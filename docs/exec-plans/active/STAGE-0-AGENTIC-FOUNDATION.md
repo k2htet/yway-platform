@@ -550,18 +550,18 @@ Do not create additional speculative agents or skills. Add more only when a recu
 Three tiers, documented in root AGENTS.md and CONTRIBUTING.md:
 
 **`agent:doctor`** (environment readiness):
-Tells a fresh Codex session whether the repository environment is ready. Checks: required tooling installed, dependencies resolved, git status clean, key docs exist (AGENTS.md, PRODUCT_VISION.md, PRODUCT_CONTRACTS.md, ARCHITECTURE.md), Codex config valid. Exit 0 = ready. Non-zero = lists what is missing.
+Tells a fresh Codex or OpenCode session whether the repository environment is ready. Checks: declared runtime and package manager policy, installed dependencies, key shared sources, and both agent harnesses. Dirty git state and missing remotes are reported without blocking readiness. Exit 0 = ready. Non-zero = lists what is missing.
 
 **Fast verification** (`verify:fast` or equivalent):
 Lint + typecheck only. Runs in seconds. Appropriate for small changes.
 
 **Full verification** (`verify:full` or equivalent):
-Lint + typecheck + tests + invariant checks. Runs longer. Required before PR submission.
+Runs all currently implemented checks: lint + typecheck + format check, then tests and product-invariant verification when their package scripts exist. A missing future check is reported as skipped, not passed. Required before PR submission.
 
 **Product invariant verification** (`verify:invariants` or equivalent):
-Runs structural checks for forbidden patterns. Clearly documented as a temporary guard, not a comprehensive guarantee.
+Pending Step F2. It will run structural checks for forbidden patterns and be clearly documented as a temporary guard, not a comprehensive guarantee.
 
-Exact command names depend on the accepted foundation tooling from Step C.
+The accepted command names are `pnpm agent:doctor`, `pnpm verify:fast`, and `pnpm verify:full`. Step F2 will add `pnpm verify:invariants`.
 
 ### Structural Invariant Checks
 
@@ -674,16 +674,16 @@ Write `docs/decisions/001-foundation-tooling.md` recording the evaluation and th
 
 ### Step F1: Create agent verification commands
 **Phase: F — Add agent verification commands and structural invariant checks**
-**Action:** Define and wire up `agent:doctor`, `verify:fast`, `verify:full`, and `verify:invariants` commands using the accepted tooling from C1. Document exact command names in AGENTS.md and CONTRIBUTING.md.
+**Action:** Define and wire up `agent:doctor`, `verify:fast`, `verify:full`, and their cross-platform verification orchestration using the accepted tooling from C1. `verify:full` must automatically run tests and `verify:invariants` later when those package scripts exist. Document the available commands in AGENTS.md.
 **Dependencies:** C1, D1.
-**Files created/modified:** `package.json` scripts (or equivalent), `AGENTS.md` updated.
-**Validation:** `agent:doctor` exits 0 on current repo state. `verify:fast` completes in under 10 seconds. `verify:full` completes. `verify:invariants` completes.
+**Files created/modified:** `scripts/agent-doctor.ts`, `scripts/run-verification.ts`, `package.json`, `tsconfig.json`, `AGENTS.md`.
+**Validation:** `agent:doctor` exits 0 on current repo state. `verify:fast` completes in under 10 seconds. `verify:full` completes and reports product invariants as skipped pending F2. No `verify:invariants` package script exists yet.
 
 ### Step F2: Create structural invariant checks
 **Phase: F — Add agent verification commands and structural invariant checks**
-**Action:** Implement cross-platform structural checks for forbidden identifiers and import patterns. Include explicit documentation that these are temporary guards, not comprehensive guarantees. Wire into `verify:invariants`.
+**Action:** Implement cross-platform structural checks for forbidden identifiers and import patterns in `scripts/check-product-invariants.ts`, add the `verify:invariants` package script, and thereby activate invariant checking inside `verify:full` through F1's conditional orchestration. Include explicit documentation that these are temporary guards, not comprehensive guarantees.
 **Dependencies:** F1, A1.
-**Files created:** `scripts/check-product-invariants.*` (extension depends on accepted tooling).
+**Files created/modified:** `scripts/check-product-invariants.ts`, `package.json`.
 **Validation:** Script exits 0 on current empty codebase. Would catch `careerScore`, `employabilityScore`, cross-domain import violations. Documentation clearly states limitations and that typed/integration/property tests are required later.
 
 ### Step G1: Create GitHub templates
@@ -805,7 +805,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step D2: Create remaining documentation directory structure
 - [x] Step E1: Create vendor-neutral ARCHITECTURE.md
 - [x] Step E2: Update AGENTS.md with the D1 root tooling, D2 directories, and E1 architecture document
-- [ ] Step F1: Create agent verification commands
+- [x] Step F1: Create agent verification commands
 - [ ] Step F2: Create structural invariant checks
 - [ ] Step G1: Create GitHub templates
 - [ ] Step G2: Create CI workflow
@@ -836,6 +836,7 @@ Stage 0 is complete when ALL of the following are true:
 | 2026-09-18 | AGENTS.md created with 114 lines, all 10 sections, referencing contract IDs YWAY-P001 through YWAY-P030 and YWAY-E001 through YWAY-E006 | ACCEPTED | Step B1 implementation |
 | 2026-09-18 | B2 creates both Codex (.toml) and OpenCode (.md) reviewer agents with matching semantics | ACCEPTED | Dual-agent harness per user instruction |
 | 2026-09-18 | No model or provider pinned in any agent definition or config | ACCEPTED | Prefer session inheritance per user instruction |
+| 2026-09-18 | F1 owns readiness and verification orchestration; F2 owns structural invariant implementation and activation | ACCEPTED | Avoid claiming invariant verification exists before Step F2 |
 
 ---
 
@@ -861,7 +862,9 @@ Stage 0 is complete when ALL of the following are true:
 | `.agents/skills/yway-pr-review/SKILL.md` | Reusable skill | B3 |
 | Root config files (depend on C1) | Scaffolding | D1 |
 | `docs/architecture/ARCHITECTURE.md` | Vendor-neutral domain boundaries | E1 |
-| `scripts/check-product-invariants.*` | Structural invariant checks | F2 |
+| `scripts/agent-doctor.ts` | Environment readiness diagnostics | F1 |
+| `scripts/run-verification.ts` | Cross-platform verification orchestration | F1 |
+| `scripts/check-product-invariants.ts` | Structural invariant checks | F2 |
 | `.github/ISSUE_TEMPLATE/task.md` | Issue template | G1 |
 | `.github/PULL_REQUEST_TEMPLATE.md` | PR template | G1 |
 | `.github/workflows/ci.yml` | CI workflow | G2 |

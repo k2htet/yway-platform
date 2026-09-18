@@ -147,11 +147,10 @@ Do not assume an agent or skill exists until its Stage 0 step creates it.
 
 ## Verification
 
-Verification tooling is added in Stage 0 Step F1.
+- `pnpm agent:doctor` — Check environment readiness.
+- `pnpm verify:fast` — Run lint and typecheck.
+- `pnpm verify:full` — Run all currently implemented checks. Tests and product-invariant
+  verification are included automatically once their package scripts exist.
+- `verify:invariants` — Pending Stage 0 Step F2.
 
-Planned concepts:
-
-- `agent:doctor`
-- fast verification
-- full verification
-- product invariant verification
+Never claim a check passed unless it was actually executed.
