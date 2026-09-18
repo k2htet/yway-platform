@@ -799,7 +799,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step A2: Create decision record template
 - [x] Step B1: Create root AGENTS.md
 - [x] Step B2: Create Codex + OpenCode configuration and reviewer agents
-- [ ] Step B3: Create shared reusable agent skills (.agents/skills/*/SKILL.md)
+- [x] Step B3: Create shared reusable agent skills (.agents/skills/*/SKILL.md)
 - [ ] Step C1: Evaluate and decide foundation tooling
 - [ ] Step D1: Initialize repository scaffolding
 - [ ] Step D2: Create documentation directory structure
