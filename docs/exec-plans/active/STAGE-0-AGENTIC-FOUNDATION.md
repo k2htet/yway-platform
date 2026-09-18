@@ -809,7 +809,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step E2: Update AGENTS.md with the D1 root tooling, D2 directories, and E1 architecture document
 - [x] Step F1: Create agent verification commands
 - [x] Step F2: Create structural invariant checks
-- [ ] Step G1: Create GitHub templates
+- [x] Step G1: Create GitHub templates
 - [ ] Step G2: Create CI workflow
 - [ ] Step G3: Configure GitHub remote and validate CI live
 - [ ] Step H1: Create README.md and CONTRIBUTING.md
