@@ -14,14 +14,14 @@ This is not a product feature stage. No application code is built here.
 |--------|--------|
 | Repository contents | Stage 0 documentation, tooling, verification scripts, GitHub workflow/templates, reviewer adapters, shared skills, and roadmap planning documents are present. No product/application code or speculative app/package surface directories exist. |
 | Git history and branches | `main` is the active branch and tracks `origin/main`; the Stage 0 foundation and roadmap planning changes are in Git history. |
-| Remote and CI | `origin` is configured as `git@github.com:k2htet/yway-platform.git`. GitHub Actions has completed the `Verify` job successfully on Node 24. |
-| Main protection | Step G3 is **BLOCKED** and incomplete because enforceable `main` branch protection is unavailable for the repository's current private-account setup. |
+| Remote and CI | `origin` is configured as `git@github.com:k2htet/yway-platform.git`. The repository is currently public by owner decision so GitHub Free can enforce branch protection. GitHub Actions has completed the `Verify` job successfully on Node 24. |
+| Main protection | Enforced `main` branch protection is active: pull requests and the `Verify` status check are required, conversations must be resolved, force pushes are disabled, and branch deletion is disabled. Step G3 is complete. |
 | Foundation tooling | YWAY-D001 accepts Node.js 24, TypeScript, pnpm 11.24.0, npm scripts, ESLint, and Prettier for the Stage 0 foundation. No product application stack has been selected. |
-| Local environment | The fresh-session environment uses Node.js v22.17.1, below the repository requirement `>=24 <25`. `pnpm agent:doctor` correctly reports the environment as not ready. |
+| Local environment | The local environment uses Node.js v24.20.0 with pnpm 11.24.0. `pnpm agent:doctor` reports `READY`. |
 | Verification | `agent:doctor`, `verify:fast`, `verify:full`, and `verify:invariants` are implemented. `verify:full` runs lint, typecheck, formatting, and structural invariant checks; tests are explicitly skipped because no test script exists. |
 | Authority and planning docs | Product Vision, Product Contracts, vendor-neutral Architecture, the accepted foundation-tooling decision, the active Stage 0 ExecPlan, and directional roadmap documents exist. The roadmap remains non-authoritative planning guidance. |
 | Agent harness | Root `AGENTS.md`, four Codex reviewer adapters, four matching OpenCode reviewer adapters, and three shared Yway skills exist. |
-| Stage progress | All steps through H1 except G3 are complete, and I1 is complete. G3 remains blocked and incomplete. J1 remains incomplete, so Stage 0 is not complete. |
+| Stage progress | All steps through I1, including G3, are complete. J1 remains incomplete, so Stage 0 is not complete. |
 
 The Build Report remains external supporting analysis supplied by the project owner. Its technology recommendations are not authority and have not been adopted as product architecture.
 
@@ -782,13 +782,13 @@ Stage 0 is complete when ALL of the following are true:
 8. [x] Three reusable skills exist in `.agents/skills/` as directories each containing `SKILL.md` with `name` and `description`
 9. [x] `docs/architecture/ARCHITECTURE.md` exists, uses vendor-neutral language for normative sections, clearly separates candidate implementations, marks dependency directions as provisional hypotheses, and does not include speculative normative edges
 10. [x] Repository scaffolding initializes successfully using accepted tooling from Step C1
-11. [x] `agent:doctor` executes and exits 0 under the supported Node.js 24 runtime; the current local Node.js 22 environment correctly fails readiness
+11. [x] `agent:doctor` executes and exits 0 under the supported local Node.js 24 runtime; the local environment reports `READY`
 12. [x] `verify:fast`, `verify:full`, and `verify:invariants` execute successfully
 13. [x] Structural invariant checks exist with documented limitations
 14. [x] GitHub issue template and PR template exist with product contract compliance reminders
 15. [x] CI workflow file exists and has been validated against a live GitHub remote
 16. [x] GitHub remote is configured and CI has executed successfully at least once
-17. [ ] Main-branch protection rules are configured requiring CI checks
+17. [x] Main-branch protection rules are configured requiring the `Verify` CI check
 18. [x] `README.md` and `CONTRIBUTING.md` exist and document verification commands and workflow
 19. [x] Fresh-session acceptance test (Step I1) passed with separate Codex and OpenCode evidence documented in this plan
 20. [x] No application code, UI components, auth logic, database schemas, or product features have been implemented
@@ -814,7 +814,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step F2: Create structural invariant checks
 - [x] Step G1: Create GitHub templates
 - [x] Step G2: Create CI workflow
-- [ ] Step G3: Configure GitHub remote and validate CI live
+- [x] Step G3: Configure GitHub remote and validate CI live
 - [x] Step H1: Create README.md and CONTRIBUTING.md
 - [x] Step I1: Fresh-session acceptance test
 - [ ] Step J1: Finalize and close Stage 0
@@ -823,7 +823,7 @@ Stage 0 is complete when ALL of the following are true:
 
 ## Step G3 Execution Record
 
-**Status:** BLOCKED on enforced `main` protection; Step G3 remains incomplete.
+**Status:** COMPLETE. Enforced `main` protection is active; Step J1 remains incomplete.
 
 - Existing remote retained: `origin` → `git@github.com:k2htet/yway-platform.git`.
 - `main` was pushed with normal, non-force pushes. The remote had no conflicting branch history.
@@ -831,15 +831,17 @@ Stage 0 is complete when ALL of the following are true:
 - GitHub Actions run #1 (`35334035853`) failed during dependency installation because the existing pnpm `esbuild` build allowlist was in an ignored `pnpm-workspace.yaml` and therefore was not present on GitHub. The failed run remains visible.
 - The smallest G2/G3-related fix stopped ignoring and committed `pnpm-workspace.yaml`; no dependency or technology choice changed.
 - GitHub Actions run #2 (`35334782520`) completed successfully on `main`. Dependency installation, `pnpm agent:doctor`, and `pnpm verify:full` all passed. The required job/check name is `Verify` (workflow `CI`).
-- GitHub's branch-protection page reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. No unenforced rule was treated as protection.
-- Owner action required: move the private repository to an eligible GitHub Team or Enterprise organization account, then configure `main` to require a pull request, require the `Verify` CI check, require conversation resolution, and keep force pushes and deletion disabled.
+- The repository is currently public by owner decision so GitHub Free can enforce branch protection.
+- Owner-authenticated GitHub REST and GraphQL verification confirmed one active `main` protection rule: pull requests are required before merge, the GitHub Actions `Verify` check is required, conversation resolution is required, force pushes are disabled, branch deletion is disabled, and the rule is enforced for administrators.
+- Live GitHub Actions run `35369618466` completed successfully on `main`; its `CI` workflow job/check is `Verify` and passed on Node 24.
+- Local validation passed under Node.js v24.20.0 with pnpm 11.24.0: `pnpm agent:doctor` reported `READY`, and `pnpm verify:full` passed lint, typecheck, formatting, and structural invariant checks while explicitly skipping tests because no test script exists.
 - `PRODUCT_VISION.md` and `PRODUCT_CONTRACTS.md` were unchanged by G1, G2, and G3 work.
 
 ---
 
 ## Step H1 Execution Record
 
-**Status:** COMPLETE. Step G3 remains independently blocked and incomplete; I1 is now complete; J1 remains incomplete.
+**Status:** COMPLETE. This record predates G3 completion; G3 and I1 are now complete, while J1 remains incomplete.
 
 - Created `README.md` with a concise repository description, prerequisites, setup, verification commands, source-of-truth entry points, agent harness locations, and the Build Report's advisory status.
 - Created `CONTRIBUTING.md` with the task workflow, simple branch naming, worktree and writer guidance, verification meanings and limitations, product/decision governance, reviewer references, pull request process, and accurate GitHub/G3 status.
@@ -852,14 +854,14 @@ Stage 0 is complete when ALL of the following are true:
 
 ## Step I1 Execution Record
 
-**Status:** COMPLETE. Step G3 remains blocked and incomplete; Step J1 remains incomplete; Stage 0 is not complete.
+**Status:** COMPLETE. This record predates G3 completion; G3 is now complete, while Step J1 remains incomplete and Stage 0 is not complete.
 
 - Separate fresh Codex and OpenCode sessions, each with no prior project context, passed the acceptance test. Detailed evidence is recorded in the Step I1 acceptance table above.
-- Both sessions independently identified the authority hierarchy, roadmap status, Stage 0/G3 status, verification meanings and limitations, reviewer adapters and shared skills, critical product invariants, unresolved decision discipline, task/PR/CI workflow, and the current environment-readiness issue.
-- Both sessions ran `pnpm agent:doctor`. It correctly failed under local Node.js v22.17.1 because repository policy requires Node.js `>=24 <25`. This is successful prerequisite detection and does not fail I1; the local environment remains not READY.
+- Both sessions independently identified the authority hierarchy, roadmap status, then-current Stage 0/G3 status, verification meanings and limitations, reviewer adapters and shared skills, critical product invariants, unresolved decision discipline, task/PR/CI workflow, and the environment-readiness issue present at the time.
+- Both sessions ran `pnpm agent:doctor`. At the time of I1, it correctly failed under local Node.js v22.17.1 because repository policy requires Node.js `>=24 <25`. This was successful prerequisite detection and did not fail I1; later G3 validation confirmed the current Node.js 24 environment is `READY`.
 - Both sessions ran `pnpm verify:full`, which passed. That result does not override `agent:doctor`; CI has already passed on Node 24.
 - Validation of this ExecPlan update passed with `pnpm verify:fast` and `pnpm verify:full` under the local Node.js 22 environment. Both commands emitted the expected unsupported-engine warning; `verify:full` passed lint, typecheck, formatting, and structural invariant checks and skipped tests because no test script exists.
-- I1 completion does not unblock G3 and does not authorize J1.
+- I1 completion did not by itself unblock G3. The later public-repository protection work completed G3; J1 remains separately incomplete.
 
 ---
 
@@ -928,6 +930,6 @@ The following owner actions are required before Stage 0 can fully complete:
 
 1. **GitHub repository setup — satisfied**: `git@github.com:k2htet/yway-platform.git` is configured as `origin`.
 2. **Push access — satisfied**: normal pushes to `main` succeeded.
-3. **Enforced branch protection — blocked**: GitHub reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. The owner must make that account/repository change, then configure the required `main` protections.
+3. **Enforced branch protection — satisfied**: The repository is currently public by owner decision, and active `main` protection requires pull requests, the `Verify` check, and conversation resolution while disabling force pushes and branch deletion.
 
-Until enforced branch protection is available and configured, Step G3 remains explicitly blocked and unchecked. Steps H1 and I1 are complete; Step J1 remains incomplete, and Stage 0 is not complete.
+Step G3 is complete. Step J1 remains incomplete, and Stage 0 is not complete.
