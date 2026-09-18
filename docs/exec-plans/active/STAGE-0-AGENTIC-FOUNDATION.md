@@ -755,7 +755,7 @@ Stage 0 is complete when ALL of the following are true:
 ## Progress Checklist
 
 - [x] Step A1: Create PRODUCT_CONTRACTS.md
-- [ ] Step A2: Create decision record template
+- [x] Step A2: Create decision record template
 - [ ] Step B1: Create root AGENTS.md
 - [ ] Step B2: Create Codex configuration and reviewer agents (TOML)
 - [ ] Step B3: Create reusable agent skills (directory/SKILL.md)
