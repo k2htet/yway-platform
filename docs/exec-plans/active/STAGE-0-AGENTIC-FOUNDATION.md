@@ -786,7 +786,7 @@ Stage 0 is complete when ALL of the following are true:
 14. [x] CI workflow file exists and has been validated against a live GitHub remote (Step G3)
 15. [x] GitHub remote is configured and CI has executed successfully at least once
 16. [ ] Main-branch protection rules are configured requiring CI checks
-17. [ ] `README.md` and `CONTRIBUTING.md` exist and document verification commands and workflow
+17. [x] `README.md` and `CONTRIBUTING.md` exist and document verification commands and workflow
 18. [ ] Fresh-session acceptance test (Step I1) passed with documented results in this plan
 19. [ ] No application code, UI components, auth logic, database schemas, or product features have been implemented
 20. [ ] No speculative app/package directories were created beyond what Stage 0 requires
@@ -812,7 +812,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step G1: Create GitHub templates
 - [x] Step G2: Create CI workflow
 - [ ] Step G3: Configure GitHub remote and validate CI live
-- [ ] Step H1: Create README.md and CONTRIBUTING.md
+- [x] Step H1: Create README.md and CONTRIBUTING.md
 - [ ] Step I1: Fresh-session acceptance test
 - [ ] Step J1: Finalize and close Stage 0
 
@@ -831,6 +831,19 @@ Stage 0 is complete when ALL of the following are true:
 - GitHub's branch-protection page reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. No unenforced rule was treated as protection.
 - Owner action required: move the private repository to an eligible GitHub Team or Enterprise organization account, then configure `main` to require a pull request, require the `Verify` CI check, require conversation resolution, and keep force pushes and deletion disabled.
 - `PRODUCT_VISION.md` and `PRODUCT_CONTRACTS.md` were unchanged by G1, G2, and G3 work.
+
+---
+
+## Step H1 Execution Record
+
+**Status:** COMPLETE. Step G3 remains independently blocked and incomplete; Steps I1 and J1 remain incomplete.
+
+- Created `README.md` with a concise repository description, prerequisites, setup, verification commands, source-of-truth entry points, agent harness locations, and the Build Report's advisory status.
+- Created `CONTRIBUTING.md` with the task workflow, simple branch naming, worktree and writer guidance, verification meanings and limitations, product/decision governance, reviewer references, pull request process, and accurate GitHub/G3 status.
+- `pnpm agent:doctor` passed under Node v24.20.0 with pnpm 11.24.0.
+- `pnpm verify:full` passed: lint, typecheck, formatting, and structural invariant checks passed; tests were skipped because no test script exists.
+- Structural invariant checks remain guardrails only and are not proof of semantic, privacy, authorization, consent, offline, accessibility, or localization correctness.
+- `PRODUCT_VISION.md` and `PRODUCT_CONTRACTS.md` were unchanged. No product requirement, application code, dependency, architecture choice, technology choice, or decision record was introduced.
 
 ---
 
@@ -901,4 +914,4 @@ The following owner actions are required before Stage 0 can fully complete:
 2. **Push access — satisfied**: normal pushes to `main` succeeded.
 3. **Enforced branch protection — blocked**: GitHub reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. The owner must make that account/repository change, then configure the required `main` protections.
 
-Until enforced branch protection is available and configured, Step G3 remains explicitly blocked and unchecked. Step H1 and all later steps remain untouched and incomplete.
+Until enforced branch protection is available and configured, Step G3 remains explicitly blocked and unchecked. Step H1 is complete; Steps I1 and J1 remain incomplete.
