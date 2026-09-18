@@ -63,8 +63,8 @@ Statuses reflect current repository evidence, not aspiration. See
   documents, and verification foundation without implementing product features.
 - **Outcome:** Fresh Codex and OpenCode sessions can discover authority, work
   safely, record decisions, and run the repository's checks consistently.
-- **Major dependencies:** Product Vision; owner access needed for enforceable
-  repository protection.
+- **Major dependencies:** Product Vision and the established Stage 0 repository,
+  governance, verification, and protected-branch foundation.
 - **Major product-contract areas:** All product contracts as engineering
   guardrails, especially YWAY-P004–P007, YWAY-P014–P019, YWAY-P022, and
   YWAY-E001–E006.
@@ -72,9 +72,9 @@ Statuses reflect current repository evidence, not aspiration. See
   evidenced, including enforced branch protection, onboarding documentation,
   and the fresh-session acceptance test.
 - **Status:** ACTIVE.
-- **Important unresolved questions:** Enforced `main` protection is blocked on
-  the documented GitHub account/organization prerequisite; remaining Stage 0
-  steps are tracked in its ExecPlan.
+- **Important unresolved questions:** G3 is complete with enforced `main`
+  protection. J1 remains the final Stage 0 closure step and is tracked in the
+  active ExecPlan.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 

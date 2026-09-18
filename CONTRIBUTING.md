@@ -49,4 +49,4 @@ Structural invariant checks are not proof of semantic behavior, privacy, authori
 
 Codex reviewer adapters live in `.codex/agents/*.toml`, OpenCode reviewer adapters in `.opencode/agents/*.md`, and shared review skills in `.agents/skills/*/SKILL.md`. Use the roles relevant to the change and report their evidence in the pull request template.
 
-GitHub Actions CI exists, is live, and currently passes. Enforceable protection for `main` is not available under the current private repository/account capabilities, so branch protection must not be treated as active. Stage 0 Step G3 remains blocked until the repository is moved to an eligible GitHub Team or Enterprise organization account and the required protection is configured.
+GitHub Actions CI exists, is live, and currently passes. The repository is public by owner decision, and `main` protection is active: pull requests and the `Verify` check are required, conversations must be resolved, and force pushes and branch deletion are disabled. Stage 0 Step G3 is complete; J1 remains the final Stage 0 closure step.
