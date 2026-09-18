@@ -7,14 +7,7 @@ description: Evaluate proposed or implemented changes against Yway product contr
 
 ## Authority
 
-Follow the hierarchy in AGENTS.md. This skill references canonical sources; it never replaces them.
-
-1. `docs/product/PRODUCT_VISION.md` — highest authority
-2. `docs/product/PRODUCT_CONTRACTS.md` — stable contracts (YWAY-Pxxx, YWAY-Exxx)
-3. `docs/architecture/ARCHITECTURE.md` — when it exists
-4. `docs/decisions/` — only ACCEPTED decisions are binding
-5. `docs/exec-plans/` — task execution plans
-6. Platform Build Report — advisory only
+Follow the hierarchy in AGENTS.md. The canonical product sources are `docs/product/PRODUCT_VISION.md` (highest authority) and `docs/product/PRODUCT_CONTRACTS.md` (stable contracts, YWAY-Pxxx / YWAY-Exxx). This skill references them; it never replaces them.
 
 ## Workflow
 
