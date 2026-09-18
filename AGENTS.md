@@ -120,6 +120,8 @@ Do not:
 - `docs/product/` — Product Vision and Contracts
 - `docs/architecture/ARCHITECTURE.md` — Logical domains, boundaries, and architectural invariants
 - `docs/decisions/` — Architecture decision records
+- `docs/roadmap/ROADMAP.md` — Directional Production V1 outcomes and planning policy
+- `docs/roadmap/STAGE-INDEX.md` — Compact stage status and exit-gate index
 - `docs/exec-plans/active/` — In-progress execution plans
 - `docs/exec-plans/completed/` — Finished execution plans
 - `.codex/agents/` — Codex reviewer agents
