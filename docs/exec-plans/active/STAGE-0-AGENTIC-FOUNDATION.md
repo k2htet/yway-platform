@@ -783,8 +783,8 @@ Stage 0 is complete when ALL of the following are true:
 11. [ ] `verify:fast`, `verify:full`, and `verify:invariants` execute successfully
 12. [ ] Structural invariant checks exist with documented limitations
 13. [ ] GitHub issue template and PR template exist with product contract compliance reminders
-14. [ ] CI workflow file exists and has been validated against a live GitHub remote (Step G3)
-15. [ ] GitHub remote is configured and CI has executed successfully at least once
+14. [x] CI workflow file exists and has been validated against a live GitHub remote (Step G3)
+15. [x] GitHub remote is configured and CI has executed successfully at least once
 16. [ ] Main-branch protection rules are configured requiring CI checks
 17. [ ] `README.md` and `CONTRIBUTING.md` exist and document verification commands and workflow
 18. [ ] Fresh-session acceptance test (Step I1) passed with documented results in this plan
@@ -815,6 +815,22 @@ Stage 0 is complete when ALL of the following are true:
 - [ ] Step H1: Create README.md and CONTRIBUTING.md
 - [ ] Step I1: Fresh-session acceptance test
 - [ ] Step J1: Finalize and close Stage 0
+
+---
+
+## Step G3 Execution Record
+
+**Status:** BLOCKED on enforced `main` protection; Step G3 remains incomplete.
+
+- Existing remote retained: `origin` → `git@github.com:k2htet/yway-platform.git`.
+- `main` was pushed with normal, non-force pushes. The remote had no conflicting branch history.
+- Pre-push verification passed: `pnpm agent:doctor` and `pnpm verify:full`.
+- GitHub Actions run #1 (`35334035853`) failed during dependency installation because the existing pnpm `esbuild` build allowlist was in an ignored `pnpm-workspace.yaml` and therefore was not present on GitHub. The failed run remains visible.
+- The smallest G2/G3-related fix stopped ignoring and committed `pnpm-workspace.yaml`; no dependency or technology choice changed.
+- GitHub Actions run #2 (`35334782520`) completed successfully on `main`. Dependency installation, `pnpm agent:doctor`, and `pnpm verify:full` all passed. The required job/check name is `Verify` (workflow `CI`).
+- GitHub's branch-protection page reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. No unenforced rule was treated as protection.
+- Owner action required: move the private repository to an eligible GitHub Team or Enterprise organization account, then configure `main` to require a pull request, require the `Verify` CI check, require conversation resolution, and keep force pushes and deletion disabled.
+- `PRODUCT_VISION.md` and `PRODUCT_CONTRACTS.md` were unchanged by G1, G2, and G3 work.
 
 ---
 
@@ -881,8 +897,8 @@ Stage 0 is complete when ALL of the following are true:
 
 The following owner actions are required before Stage 0 can fully complete:
 
-1. **GitHub repository setup**: Owner must create a GitHub repository (if not already existing) and provide the remote URL.
-2. **Push access**: The executing agent or developer must have push access to the repository.
-3. **Branch protection permissions**: Owner must have admin access to configure branch protection rules on `main`.
+1. **GitHub repository setup — satisfied**: `git@github.com:k2htet/yway-platform.git` is configured as `origin`.
+2. **Push access — satisfied**: normal pushes to `main` succeeded.
+3. **Enforced branch protection — blocked**: GitHub reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. The owner must make that account/repository change, then configure the required `main` protections.
 
-If these prerequisites are not met, Step G3 is explicitly blocked. All other steps (A1 through G2, H1) can proceed without a remote. Step I1 (acceptance test) and Step J1 (closure) depend on G3 completing.
+Until enforced branch protection is available and configured, Step G3 remains explicitly blocked and unchecked. Step H1 and all later steps remain untouched and incomplete.
