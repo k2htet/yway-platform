@@ -12,21 +12,18 @@ This is not a product feature stage. No application code is built here.
 
 | Aspect | Status |
 |--------|--------|
-| Repository contents | Single file: `docs/product/PRODUCT_VISION.md` |
-| Git history | One commit (`48e07e9 docs: product vision`) |
-| Branches | `main` only |
-| Remotes | None configured |
-| Package manager | None initialized |
-| Monorepo tooling | None |
-| CI/CD | None |
-| Tests | None |
-| AGENTS.md | Does not exist |
-| GitHub config | No `.github/` directory |
-| Architecture docs | None beyond Product Vision |
-| Codex config | None |
-| OpenCode config | None |
+| Repository contents | Stage 0 documentation, tooling, verification scripts, GitHub workflow/templates, reviewer adapters, shared skills, and roadmap planning documents are present. No product/application code or speculative app/package surface directories exist. |
+| Git history and branches | `main` is the active branch and tracks `origin/main`; the Stage 0 foundation and roadmap planning changes are in Git history. |
+| Remote and CI | `origin` is configured as `git@github.com:k2htet/yway-platform.git`. GitHub Actions has completed the `Verify` job successfully on Node 24. |
+| Main protection | Step G3 is **BLOCKED** and incomplete because enforceable `main` branch protection is unavailable for the repository's current private-account setup. |
+| Foundation tooling | YWAY-D001 accepts Node.js 24, TypeScript, pnpm 11.24.0, npm scripts, ESLint, and Prettier for the Stage 0 foundation. No product application stack has been selected. |
+| Local environment | The fresh-session environment uses Node.js v22.17.1, below the repository requirement `>=24 <25`. `pnpm agent:doctor` correctly reports the environment as not ready. |
+| Verification | `agent:doctor`, `verify:fast`, `verify:full`, and `verify:invariants` are implemented. `verify:full` runs lint, typecheck, formatting, and structural invariant checks; tests are explicitly skipped because no test script exists. |
+| Authority and planning docs | Product Vision, Product Contracts, vendor-neutral Architecture, the accepted foundation-tooling decision, the active Stage 0 ExecPlan, and directional roadmap documents exist. The roadmap remains non-authoritative planning guidance. |
+| Agent harness | Root `AGENTS.md`, four Codex reviewer adapters, four matching OpenCode reviewer adapters, and three shared Yway skills exist. |
+| Stage progress | All steps through H1 except G3 are complete, and I1 is complete. G3 remains blocked and incomplete. J1 remains incomplete, so Stage 0 is not complete. |
 
-The Build Report exists as external analysis provided by the project owner. It recommends a technology stack and phased build sequence but is not committed to the repository and is not an authority source — it is supporting analysis.
+The Build Report remains external supporting analysis supplied by the project owner. Its technology recommendations are not authority and have not been adopted as product architecture.
 
 ---
 
@@ -152,19 +149,21 @@ Open creator marketplace, open coaching marketplace, public social feed, followe
 
 ---
 
-## Repository Audit Findings
+## Initial Repository Audit Findings (Historical Baseline)
 
-### Existing Structure
+This section records the repository audit performed before Stage 0 implementation. It is retained as historical planning context and does not describe the current repository; see **Current State** above for the live status.
+
+### Initial Structure
 - Single file: `docs/product/PRODUCT_VISION.md` (438 lines, canonical authority)
 - Single branch: `main`
 - Single commit: `48e07e9`
 - No remote configured
 
-### Existing Documentation
+### Initial Documentation
 - Product Vision: complete and authoritative
 - Build Report: external analysis (provided by owner, not in repo), treated as recommendations not truth
 
-### Missing Foundations
+### Foundations Missing at the Initial Audit
 Everything else is missing:
 - No `README.md`
 - No `AGENTS.md`
@@ -725,21 +724,25 @@ Write `docs/decisions/001-foundation-tooling.md` recording the evaluation and th
 **Validation:** All checks in the acceptance test table pass.
 
 #### Acceptance Test Results
-_To be filled during Step I1._
 
-| Check | Pass/Fail | Notes |
-|-------|-----------|-------|
-| Discovers AGENTS.md | | |
-| Locates PRODUCT_VISION.md | | |
-| Locates PRODUCT_CONTRACTS.md | | |
-| Finds ARCHITECTURE.md | | |
-| Understands prohibitions | | |
-| Runs agent:doctor successfully | | |
-| Runs verification commands | | |
-| Identifies how to start a task | | |
-| Locates Codex agents (.toml) | | |
-| Locates OpenCode agents (.md) | | |
-| Locates shared skills (SKILL.md) | | |
+Both acceptance runs started as fresh sessions with no prior project context. The Node.js prerequisite failure is a successful environment-readiness detection, not a comprehension-test failure.
+
+| Check | Codex | OpenCode | Evidence |
+|-------|-------|----------|----------|
+| Discovers canonical authority hierarchy | PASS | PASS | Located `AGENTS.md`, Product Vision, Product Contracts, Architecture, accepted decisions, and the active ExecPlan in the correct precedence order. |
+| Treats roadmap as directional and non-authoritative | PASS | PASS | Identified the roadmap as planning guidance rather than product or architecture authority. |
+| Identifies current Stage 0 status | PASS | PASS | Found the live Stage 0 progress, the G3 enforceable-protection blocker, and that J1 remains incomplete. |
+| Understands critical product invariants | PASS | PASS | Identified try-before-choosing, reversible guidance, prohibited scoring, signal/evidence separation, login-free first value, safeguarding, privacy/consent, employer isolation, content provenance, and offline preservation boundaries. |
+| Preserves unresolved decision discipline | PASS | PASS | Distinguished the accepted Stage 0 foundation tooling decision from unresolved future product/application technology choices. |
+| Finds verification commands and limitations | PASS | PASS | Located all four commands and understood that structural invariant checks are guardrails rather than proof of semantic, authorization, consent, privacy, offline, accessibility, or localization correctness. |
+| Runs `pnpm agent:doctor` and interprets the result | PASS | PASS | Both ran it. It correctly failed because local Node.js is v22.17.1 while repository policy requires `>=24 <25`; both correctly concluded that the local environment is not READY. |
+| Runs `pnpm verify:full` and interprets the result | PASS | PASS | Both ran it successfully and correctly recognized that a passing full verification does not override the failed runtime prerequisite. CI had already passed the same workflow on Node 24. |
+| Locates reviewer adapters and shared skills | PASS | PASS | Found the Codex `.toml` adapters, OpenCode `.md` adapters, and shared `.agents/skills/*/SKILL.md` instructions. |
+| Identifies task and collaboration workflow | PASS | PASS | Found the branch/worktree, ExecPlan, PR, review, and CI workflow guidance. |
+
+**Codex result:** PASS. The fresh Codex session independently found all required authority, workflow, product-integrity, decision-discipline, verification, and environment-readiness information and ran both required commands.
+
+**OpenCode result:** PASS. The fresh OpenCode session independently found all required authority, workflow, product-integrity, decision-discipline, verification, and environment-readiness information and ran both required commands.
 
 ### Step J1: Finalize and close Stage 0
 **Phase: J — Close Stage 0 only after all objective completion criteria pass**
@@ -769,29 +772,29 @@ _To be filled during Step I1._
 
 Stage 0 is complete when ALL of the following are true:
 
-1. [ ] `docs/product/PRODUCT_CONTRACTS.md` exists and covers all 6 assertion categories with corrected offline contract
-2. [ ] `docs/decisions/000-TEMPLATE.md` exists with correct fields
-3. [ ] `docs/decisions/001-foundation-tooling.md` exists with ACCEPTED status for chosen tooling
-4. [ ] Root `AGENTS.md` exists, is under 200 lines, and contains: source-of-truth hierarchy, product invariants summary, repository map, verification commands, prohibition list, agent harness reference for both Codex and OpenCode
-5. [ ] `.codex/config.toml` exists with valid project configuration
-6. [ ] Four reviewer agents exist in `.codex/agents/` as `.toml` files with `name`, `description`, `developer_instructions`, `sandbox_mode = "read-only"`
-7. [ ] Four reviewer agents exist in `.opencode/agents/` as `.md` files with `mode: subagent`, `permission: edit: deny`, matching Codex reviewer semantics
-8. [ ] Three reusable skills exist in `.agents/skills/` as directories each containing `SKILL.md` with `name` and `description`
-9. [ ] `docs/architecture/ARCHITECTURE.md` exists, uses vendor-neutral language for normative sections, clearly separates candidate implementations, marks dependency directions as provisional hypotheses, and does not include speculative normative edges
-9. [ ] Repository scaffolding initializes successfully using accepted tooling from Step C1
-10. [ ] `agent:doctor` executes and exits 0
-11. [ ] `verify:fast`, `verify:full`, and `verify:invariants` execute successfully
-12. [ ] Structural invariant checks exist with documented limitations
-13. [ ] GitHub issue template and PR template exist with product contract compliance reminders
-14. [x] CI workflow file exists and has been validated against a live GitHub remote (Step G3)
-15. [x] GitHub remote is configured and CI has executed successfully at least once
-16. [ ] Main-branch protection rules are configured requiring CI checks
-17. [x] `README.md` and `CONTRIBUTING.md` exist and document verification commands and workflow
-18. [ ] Fresh-session acceptance test (Step I1) passed with documented results in this plan
-19. [ ] No application code, UI components, auth logic, database schemas, or product features have been implemented
-20. [ ] No speculative app/package directories were created beyond what Stage 0 requires
-21. [ ] PRODUCT_VISION.md has not been modified
-22. [ ] No decision records exist for technologies not evaluated during Stage 0 (only 001-foundation-tooling)
+1. [x] `docs/product/PRODUCT_CONTRACTS.md` exists and covers all 6 assertion categories with corrected offline contract
+2. [x] `docs/decisions/000-TEMPLATE.md` exists with correct fields
+3. [x] `docs/decisions/001-foundation-tooling.md` exists with ACCEPTED status for chosen tooling
+4. [x] Root `AGENTS.md` exists, is under 200 lines, and contains: source-of-truth hierarchy, product invariants summary, repository map, verification commands, prohibition list, agent harness reference for both Codex and OpenCode
+5. [x] `.codex/config.toml` exists with valid project configuration
+6. [x] Four reviewer agents exist in `.codex/agents/` as `.toml` files with `name`, `description`, `developer_instructions`, `sandbox_mode = "read-only"`
+7. [x] Four reviewer agents exist in `.opencode/agents/` as `.md` files with `mode: subagent`, `permission: edit: deny`, matching Codex reviewer semantics
+8. [x] Three reusable skills exist in `.agents/skills/` as directories each containing `SKILL.md` with `name` and `description`
+9. [x] `docs/architecture/ARCHITECTURE.md` exists, uses vendor-neutral language for normative sections, clearly separates candidate implementations, marks dependency directions as provisional hypotheses, and does not include speculative normative edges
+10. [x] Repository scaffolding initializes successfully using accepted tooling from Step C1
+11. [x] `agent:doctor` executes and exits 0 under the supported Node.js 24 runtime; the current local Node.js 22 environment correctly fails readiness
+12. [x] `verify:fast`, `verify:full`, and `verify:invariants` execute successfully
+13. [x] Structural invariant checks exist with documented limitations
+14. [x] GitHub issue template and PR template exist with product contract compliance reminders
+15. [x] CI workflow file exists and has been validated against a live GitHub remote
+16. [x] GitHub remote is configured and CI has executed successfully at least once
+17. [ ] Main-branch protection rules are configured requiring CI checks
+18. [x] `README.md` and `CONTRIBUTING.md` exist and document verification commands and workflow
+19. [x] Fresh-session acceptance test (Step I1) passed with separate Codex and OpenCode evidence documented in this plan
+20. [x] No application code, UI components, auth logic, database schemas, or product features have been implemented
+21. [x] No speculative app/package directories were created beyond what Stage 0 requires
+22. [x] PRODUCT_VISION.md has not been modified
+23. [x] No decision records exist for technologies not evaluated during Stage 0 (only 001-foundation-tooling)
 
 ---
 
@@ -813,7 +816,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step G2: Create CI workflow
 - [ ] Step G3: Configure GitHub remote and validate CI live
 - [x] Step H1: Create README.md and CONTRIBUTING.md
-- [ ] Step I1: Fresh-session acceptance test
+- [x] Step I1: Fresh-session acceptance test
 - [ ] Step J1: Finalize and close Stage 0
 
 ---
@@ -836,7 +839,7 @@ Stage 0 is complete when ALL of the following are true:
 
 ## Step H1 Execution Record
 
-**Status:** COMPLETE. Step G3 remains independently blocked and incomplete; Steps I1 and J1 remain incomplete.
+**Status:** COMPLETE. Step G3 remains independently blocked and incomplete; I1 is now complete; J1 remains incomplete.
 
 - Created `README.md` with a concise repository description, prerequisites, setup, verification commands, source-of-truth entry points, agent harness locations, and the Build Report's advisory status.
 - Created `CONTRIBUTING.md` with the task workflow, simple branch naming, worktree and writer guidance, verification meanings and limitations, product/decision governance, reviewer references, pull request process, and accurate GitHub/G3 status.
@@ -844,6 +847,19 @@ Stage 0 is complete when ALL of the following are true:
 - `pnpm verify:full` passed: lint, typecheck, formatting, and structural invariant checks passed; tests were skipped because no test script exists.
 - Structural invariant checks remain guardrails only and are not proof of semantic, privacy, authorization, consent, offline, accessibility, or localization correctness.
 - `PRODUCT_VISION.md` and `PRODUCT_CONTRACTS.md` were unchanged. No product requirement, application code, dependency, architecture choice, technology choice, or decision record was introduced.
+
+---
+
+## Step I1 Execution Record
+
+**Status:** COMPLETE. Step G3 remains blocked and incomplete; Step J1 remains incomplete; Stage 0 is not complete.
+
+- Separate fresh Codex and OpenCode sessions, each with no prior project context, passed the acceptance test. Detailed evidence is recorded in the Step I1 acceptance table above.
+- Both sessions independently identified the authority hierarchy, roadmap status, Stage 0/G3 status, verification meanings and limitations, reviewer adapters and shared skills, critical product invariants, unresolved decision discipline, task/PR/CI workflow, and the current environment-readiness issue.
+- Both sessions ran `pnpm agent:doctor`. It correctly failed under local Node.js v22.17.1 because repository policy requires Node.js `>=24 <25`. This is successful prerequisite detection and does not fail I1; the local environment remains not READY.
+- Both sessions ran `pnpm verify:full`, which passed. That result does not override `agent:doctor`; CI has already passed on Node 24.
+- Validation of this ExecPlan update passed with `pnpm verify:fast` and `pnpm verify:full` under the local Node.js 22 environment. Both commands emitted the expected unsupported-engine warning; `verify:full` passed lint, typecheck, formatting, and structural invariant checks and skipped tests because no test script exists.
+- I1 completion does not unblock G3 and does not authorize J1.
 
 ---
 
@@ -856,7 +872,7 @@ Stage 0 is complete when ALL of the following are true:
 | 2026-09-18 | Architecture document must be vendor-neutral | ACCEPTED | User instruction: do not lock in unvalidated technologies |
 | 2026-09-18 | Physical app/package shells deferred until validated | ACCEPTED | User instruction: separate logical domain from physical package |
 | 2026-09-18 | Decision records created only for Stage 0 decisions | ACCEPTED | User instruction: avoid speculative decision records |
-| 2026-09-18 | Foundation tooling evaluated and decided in Step C1 | PENDING | Must be done before scaffolding |
+| 2026-09-18 | Foundation tooling evaluated and recorded in YWAY-D001 | ACCEPTED | Node.js 24, TypeScript, pnpm, npm scripts, ESLint, and Prettier are the minimum Stage 0 foundation tooling; future application technologies remain unresolved |
 | 2026-09-18 | Codex agents use TOML format | ACCEPTED | User instruction: match Codex custom agent schema |
 | 2026-09-18 | OpenCode agents use Markdown with YAML frontmatter | ACCEPTED | User instruction: dual-agent support for B2 |
 | 2026-09-18 | Shared skills under .agents/skills/ for both tools | ACCEPTED | User instruction: one shared source of truth |
@@ -914,4 +930,4 @@ The following owner actions are required before Stage 0 can fully complete:
 2. **Push access — satisfied**: normal pushes to `main` succeeded.
 3. **Enforced branch protection — blocked**: GitHub reports that rules will not be enforced on this private repository unless it is moved to a GitHub Team or Enterprise organization account. The owner must make that account/repository change, then configure the required `main` protections.
 
-Until enforced branch protection is available and configured, Step G3 remains explicitly blocked and unchecked. Step H1 is complete; Steps I1 and J1 remain incomplete.
+Until enforced branch protection is available and configured, Step G3 remains explicitly blocked and unchecked. Steps H1 and I1 are complete; Step J1 remains incomplete, and Stage 0 is not complete.
