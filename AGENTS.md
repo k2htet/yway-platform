@@ -17,14 +17,23 @@ Use this order when sources disagree:
 
 1. `docs/product/PRODUCT_VISION.md` — highest product authority
 2. `docs/product/PRODUCT_CONTRACTS.md` — stable product contracts
-3. `docs/architecture/ARCHITECTURE.md` — architecture authority when created
+3. `docs/architecture/ARCHITECTURE.md` — logical domain boundaries and architectural invariants
 4. `docs/decisions/` — only ACCEPTED decisions are binding
 5. `docs/exec-plans/` — task execution plans
 6. Platform Build Report — advisory only
 
-Higher authority wins.
+Higher authority wins. ARCHITECTURE.md cannot override Product Contracts or Product Vision.
 
 Do not modify `PRODUCT_VISION.md` unless the project owner explicitly asks.
+
+## Architecture Guidance
+
+Read `docs/architecture/ARCHITECTURE.md` before changing domain boundaries, privacy
+boundaries, synchronization assumptions, or physical architecture.
+
+- Logical domain does NOT imply package, service, app, or database.
+- Provisional architecture hypotheses in ARCHITECTURE.md are non-binding.
+- Candidate technologies are not adopted until an ACCEPTED decision record says so.
 
 ## Critical Product Rules
 
@@ -59,7 +68,10 @@ Do not adopt a technology because it appears in the Build Report.
 Use `docs/decisions/000-TEMPLATE.md` for significant architecture or
 technology decisions.
 
-PROPOSED and DEFERRED decisions are not adopted choices.
+- Only ACCEPTED decision records are binding.
+- PROPOSED, DEFERRED, REJECTED, and SUPERSEDED records are not active choices.
+- YWAY-D001 (`docs/decisions/001-foundation-tooling.md`) is the accepted Stage 0 foundation tooling decision.
+- Future app, database, auth, sync, and framework choices remain undecided unless a future ACCEPTED record exists.
 
 Do not silently resolve unresolved product decisions.
 
@@ -96,6 +108,26 @@ Do not:
 - adopt unvalidated technologies
 - claim tests or verification passed unless they were actually run
 - hide failures, uncertainty, or unresolved risks
+
+## Repository Map
+
+- `package.json` — Runtime policy, package manager, dependencies, and repository commands
+- `pnpm-lock.yaml`, `pnpm-workspace.yaml` — Deterministic dependency and workspace configuration
+- `tsconfig.json`, `tsconfig.base.json` — TypeScript project and shared compiler configuration
+- `eslint.config.mjs` — ESLint flat configuration
+- `.prettierrc`, `.prettierignore` — Formatting configuration and exclusions
+- `.editorconfig`, `.gitignore` — Editor conventions and Git exclusions
+- `docs/product/` — Product Vision and Contracts
+- `docs/architecture/ARCHITECTURE.md` — Logical domains, boundaries, and architectural invariants
+- `docs/decisions/` — Architecture decision records
+- `docs/exec-plans/active/` — In-progress execution plans
+- `docs/exec-plans/completed/` — Finished execution plans
+- `.codex/agents/` — Codex reviewer agents
+- `.opencode/agents/` — OpenCode reviewer agents
+- `.agents/skills/` — Shared reusable skills
+- `scripts/` — Verification scripts
+- `.github/ISSUE_TEMPLATE/` — Issue templates
+- `.github/workflows/` — CI workflows
 
 ## Agent Harness
 

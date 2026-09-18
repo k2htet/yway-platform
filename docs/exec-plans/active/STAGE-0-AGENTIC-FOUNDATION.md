@@ -804,7 +804,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step D1: Initialize repository scaffolding
 - [x] Step D2: Create remaining documentation directory structure
 - [x] Step E1: Create vendor-neutral ARCHITECTURE.md
-- [ ] Step E2: Update AGENTS.md with repository map
+- [x] Step E2: Update AGENTS.md with the D1 root tooling, D2 directories, and E1 architecture document
 - [ ] Step F1: Create agent verification commands
 - [ ] Step F2: Create structural invariant checks
 - [ ] Step G1: Create GitHub templates
