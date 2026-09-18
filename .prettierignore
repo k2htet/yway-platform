@@ -1,0 +1,14 @@
+docs/product/PRODUCT_VISION.md
+docs/product/PRODUCT_CONTRACTS.md
+docs/exec-plans/
+docs/decisions/000-TEMPLATE.md
+.opencode/agents/
+.codex/
+.agents/
+pnpm-lock.yaml
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.*
