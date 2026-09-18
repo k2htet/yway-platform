@@ -651,12 +651,12 @@ Write `docs/decisions/001-foundation-tooling.md` recording the evaluation and th
 **Files created:** Depends on accepted tooling. Typically 4-6 root config files.
 **Validation:** Package manager install succeeds. TypeScript base config resolves. Lint/format commands work (may pass trivially). No errors.
 
-### Step D2: Create documentation directory structure
+### Step D2: Create remaining documentation directory structure
 **Phase: D — Initialize repository/tooling based on accepted decisions**
-**Action:** Create directories: `docs/architecture/`, `docs/exec-plans/completed/`, `.github/ISSUE_TEMPLATE/`, `scripts/`, `.codex/agents/`, `.agents/skills/yway-exec-plan/`, `.agents/skills/yway-product-integrity/`, `.agents/skills/yway-pr-review/`. Use `.gitkeep` files where needed so git tracks empty directories.
+**Action:** Create only directories that do not already contain files from prior steps: `docs/architecture/`, `docs/exec-plans/completed/`, `.github/ISSUE_TEMPLATE/`, `.github/workflows/`, `scripts/`. Do NOT recreate `.codex/agents/`, `.opencode/agents/`, or `.agents/skills/*/` — those are populated by Steps B2 and B3 respectively. Only add `.gitkeep` files to directories that will remain empty after all prior steps. Do not add `.gitkeep` files to directories that already contain files.
 **Dependencies:** D1.
-**Files created:** Directories with `.gitkeep` placeholders.
-**Validation:** Directory tree matches the Stage 0 structure defined above (without speculative app/package directories).
+**Files created:** Directories, with `.gitkeep` only in genuinely empty directories.
+**Validation:** Directory tree matches the Stage 0 structure defined above (without speculative app/package directories). No `.gitkeep` in `.codex/agents/`, `.opencode/agents/`, or `.agents/skills/*/`.
 
 ### Step E1: Create ARCHITECTURE.md
 **Phase: E — Define vendor-neutral architecture and domain boundaries**
@@ -717,10 +717,10 @@ Write `docs/decisions/001-foundation-tooling.md` recording the evaluation and th
 
 ### Step I1: Fresh-session acceptance test
 **Phase: I — Run a fresh-session acceptance test**
-**Action:** Create only directories that do not already contain files from prior steps: `docs/architecture/`, `docs/exec-plans/completed/`, `.github/ISSUE_TEMPLATE/`, `scripts/`. Do NOT recreate `.codex/agents/` or `.agents/skills/*/` — those are populated by Steps B2 and B3 respectively. Only add `.gitkeep` files to directories that will remain empty after all prior steps. Do not add `.gitkeep` files to directories that already contain files.
-**Dependencies:** D1.
-**Files created:** Directories, with `.gitkeep` only in genuinely empty directories.
-**Validation:** Directory tree matches the Stage 0 structure defined above (without speculative app/package directories). No `.gitkeep` in `.codex/agents/` or `.agents/skills/*/`.
+**Action:** Start a fresh agent session and verify it can discover all authoritative docs, run verification commands, and understand prohibitions. Document results in the acceptance test table below.
+**Dependencies:** H1.
+**Files created:** None.
+**Validation:** All checks in the acceptance test table pass.
 
 #### Acceptance Test Results
 _To be filled during Step I1._
@@ -800,10 +800,10 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step B1: Create root AGENTS.md
 - [x] Step B2: Create Codex + OpenCode configuration and reviewer agents
 - [x] Step B3: Create shared reusable agent skills (.agents/skills/*/SKILL.md)
-- [ ] Step C1: Evaluate and decide foundation tooling
-- [ ] Step D1: Initialize repository scaffolding
-- [ ] Step D2: Create documentation directory structure
-- [ ] Step E1: Create vendor-neutral ARCHITECTURE.md
+- [x] Step C1: Evaluate and decide foundation tooling
+- [x] Step D1: Initialize repository scaffolding
+- [x] Step D2: Create remaining documentation directory structure
+- [x] Step E1: Create vendor-neutral ARCHITECTURE.md
 - [ ] Step E2: Update AGENTS.md with repository map
 - [ ] Step F1: Create agent verification commands
 - [ ] Step F2: Create structural invariant checks
@@ -832,6 +832,7 @@ Stage 0 is complete when ALL of the following are true:
 | 2026-09-18 | Codex skills use directory/SKILL.md format | ACCEPTED | User instruction: match skill metadata requirements |
 | 2026-09-18 | Dependency directions are provisional hypotheses | ACCEPTED | User instruction: do not lock in speculative edges |
 | 2026-09-18 | GitHub remote and live CI validation required in Stage 0 | ACCEPTED | User instruction: CI must actually execute, not just pass syntax check |
+| 2026-09-18 | D2 creates only remaining empty directories; .codex/agents/, .opencode/agents/, .agents/skills/ excluded (created in B2/B3) | ACCEPTED | Corrected outdated D2 wording to avoid recreating existing directories |
 | 2026-09-18 | AGENTS.md created with 114 lines, all 10 sections, referencing contract IDs YWAY-P001 through YWAY-P030 and YWAY-E001 through YWAY-E006 | ACCEPTED | Step B1 implementation |
 | 2026-09-18 | B2 creates both Codex (.toml) and OpenCode (.md) reviewer agents with matching semantics | ACCEPTED | Dual-agent harness per user instruction |
 | 2026-09-18 | No model or provider pinned in any agent definition or config | ACCEPTED | Prefer session inheritance per user instruction |
