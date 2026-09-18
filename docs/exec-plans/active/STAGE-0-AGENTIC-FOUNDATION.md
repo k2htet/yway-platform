@@ -697,10 +697,10 @@ Write `docs/decisions/001-foundation-tooling.md` recording the evaluation and th
 
 ### Step G2: Create CI workflow
 **Phase: G — Add GitHub workflow and CI**
-**Action:** Write `.github/workflows/ci.yml` running the verification commands from Step F.
+**Action:** Create `.github/workflows/ci.yml` with one Ubuntu verification job for pull requests and pushes to `main`. Use read-only repository permissions, superseded-run cancellation, a 15-minute timeout, Node.js 24, and the current officially supported `actions/checkout@v7` and `actions/setup-node@v7`. Provision the exact pnpm version declared by `packageManager` through Corepack, install with a frozen lockfile, then run `pnpm agent:doctor` and `pnpm verify:full`. Do not add caching, secrets, deployment, artifacts, matrices, or separate commands already owned by `verify:full`.
 **Dependencies:** F1.
 **Files created:** `.github/workflows/ci.yml`.
-**Validation:** Workflow syntax is valid. Steps reference actual verification commands from F1. CI will be validated live in Step G3.
+**Validation:** Local YAML parsing and repository formatting checks pass. The workflow references actual package scripts, uses `pnpm install --frozen-lockfile`, and local runs of `pnpm agent:doctor` and `pnpm verify:full` pass. Tests remain explicitly skipped by `verify:full` because no test script exists. A live GitHub Actions run and branch-protection validation remain owned by Step G3.
 
 ### Step G3: Configure GitHub remote and validate CI
 **Phase: G — Add GitHub workflow and CI**
@@ -810,7 +810,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step F1: Create agent verification commands
 - [x] Step F2: Create structural invariant checks
 - [x] Step G1: Create GitHub templates
-- [ ] Step G2: Create CI workflow
+- [x] Step G2: Create CI workflow
 - [ ] Step G3: Configure GitHub remote and validate CI live
 - [ ] Step H1: Create README.md and CONTRIBUTING.md
 - [ ] Step I1: Fresh-session acceptance test
