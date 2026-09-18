@@ -756,7 +756,7 @@ Stage 0 is complete when ALL of the following are true:
 
 - [x] Step A1: Create PRODUCT_CONTRACTS.md
 - [x] Step A2: Create decision record template
-- [ ] Step B1: Create root AGENTS.md
+- [x] Step B1: Create root AGENTS.md
 - [ ] Step B2: Create Codex configuration and reviewer agents (TOML)
 - [ ] Step B3: Create reusable agent skills (directory/SKILL.md)
 - [ ] Step C1: Evaluate and decide foundation tooling
@@ -789,6 +789,7 @@ Stage 0 is complete when ALL of the following are true:
 | 2026-09-18 | Codex skills use directory/SKILL.md format | ACCEPTED | User instruction: match skill metadata requirements |
 | 2026-09-18 | Dependency directions are provisional hypotheses | ACCEPTED | User instruction: do not lock in speculative edges |
 | 2026-09-18 | GitHub remote and live CI validation required in Stage 0 | ACCEPTED | User instruction: CI must actually execute, not just pass syntax check |
+| 2026-09-18 | AGENTS.md created with 114 lines, all 10 sections, referencing contract IDs YWAY-P001 through YWAY-P030 and YWAY-E001 through YWAY-E006 | ACCEPTED | Step B1 implementation |
 
 ---
 
