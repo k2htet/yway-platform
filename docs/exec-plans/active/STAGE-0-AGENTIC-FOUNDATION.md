@@ -559,20 +559,22 @@ Lint + typecheck only. Runs in seconds. Appropriate for small changes.
 Runs all currently implemented checks: lint + typecheck + format check, then tests and product-invariant verification when their package scripts exist. A missing future check is reported as skipped, not passed. Required before PR submission.
 
 **Product invariant verification** (`verify:invariants` or equivalent):
-Pending Step F2. It will run structural checks for forbidden patterns and be clearly documented as a temporary guard, not a comprehensive guarantee.
+Runs conservative AST-based checks for clear prohibited scoring, automatic Quest-to-candidate/application, and public-portfolio identifiers. It is a structural guardrail, not a comprehensive guarantee.
 
-The accepted command names are `pnpm agent:doctor`, `pnpm verify:fast`, and `pnpm verify:full`. Step F2 will add `pnpm verify:invariants`.
+The accepted command names are `pnpm agent:doctor`, `pnpm verify:fast`, `pnpm verify:full`, and `pnpm verify:invariants`.
 
 ### Structural Invariant Checks
 
 Implementation: Prefer a cross-platform approach (e.g., a Node.js script using the accepted tooling) over a bash-only grep script, so it works identically across developer machines and CI.
 
-Scope at Stage 0: Detect obvious forbidden identifiers and import patterns:
-- Identifiers: `careerScore`, `employabilityScore`, `candidateRanking`, `careerFitPercentage`, `hiddenScore`
-- Import violations: employer-domain code importing youth-domain types
-- Pattern violations: any file combining evidence category types into a single exported aggregate
+Scope at Stage 0: Parse `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, and `.cjs` files and inspect executable identifier and ECMAScript private-identifier nodes for three conservative rule sets:
+- `YINV-SCORE-001` detects only clear prohibited scoring identifiers mapped to YWAY-P005 and YWAY-E006.
+- `YINV-CANDIDATE-001` detects only clear automatic Quest-to-candidate/application identifiers mapped to YWAY-P017 and YWAY-P030.
+- `YINV-PORTFOLIO-001` detects only clear public-portfolio identifiers mapped to YWAY-P014.
 
-Explicit limitation documented in the check itself: These structural checks detect naming and import violations only. True evidence separation, authorization enforcement, consent integrity, and offline-preservation guarantees require typed tests, integration tests, property-based tests, and authorization tests that will be added in later stages. The invariant checker is a floor, not a ceiling.
+Markdown, comments, string literals, dependencies, generated/build output, and the checker itself are excluded. Generic identifiers such as `score`, `rank`, `rating`, `percentage`, `url`, `slug`, and `share` are allowed.
+
+Explicit limitation: These checks are structural guardrails only. Semantic behavior, authorization, consent, privacy, evidence semantics, offline preservation, safeguarding, accessibility, and localization correctness require future typed, integration, property, flow, security, and UI tests. Employer/private-youth access enforcement under YWAY-P018, YWAY-E001, and YWAY-E004 also remains future architecture-fitness work; no physical import or package boundary is enforced before physical architecture is accepted.
 
 ### Worktree-Per-Task Workflow
 
@@ -681,10 +683,10 @@ Write `docs/decisions/001-foundation-tooling.md` recording the evaluation and th
 
 ### Step F2: Create structural invariant checks
 **Phase: F — Add agent verification commands and structural invariant checks**
-**Action:** Implement cross-platform structural checks for forbidden identifiers and import patterns in `scripts/check-product-invariants.ts`, add the `verify:invariants` package script, and thereby activate invariant checking inside `verify:full` through F1's conditional orchestration. Include explicit documentation that these are temporary guards, not comprehensive guarantees.
+**Action:** Implement cross-platform, AST-based checks for the conservative YINV-SCORE-001, YINV-CANDIDATE-001, and YINV-PORTFOLIO-001 identifier sets in `scripts/check-product-invariants.ts`; add the `verify:invariants` package script; and thereby activate invariant checking inside `verify:full` through F1's conditional orchestration. Exclude prose, comments, strings, dependencies, generated/build output, and the checker itself. Document that these are structural guardrails, not comprehensive guarantees.
 **Dependencies:** F1, A1.
-**Files created/modified:** `scripts/check-product-invariants.ts`, `package.json`.
-**Validation:** Script exits 0 on current empty codebase. Would catch `careerScore`, `employabilityScore`, cross-domain import violations. Documentation clearly states limitations and that typed/integration/property tests are required later.
+**Files created/modified:** `scripts/check-product-invariants.ts`, `package.json`, `AGENTS.md`, this ExecPlan.
+**Validation:** Script exits 0 on the current repository. Its self-test catches forbidden ordinary and private identifiers, allows a normal identifier, and ignores comment/string mentions. `verify:full` discovers and runs it while tests remain skipped because no test script exists. Semantic, authorization, consent, privacy, evidence, offline, safeguarding, accessibility, localization, and physical domain-boundary verification remain future work.
 
 ### Step G1: Create GitHub templates
 **Phase: G — Add GitHub workflow and CI**
@@ -806,7 +808,7 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step E1: Create vendor-neutral ARCHITECTURE.md
 - [x] Step E2: Update AGENTS.md with the D1 root tooling, D2 directories, and E1 architecture document
 - [x] Step F1: Create agent verification commands
-- [ ] Step F2: Create structural invariant checks
+- [x] Step F2: Create structural invariant checks
 - [ ] Step G1: Create GitHub templates
 - [ ] Step G2: Create CI workflow
 - [ ] Step G3: Configure GitHub remote and validate CI live
@@ -837,6 +839,8 @@ Stage 0 is complete when ALL of the following are true:
 | 2026-09-18 | B2 creates both Codex (.toml) and OpenCode (.md) reviewer agents with matching semantics | ACCEPTED | Dual-agent harness per user instruction |
 | 2026-09-18 | No model or provider pinned in any agent definition or config | ACCEPTED | Prefer session inheritance per user instruction |
 | 2026-09-18 | F1 owns readiness and verification orchestration; F2 owns structural invariant implementation and activation | ACCEPTED | Avoid claiming invariant verification exists before Step F2 |
+| 2026-09-18 | F2 uses conservative AST identifier checks only; semantic and physical-boundary enforcement remains deferred | ACCEPTED | Structural guardrails can reject explicit prohibited implementation names without claiming proof or inventing package boundaries |
+| 2026-09-18 | F2 inspects both ordinary and ECMAScript private identifiers | ACCEPTED | TypeScript represents names such as `#careerScore` as `PrivateIdentifier`, so both declaration and access must be normalized before rule lookup |
 
 ---
 

@@ -151,6 +151,7 @@ Do not assume an agent or skill exists until its Stage 0 step creates it.
 - `pnpm verify:fast` — Run lint and typecheck.
 - `pnpm verify:full` — Run all currently implemented checks. Tests and product-invariant
   verification are included automatically once their package scripts exist.
-- `verify:invariants` — Pending Stage 0 Step F2.
+- `pnpm verify:invariants` — Run structural product guardrails only; this is not proof of
+  semantic, authorization, consent, privacy, offline, accessibility, or localization correctness.
 
 Never claim a check passed unless it was actually executed.
