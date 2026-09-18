@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Establish the documentation, configuration, and guardrail infrastructure so that any fresh Codex session can enter this repository, understand Yway's inviolable product rules, locate authoritative sources, plan a bounded task, implement it in the correct domain, run required verification, and prepare a reviewable change — without relying on hidden chat context.
+Establish the documentation, configuration, and guardrail infrastructure so that any fresh Codex or OpenCode session can enter this repository, understand Yway's inviolable product rules, locate authoritative sources, plan a bounded task, implement it in the correct domain, run required verification, and prepare a reviewable change — without relying on hidden chat context.
 
 This is not a product feature stage. No application code is built here.
 
@@ -24,6 +24,7 @@ This is not a product feature stage. No application code is built here.
 | GitHub config | No `.github/` directory |
 | Architecture docs | None beyond Product Vision |
 | Codex config | None |
+| OpenCode config | None |
 
 The Build Report exists as external analysis provided by the project owner. It recommends a technology stack and phased build sequence but is not committed to the repository and is not an authority source — it is supporting analysis.
 
@@ -38,7 +39,7 @@ After Stage 0 completion:
 3. `docs/architecture/ARCHITECTURE.md` defines logical domains, ownership boundaries, forbidden access paths, privacy boundaries, capability requirements, and architectural invariants — vendor-neutral, without unvalidated technology names in normative sections. Dependency directions are recorded as provisional hypotheses, not accepted facts.
 4. An execution-plan system (`docs/exec-plans/active/` and `docs/exec-plans/completed/`) tracks work.
 5. A decision-record system (`docs/decisions/`) captures technology choices with explicit classification status. Only decisions actually made during Stage 0 have records; future candidates are listed as proposals only.
-6. Codex configuration (`.codex/`) exists with initial reviewer agents (TOML) and reusable skills (directory-based SKILL.md).
+6. Codex configuration (`.codex/`) and OpenCode configuration (`.opencode/`) exist with initial reviewer agents (TOML and Markdown respectively) and shared reusable skills (directory-based SKILL.md under `.agents/skills/`).
 7. GitHub issue templates and PR templates enforce structured human+agent workflows.
 8. CI foundation runs lint, typecheck, and product-invariant checks on every push — validated against a real GitHub remote, not just syntax-checked.
 9. Agent verification commands (`agent:doctor`, fast verify, full verify, invariant check) are documented and runnable.
@@ -53,7 +54,9 @@ After Stage 0 completion:
 - Root AGENTS.md
 - Execution plan system
 - Decision record system (template + only Stage 0 decisions)
-- Codex project configuration (`.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*/SKILL.md`)
+- Codex project configuration (`.codex/config.toml`, `.codex/agents/*.toml`)
+- OpenCode project configuration (`.opencode/agents/*.md`)
+- Shared reusable skills (`.agents/skills/*/SKILL.md`) for both Codex and OpenCode
 - GitHub templates (issue, PR)
 - CI foundation with live remote validation
 - Agent verification commands
@@ -300,6 +303,12 @@ yway-platform/
 │       ├── architecture-reviewer.toml
 │       ├── security-privacy-reviewer.toml
 │       └── test-reviewer.toml
+├── .opencode/
+│   └── agents/
+│       ├── product-integrity-reviewer.md
+│       ├── architecture-reviewer.md
+│       ├── security-privacy-reviewer.md
+│       └── test-reviewer.md
 ├── .agents/
 │   └── skills/
 │       ├── yway-exec-plan/
@@ -344,7 +353,7 @@ The root AGENTS.md must be concise and directive. Structure:
 7. **Verification commands**: Exact commands for agent:doctor, fast verify, full verify, invariant check.
 8. **Workflow rules**: Branch naming, commit conventions, worktree-per-task expectation, PR requirements.
 9. **What agents must NOT do**: List of prohibited actions.
-10. **Codex harness**: Reference to `.codex/agents/*.toml` and `.agents/skills/*/SKILL.md`.
+10. **Agent harness**: Reference to `.codex/agents/*.toml`, `.opencode/agents/*.md`, and shared `.agents/skills/*/SKILL.md`.
 
 Target size: under 200 lines. References point to detailed docs rather than inlining everything.
 
@@ -466,7 +475,7 @@ The Build Report proposes mapping these domains to specific apps/packages. That 
 
 ### Codex Configuration
 
-**`.codex/config.toml`**: Project-level Codex settings. Defines default model hints, allowed tools, sandbox expectations, and references to custom agents.
+**`.codex/config.toml`**: Project-level Codex settings. Minimal — only settings genuinely needed for the Stage 0 agent harness. No model is hard-coded unless technically required; prefer inheritance from the active Codex session.
 
 **`.codex/agents/`**: Custom read-only reviewer agents as standalone TOML files. Each follows the Codex custom agent schema:
 
@@ -479,7 +488,37 @@ The Build Report proposes mapping these domains to specific apps/packages. That 
 
 Each TOML file contains: `name`, `description`, `developer_instructions`, `sandbox_mode = "read-only"`.
 
-**`.agents/skills/`**: Reusable agent skills as directories containing SKILL.md:
+### OpenCode Configuration
+
+**`.opencode/agents/`**: Read-only reviewer agents as Markdown files with YAML frontmatter. Each uses `mode: subagent` with `permission: edit: deny`. The Markdown body serves as the system instruction. Semantic responsibilities match the corresponding Codex reviewers. No provider/model is pinned unless technically required; prefer inheriting the active session model.
+
+| File | Agent Name | Purpose | Permissions | When Invoked |
+|------|-----------|---------|-------------|--------------|
+| `product-integrity-reviewer.md` | product-integrity-reviewer | Checks changes against PRODUCT_CONTRACTS.md assertions | `mode: subagent`, `permission: edit: deny` | On every PR touching domain logic, evidence types, consent, or employer-facing code |
+| `architecture-reviewer.md` | architecture-reviewer | Checks dependency direction violations, domain boundary crossings | `mode: subagent`, `permission: edit: deny` | On every PR adding/changing imports between packages or creating new modules |
+| `security-privacy-reviewer.md` | security-privacy-reviewer | Checks for data leakage paths, missing authorization, secret exposure | `mode: subagent`, `permission: edit: deny` | On every PR touching auth, API routes, employer endpoints, or consent logic |
+| `test-reviewer.md` | test-reviewer | Evaluates test coverage adequacy, especially for product invariants | `mode: subagent`, `permission: edit: deny` | On every PR |
+
+### Reviewer Output Convention
+
+All reviewer agents, in both Codex and OpenCode, produce findings using a consistent format:
+
+```
+Severity: BLOCKER | HIGH | MEDIUM | LOW
+Location: file/path[:line when available]
+Contract/Decision: relevant YWAY-Pxxx / YWAY-Exxx / ADR if applicable
+Finding: concise description
+Why it matters: concrete consequence
+Suggested direction: optional, without directly editing
+```
+
+If there are no material findings, the reviewer says so explicitly. Reviewers do not manufacture findings to produce output.
+
+### Semantic Drift Prevention
+
+For each reviewer pair (Codex + OpenCode), the tool-specific files differ in syntax but agree on: purpose, scope, what counts as a finding, read-only behavior, authoritative sources, and expected output style. Each reviewer explicitly treats `PRODUCT_VISION.md`, `PRODUCT_CONTRACTS.md`, accepted decision records, and later `ARCHITECTURE.md` according to the authority hierarchy in AGENTS.md. Product contracts are referenced, not duplicated into reviewer files.
+
+### Shared Agent Skills
 
 | Directory | Skill Name | Purpose | When Used |
 |-----------|-----------|---------|-----------|
@@ -571,25 +610,25 @@ Execute in this order. Each step has validation criteria. The sequence follows d
 **Validation:** Template is usable by future agents to record decisions consistently.
 
 ### Step B1: Create root AGENTS.md
-**Phase: B — Establish agent instructions and Codex harness**
-**Action:** Write root AGENTS.md with project identity, source-of-truth hierarchy, product invariants summary, repository map (placeholder until Step D), domain boundaries reference, verification commands (placeholder until Step F), workflow rules, prohibitions, and Codex harness reference pointing to `.codex/agents/*.toml` and `.agents/skills/*/SKILL.md`.
+**Phase: B — Establish agent instructions and harness for Codex + OpenCode**
+**Action:** Write root AGENTS.md with project identity, source-of-truth hierarchy, product invariants summary, repository map (placeholder until Step D), domain boundaries reference, verification commands (placeholder until Step F), workflow rules, prohibitions, and agent harness reference pointing to `.codex/agents/*.toml`, `.opencode/agents/*.md`, and shared `.agents/skills/*/SKILL.md`.
 **Dependencies:** A1.
 **Files created:** `AGENTS.md` at root.
 **Validation:** Under 200 lines. References PRODUCT_VISION.md and PRODUCT_CONTRACTS.md. Contains prohibition list. Contains placeholder sections for verification commands and repo map to be filled after Steps D and F.
 
-### Step B2: Create Codex configuration
-**Phase: B — Establish agent instructions and Codex harness**
-**Action:** Create `.codex/config.toml` with project-level settings. Create `.codex/agents/` with four reviewer agent definitions as standalone TOML files. Each file contains: `name`, `description`, `developer_instructions`, `sandbox_mode = "read-only"`.
+### Step B2: Create Codex and OpenCode reviewer agents
+**Phase: B — Establish agent instructions and harness for Codex + OpenCode**
+**Action:** Create `.codex/config.toml` with minimal project-level settings. Create `.codex/agents/` with four reviewer agent definitions as standalone TOML files. Create `.opencode/agents/` with four equivalent reviewer agent definitions as Markdown files with YAML frontmatter. Each Codex file contains: `name`, `description`, `developer_instructions`, `sandbox_mode = "read-only"`. Each OpenCode file uses `mode: subagent` with `permission: edit: deny` and a Markdown body serving as the system instruction. Both tool-specific sets enforce the same Yway review contracts, referencing canonical shared docs rather than duplicating product rules. All reviewers produce findings using a consistent output format (Severity / Location / Contract-Decision / Finding / Why it matters / Suggested direction). No model is pinned unless technically required.
 **Dependencies:** A1, B1.
-**Files created:** `.codex/config.toml`, `.codex/agents/product-integrity-reviewer.toml`, `.codex/agents/architecture-reviewer.toml`, `.codex/agents/security-privacy-reviewer.toml`, `.codex/agents/test-reviewer.toml`.
-**Validation:** Each TOML file follows Codex custom agent schema with required fields. `sandbox_mode = "read-only"` is set on each. `developer_instructions` reference specific PR types for invocation.
+**Files created:** `.codex/config.toml`, `.codex/agents/product-integrity-reviewer.toml`, `.codex/agents/architecture-reviewer.toml`, `.codex/agents/security-privacy-reviewer.toml`, `.codex/agents/test-reviewer.toml`, `.opencode/agents/product-integrity-reviewer.md`, `.opencode/agents/architecture-reviewer.md`, `.opencode/agents/security-privacy-reviewer.md`, `.opencode/agents/test-reviewer.md`.
+**Validation:** Each TOML file follows Codex custom agent schema with required fields and `sandbox_mode = "read-only"`. Each OpenCode Markdown file has valid frontmatter with `mode: subagent` and `permission: edit: deny`. Reviewer semantics match across both tools. No product rules are duplicated as a competing source of truth.
 
 ### Step B3: Create reusable agent skills
-**Phase: B — Establish agent instructions and Codex harness**
-**Action:** Create `.agents/skills/` with three skill directories, each containing a SKILL.md. Each SKILL.md contains valid skill metadata including `name` and `description` plus concise instructions.
+**Phase: B — Establish agent instructions and harness for Codex + OpenCode**
+**Action:** Create `.agents/skills/` with three skill directories, each containing a SKILL.md. These are the SHARED skill location for BOTH Codex and OpenCode. Do NOT create duplicate copies under `.opencode/skills/` or `.codex/skills/` unless a future validated limitation requires it. Each SKILL.md contains valid skill metadata including `name` and `description` plus concise instructions.
 **Dependencies:** B1.
 **Files created:** `.agents/skills/yway-exec-plan/SKILL.md`, `.agents/skills/yway-product-integrity/SKILL.md`, `.agents/skills/yway-pr-review/SKILL.md`.
-**Validation:** Each SKILL.md contains `name` and `description` fields. Instructions are concise. No speculative skills beyond these three. Files are inside directories, not flat under `.agents/skills/`.
+**Validation:** Each SKILL.md contains `name` and `description` fields. Instructions are concise. No speculative skills beyond these three. Files are inside directories, not flat under `.agents/skills/`. Skills are loadable by both Codex and OpenCode from the single shared location.
 
 ### Step C1: Evaluate and decide foundation tooling
 **Phase: C — Make only the minimum foundation technology decisions required**
@@ -697,7 +736,8 @@ _To be filled during Step I1._
 | Runs verification commands | | |
 | Identifies how to start a task | | |
 | Locates Codex agents (.toml) | | |
-| Locates Codex skills (SKILL.md) | | |
+| Locates OpenCode agents (.md) | | |
+| Locates shared skills (SKILL.md) | | |
 
 ### Step J1: Finalize and close Stage 0
 **Phase: J — Close Stage 0 only after all objective completion criteria pass**
@@ -730,11 +770,12 @@ Stage 0 is complete when ALL of the following are true:
 1. [ ] `docs/product/PRODUCT_CONTRACTS.md` exists and covers all 6 assertion categories with corrected offline contract
 2. [ ] `docs/decisions/000-TEMPLATE.md` exists with correct fields
 3. [ ] `docs/decisions/001-foundation-tooling.md` exists with ACCEPTED status for chosen tooling
-4. [ ] Root `AGENTS.md` exists, is under 200 lines, and contains: source-of-truth hierarchy, product invariants summary, repository map, verification commands, prohibition list, Codex harness reference
+4. [ ] Root `AGENTS.md` exists, is under 200 lines, and contains: source-of-truth hierarchy, product invariants summary, repository map, verification commands, prohibition list, agent harness reference for both Codex and OpenCode
 5. [ ] `.codex/config.toml` exists with valid project configuration
 6. [ ] Four reviewer agents exist in `.codex/agents/` as `.toml` files with `name`, `description`, `developer_instructions`, `sandbox_mode = "read-only"`
-7. [ ] Three reusable skills exist in `.agents/skills/` as directories each containing `SKILL.md` with `name` and `description`
-8. [ ] `docs/architecture/ARCHITECTURE.md` exists, uses vendor-neutral language for normative sections, clearly separates candidate implementations, marks dependency directions as provisional hypotheses, and does not include speculative normative edges
+7. [ ] Four reviewer agents exist in `.opencode/agents/` as `.md` files with `mode: subagent`, `permission: edit: deny`, matching Codex reviewer semantics
+8. [ ] Three reusable skills exist in `.agents/skills/` as directories each containing `SKILL.md` with `name` and `description`
+9. [ ] `docs/architecture/ARCHITECTURE.md` exists, uses vendor-neutral language for normative sections, clearly separates candidate implementations, marks dependency directions as provisional hypotheses, and does not include speculative normative edges
 9. [ ] Repository scaffolding initializes successfully using accepted tooling from Step C1
 10. [ ] `agent:doctor` executes and exits 0
 11. [ ] `verify:fast`, `verify:full`, and `verify:invariants` execute successfully
@@ -757,8 +798,8 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step A1: Create PRODUCT_CONTRACTS.md
 - [x] Step A2: Create decision record template
 - [x] Step B1: Create root AGENTS.md
-- [ ] Step B2: Create Codex configuration and reviewer agents (TOML)
-- [ ] Step B3: Create reusable agent skills (directory/SKILL.md)
+- [x] Step B2: Create Codex + OpenCode configuration and reviewer agents
+- [ ] Step B3: Create shared reusable agent skills (.agents/skills/*/SKILL.md)
 - [ ] Step C1: Evaluate and decide foundation tooling
 - [ ] Step D1: Initialize repository scaffolding
 - [ ] Step D2: Create documentation directory structure
@@ -786,10 +827,14 @@ Stage 0 is complete when ALL of the following are true:
 | 2026-09-18 | Decision records created only for Stage 0 decisions | ACCEPTED | User instruction: avoid speculative decision records |
 | 2026-09-18 | Foundation tooling evaluated and decided in Step C1 | PENDING | Must be done before scaffolding |
 | 2026-09-18 | Codex agents use TOML format | ACCEPTED | User instruction: match Codex custom agent schema |
+| 2026-09-18 | OpenCode agents use Markdown with YAML frontmatter | ACCEPTED | User instruction: dual-agent support for B2 |
+| 2026-09-18 | Shared skills under .agents/skills/ for both tools | ACCEPTED | User instruction: one shared source of truth |
 | 2026-09-18 | Codex skills use directory/SKILL.md format | ACCEPTED | User instruction: match skill metadata requirements |
 | 2026-09-18 | Dependency directions are provisional hypotheses | ACCEPTED | User instruction: do not lock in speculative edges |
 | 2026-09-18 | GitHub remote and live CI validation required in Stage 0 | ACCEPTED | User instruction: CI must actually execute, not just pass syntax check |
 | 2026-09-18 | AGENTS.md created with 114 lines, all 10 sections, referencing contract IDs YWAY-P001 through YWAY-P030 and YWAY-E001 through YWAY-E006 | ACCEPTED | Step B1 implementation |
+| 2026-09-18 | B2 creates both Codex (.toml) and OpenCode (.md) reviewer agents with matching semantics | ACCEPTED | Dual-agent harness per user instruction |
+| 2026-09-18 | No model or provider pinned in any agent definition or config | ACCEPTED | Prefer session inheritance per user instruction |
 
 ---
 
@@ -806,6 +851,10 @@ Stage 0 is complete when ALL of the following are true:
 | `.codex/agents/architecture-reviewer.toml` | Reviewer agent definition | B2 |
 | `.codex/agents/security-privacy-reviewer.toml` | Reviewer agent definition | B2 |
 | `.codex/agents/test-reviewer.toml` | Reviewer agent definition | B2 |
+| `.opencode/agents/product-integrity-reviewer.md` | Reviewer agent definition | B2 |
+| `.opencode/agents/architecture-reviewer.md` | Reviewer agent definition | B2 |
+| `.opencode/agents/security-privacy-reviewer.md` | Reviewer agent definition | B2 |
+| `.opencode/agents/test-reviewer.md` | Reviewer agent definition | B2 |
 | `.agents/skills/yway-exec-plan/SKILL.md` | Reusable skill | B3 |
 | `.agents/skills/yway-product-integrity/SKILL.md` | Reusable skill | B3 |
 | `.agents/skills/yway-pr-review/SKILL.md` | Reusable skill | B3 |

@@ -1,0 +1,3 @@
+# Yway project configuration for Codex
+# No model is pinned — inherits from the active Codex session.
+# Only settings required for the Stage 0 agent harness are configured here.

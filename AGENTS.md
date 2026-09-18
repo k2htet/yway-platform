@@ -97,17 +97,21 @@ Do not:
 - claim tests or verification passed unless they were actually run
 - hide failures, uncertainty, or unresolved risks
 
-## Codex Harness
+## Agent Harness
 
-Reviewer agents will live in:
+Tool-specific reviewer adapters:
 
-`.codex/agents/*.toml`
+- Codex: `.codex/agents/*.toml`
+- OpenCode: `.opencode/agents/*.md`
 
-Reusable Yway skills will live in:
+Shared reusable Yway skills:
 
-`.agents/skills/*/SKILL.md`
+- `.agents/skills/*/SKILL.md`
 
-Do not assume these exist until their Stage 0 steps are complete.
+Shared project rules live in AGENTS.md and authoritative docs, not inside
+tool-specific agent definitions.
+
+Do not assume an agent or skill exists until its Stage 0 step creates it.
 
 ## Verification
 
