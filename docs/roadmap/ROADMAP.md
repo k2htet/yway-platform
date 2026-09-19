@@ -73,7 +73,7 @@ Statuses reflect current repository evidence, not aspiration. See
   and the fresh-session acceptance test.
 - **Status:** COMPLETE.
 - **Important unresolved questions:** Stage 0 closure is complete. Stage 1 remains
-  NEXT and will require its own kickoff and active ExecPlan before implementation begins.
+  ACTIVE with its own kickoff and active ExecPlan; Stage 2 remains PLANNED.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 
@@ -89,7 +89,8 @@ Statuses reflect current repository evidence, not aspiration. See
 - **Exit gate:** Required refinements are internally consistent, unresolved
   decisions remain explicit, and significant implementation choices have
   appropriately reviewed decision records.
-- **Status:** NEXT.
+- **Status:** ACTIVE.
+- **Active ExecPlan:** `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`.
 - **Important unresolved questions:** The unresolved architecture questions in
   `ARCHITECTURE.md` remain open unless separately decided; the first physical
   application boundary and future product technology choices are not selected.
