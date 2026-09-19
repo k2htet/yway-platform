@@ -81,6 +81,19 @@ Do not:
 - `.agents/skills/yway-exec-plan/SKILL.md`
 - protected `main` with required `Verify` CI
 
+## GitHub issue map
+
+| Step | Issue |
+| --- | --- |
+| S1-01 | #16 — Audit Product Vision-to-contract traceability |
+| S1-02 | #17 — Clarify career experiment and anonymous-first-value semantics |
+| S1-03 | #18 — Clarify provenance, practitioner review, and evidence presentation |
+| S1-04 | #19 — Apply approved Product Contract refinements |
+| S1-05 | #20 — Define logical domain responsibility and collaboration matrix |
+| S1-06 | #21 — Decide Evidence logical-domain boundary |
+| S1-07 | #22 — Reconcile Architecture and classify remaining questions |
+| S1-08 | #23 — Validate and close Stage 1 |
+
 ## Classified decision register
 
 ### Contract clarification candidates
