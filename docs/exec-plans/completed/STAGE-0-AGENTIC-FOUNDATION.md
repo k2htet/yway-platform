@@ -1,5 +1,7 @@
 # STAGE 0: Agentic Engineering Foundation
 
+**Completed:** 2026-09-19
+
 ## Purpose
 
 Establish the documentation, configuration, and guardrail infrastructure so that any fresh Codex or OpenCode session can enter this repository, understand Yway's inviolable product rules, locate authoritative sources, plan a bounded task, implement it in the correct domain, run required verification, and prepare a reviewable change — without relying on hidden chat context.
@@ -19,9 +21,9 @@ This is not a product feature stage. No application code is built here.
 | Foundation tooling | YWAY-D001 accepts Node.js 24, TypeScript, pnpm 11.24.0, npm scripts, ESLint, and Prettier for the Stage 0 foundation. No product application stack has been selected. |
 | Local environment | The local environment uses Node.js v24.20.0 with pnpm 11.24.0. `pnpm agent:doctor` reports `READY`. |
 | Verification | `agent:doctor`, `verify:fast`, `verify:full`, and `verify:invariants` are implemented. `verify:full` runs lint, typecheck, formatting, and structural invariant checks; tests are explicitly skipped because no test script exists. |
-| Authority and planning docs | Product Vision, Product Contracts, vendor-neutral Architecture, the accepted foundation-tooling decision, the active Stage 0 ExecPlan, and directional roadmap documents exist. The roadmap remains non-authoritative planning guidance. |
+| Authority and planning docs | Product Vision, Product Contracts, vendor-neutral Architecture, the accepted foundation-tooling decision, the completed Stage 0 ExecPlan, and directional roadmap documents exist. The roadmap remains non-authoritative planning guidance. |
 | Agent harness | Root `AGENTS.md`, four Codex reviewer adapters, four matching OpenCode reviewer adapters, and three shared Yway skills exist. |
-| Stage progress | All steps through I1, including G3, are complete. J1 remains incomplete, so Stage 0 is not complete. |
+| Stage progress | All Stage 0 steps A1–J1 are complete. Stage 0 is complete; Stage 1 remains NEXT and has not started. |
 
 The Build Report remains external supporting analysis supplied by the project owner. Its technology recommendations are not authority and have not been adopted as product architecture.
 
@@ -327,8 +329,7 @@ yway-platform/
 │   │   └── 001-foundation-tooling.md  # Only Stage 0 decision
 │   └── exec-plans/
 │       ├── active/                    # In-progress plans
-│       │   └── STAGE-0-AGENTIC-FOUNDATION.md  # This file
-│       └── completed/                 # Finished plans (moved here)
+│       └── completed/                 # Finished plans (this file moved here at J1)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   └── task.md                    # Structured task template
@@ -817,13 +818,27 @@ Stage 0 is complete when ALL of the following are true:
 - [x] Step G3: Configure GitHub remote and validate CI live
 - [x] Step H1: Create README.md and CONTRIBUTING.md
 - [x] Step I1: Fresh-session acceptance test
-- [ ] Step J1: Finalize and close Stage 0
+- [x] Step J1: Finalize and close Stage 0
 
 ---
 
+## Step J1 Execution Record
+
+**Status:** COMPLETE on 2026-09-19.
+
+- Audited all 23 Stage 0 completion criteria against the current repository and recorded execution evidence; no closure-blocking criterion remained.
+- Confirmed `main` is protected and the required `Verify` status check is active. The latest audited `main` CI run before closure completed successfully on Node 24.
+- Rechecked the public repository's current tracked tree for obvious sensitive filenames and searched the current default branch for common private-key/token prefixes; no obvious committed secret, credential file, private key, or private user/partner data was found. This was a bounded current-repository check, not a forensic scan of every historical Git object.
+- Confirmed the repository still contains no product/application source tree, database schema, authentication implementation, or product feature implementation.
+- Confirmed Product Vision, Product Contracts, and Architecture were not changed by J1.
+- Moved this ExecPlan from `docs/exec-plans/active/` to `docs/exec-plans/completed/`.
+- The first closure CI run exposed that removing the last active plan also removed the tracked `docs/exec-plans/active/` directory required by `agent:doctor`; added `docs/exec-plans/active/.gitkeep` to preserve the empty in-progress-plan directory.
+- Updated Roadmap and Stage Index to Stage 0 `COMPLETE` and Stage 1 `NEXT`.
+- Stage 1 was not activated or implemented as part of J1.
+
 ## Step G3 Execution Record
 
-**Status:** COMPLETE. Enforced `main` protection is active; Step J1 remains incomplete.
+**Status:** COMPLETE. Enforced `main` protection is active. Step J1 later completed during final Stage 0 closure.
 
 - Existing remote retained: `origin` → `git@github.com:k2htet/yway-platform.git`.
 - `main` was pushed with normal, non-force pushes. The remote had no conflicting branch history.
@@ -841,7 +856,7 @@ Stage 0 is complete when ALL of the following are true:
 
 ## Step H1 Execution Record
 
-**Status:** COMPLETE. This record predates G3 completion; G3 and I1 are now complete, while J1 remains incomplete.
+**Status:** COMPLETE. This record predates G3 completion. G3, I1, and the later J1 closure are now complete.
 
 - Created `README.md` with a concise repository description, prerequisites, setup, verification commands, source-of-truth entry points, agent harness locations, and the Build Report's advisory status.
 - Created `CONTRIBUTING.md` with the task workflow, simple branch naming, worktree and writer guidance, verification meanings and limitations, product/decision governance, reviewer references, pull request process, and accurate GitHub/G3 status.
@@ -854,14 +869,14 @@ Stage 0 is complete when ALL of the following are true:
 
 ## Step I1 Execution Record
 
-**Status:** COMPLETE. This record predates G3 completion; G3 is now complete, while Step J1 remains incomplete and Stage 0 is not complete.
+**Status:** COMPLETE. This record predates G3 completion. G3 and the later J1 closure are now complete, and Stage 0 is complete.
 
 - Separate fresh Codex and OpenCode sessions, each with no prior project context, passed the acceptance test. Detailed evidence is recorded in the Step I1 acceptance table above.
 - Both sessions independently identified the authority hierarchy, roadmap status, then-current Stage 0/G3 status, verification meanings and limitations, reviewer adapters and shared skills, critical product invariants, unresolved decision discipline, task/PR/CI workflow, and the environment-readiness issue present at the time.
 - Both sessions ran `pnpm agent:doctor`. At the time of I1, it correctly failed under local Node.js v22.17.1 because repository policy requires Node.js `>=24 <25`. This was successful prerequisite detection and did not fail I1; later G3 validation confirmed the current Node.js 24 environment is `READY`.
 - Both sessions ran `pnpm verify:full`, which passed. That result does not override `agent:doctor`; CI has already passed on Node 24.
 - Validation of this ExecPlan update passed with `pnpm verify:fast` and `pnpm verify:full` under the local Node.js 22 environment. Both commands emitted the expected unsupported-engine warning; `verify:full` passed lint, typecheck, formatting, and structural invariant checks and skipped tests because no test script exists.
-- I1 completion did not by itself unblock G3. The later public-repository protection work completed G3; J1 remains separately incomplete.
+- I1 completion did not by itself unblock G3. The later public-repository protection work completed G3, and J1 subsequently completed the Stage 0 closure.
 
 ---
 
@@ -932,4 +947,4 @@ The following owner actions are required before Stage 0 can fully complete:
 2. **Push access — satisfied**: normal pushes to `main` succeeded.
 3. **Enforced branch protection — satisfied**: The repository is currently public by owner decision, and active `main` protection requires pull requests, the `Verify` check, and conversation resolution while disabling force pushes and branch deletion.
 
-Step G3 is complete. Step J1 remains incomplete, and Stage 0 is not complete.
+Steps G3 and J1 are complete. Stage 0 is complete; Stage 1 remains NEXT and has not started.

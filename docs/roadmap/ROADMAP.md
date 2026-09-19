@@ -68,13 +68,12 @@ Statuses reflect current repository evidence, not aspiration. See
 - **Major product-contract areas:** All product contracts as engineering
   guardrails, especially YWAY-P004–P007, YWAY-P014–P019, YWAY-P022, and
   YWAY-E001–E006.
-- **Exit gate:** Every Stage 0 completion criterion in the active ExecPlan is
+- **Exit gate:** Every Stage 0 completion criterion in the completed ExecPlan is
   evidenced, including enforced branch protection, onboarding documentation,
   and the fresh-session acceptance test.
-- **Status:** ACTIVE.
-- **Important unresolved questions:** G3 is complete with enforced `main`
-  protection. J1 remains the final Stage 0 closure step and is tracked in the
-  active ExecPlan.
+- **Status:** COMPLETE.
+- **Important unresolved questions:** Stage 0 closure is complete. Stage 1 remains
+  NEXT and will require its own kickoff and active ExecPlan before implementation begins.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 
