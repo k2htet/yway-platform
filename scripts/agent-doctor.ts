@@ -1,6 +1,6 @@
 import { accessSync, constants, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
+import { dirname, parse, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 interface PackageManifest {
@@ -106,6 +106,43 @@ function pnpmVersionFromEnvironment(): string | undefined {
   return match?.[1];
 }
 
+function pnpmVersionFromExecPath(): string | undefined {
+  const execPath = process.env.npm_execpath;
+  if (!execPath) {
+    return undefined;
+  }
+
+  let directory = dirname(execPath);
+  const root = parse(directory).root;
+
+  while (true) {
+    try {
+      const candidate = JSON.parse(
+        readFileSync(resolve(directory, "package.json"), "utf8"),
+      ) as {
+        name?: unknown;
+        version?: unknown;
+      };
+
+      if (candidate.name === "pnpm" && typeof candidate.version === "string") {
+        return candidate.version;
+      }
+    } catch {
+      // Keep walking toward the filesystem root.
+    }
+
+    if (directory === root) {
+      return undefined;
+    }
+
+    const parent = dirname(directory);
+    if (parent === directory) {
+      return undefined;
+    }
+    directory = parent;
+  }
+}
+
 let manifest: PackageManifest | undefined;
 try {
   manifest = JSON.parse(readFileSync(packageJsonPath, "utf8")) as PackageManifest;
@@ -139,15 +176,13 @@ if (!packageManagerMatch?.[1]) {
   report("FAIL", "package.json does not declare an exact pnpm packageManager version");
 } else {
   const expectedPnpmVersion = packageManagerMatch[1];
-  const environmentPnpmVersion = pnpmVersionFromEnvironment();
-  const pnpmVersion =
-    environmentPnpmVersion === undefined ? run(commandName("pnpm"), ["--version"]) : undefined;
-  const detectedPnpmVersion = environmentPnpmVersion ?? pnpmVersion?.output;
+  const detectedPnpmVersion = pnpmVersionFromEnvironment() ?? pnpmVersionFromExecPath();
 
   if (detectedPnpmVersion === undefined || detectedPnpmVersion.length === 0) {
-    report("FAIL", "pnpm is unavailable or could not report its version");
-  } else if (pnpmVersion && !pnpmVersion.ok) {
-    report("FAIL", `pnpm is unavailable or could not report its version: ${pnpmVersion.output}`);
+    report(
+      "FAIL",
+      "pnpm version could not be determined from the active pnpm lifecycle environment",
+    );
   } else if (detectedPnpmVersion !== expectedPnpmVersion) {
     report(
       "FAIL",
