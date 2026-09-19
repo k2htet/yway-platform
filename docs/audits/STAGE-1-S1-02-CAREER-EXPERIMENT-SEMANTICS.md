@@ -21,11 +21,7 @@ This document records clarification findings from S1-02. It does not modify Prod
 
 ### 1. Career Experience Pack, trial, and experiment relationship
 
-**Current authority**
-
-Product Vision defines the Career Experience Pack as the core exploration content unit. It also states that the primary user outcome is completing a meaningful career experiment and taking a real next action.
-
-**Clarification**
+Product Vision defines the Career Experience Pack as the core exploration content unit and states that the primary user outcome is completing a meaningful career experiment and taking a real next action.
 
 The terms should not be treated as interchangeable:
 
@@ -41,8 +37,6 @@ A Pack may support a career experiment, but the existence of a Pack does not by 
 
 S1-01 identified that Product Vision supports clarifying whether the six-part structure applies to a Pack, a trial component, or another governed unit.
 
-**Disposition**
-
 Do not resolve this by assuming:
 
 - every Pack equals exactly one experiment;
@@ -53,11 +47,7 @@ A later owner decision is required if Product Contracts need a more precise gove
 
 ### 3. Anonymous first value
 
-**Current authority**
-
 Product Vision requires first career value without mandatory login and describes a short realistic work trial without mandatory login.
-
-**Clarification**
 
 Anonymous first value means a young person can receive meaningful career discovery value before account creation. It does not require completing every possible Pack interaction anonymously.
 
@@ -71,16 +61,12 @@ The exact completion threshold remains a product decision if not determined by e
 
 ### 4. Post-trial paths
 
-**Current authority**
-
 After a meaningful trial, Product Vision allows a user to:
 
 - go deeper;
 - try another career;
 - compare when useful;
 - pause.
-
-**Clarification**
 
 These are available directions, not a mandatory sequence that every user must complete.
 
