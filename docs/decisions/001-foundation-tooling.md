@@ -385,10 +385,10 @@ These are recorded as DEFERRED, not REJECTED. The Build Report's recommendations
 
 ## Decision History
 
-| Date       | Change                                                                                                                                                                         | Reason                                      |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| 2026-09-18 | Initial record created                                                                                                                                                         | Step C1 evaluation completed during Stage 0 |
-| 2026-09-18 | Node policy amended to >=24 <25; Corepack wording corrected; agent runtime rationale removed; workspace yaml removed from follow-up; .turbo/ removed from .gitignore follow-up | Owner amendment after C1 approval           |
-| 2026-09-19 | Script invocation clarified to use `node --import tsx` rather than the `tsx` CLI                                                                                     | Post-Stage-0 portability fix for managed agent sandboxes; technology choice unchanged |
+| Date       | Change                                                                                                                                                                         | Reason                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| 2026-09-18 | Initial record created                                                                                                                                                         | Step C1 evaluation completed during Stage 0                                           |
+| 2026-09-18 | Node policy amended to >=24 <25; Corepack wording corrected; agent runtime rationale removed; workspace yaml removed from follow-up; .turbo/ removed from .gitignore follow-up | Owner amendment after C1 approval                                                     |
+| 2026-09-19 | Script invocation clarified to use `node --import tsx` rather than the `tsx` CLI                                                                                               | Post-Stage-0 portability fix for managed agent sandboxes; technology choice unchanged |
 
 </content>
