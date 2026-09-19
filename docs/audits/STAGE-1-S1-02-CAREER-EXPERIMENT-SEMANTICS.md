@@ -25,11 +25,11 @@ Product Vision defines the Career Experience Pack as the core exploration conten
 
 The terms should not be treated as interchangeable:
 
-| Term | Product meaning |
-| --- | --- |
-| Career Experience Pack | A structured exploration content unit containing realistic career context, activities, reflection, and possible next experiments. |
-| Realistic work trial | A short experience inside the exploration journey that lets a young person try aspects of work before choosing a direction. |
-| Career experiment | The user-centered journey of increasing reality before commitment through question, action, timebox, observation, reflection, and next fork. |
+| Term                   | Product meaning                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Career Experience Pack | A structured exploration content unit containing realistic career context, activities, reflection, and possible next experiments.            |
+| Realistic work trial   | A short experience inside the exploration journey that lets a young person try aspects of work before choosing a direction.                  |
+| Career experiment      | The user-centered journey of increasing reality before commitment through question, action, timebox, observation, reflection, and next fork. |
 
 A Pack may support a career experiment, but the existence of a Pack does not by itself prove that every contained element is a complete career experiment.
 
