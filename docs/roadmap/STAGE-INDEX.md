@@ -6,7 +6,7 @@ product requirements.
 
 | Stage | Stage name                                         | Status  | Dependencies                                              | Primary exit gate                                                                  |
 | ----: | -------------------------------------------------- | ------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-|     0 | Agentic Engineering Foundation                     | ACTIVE  | Product Vision; established Stage 0 repository foundation | All Stage 0 ExecPlan completion criteria evidenced                                 |
+|     0 | Agentic Engineering Foundation                     | COMPLETE | Product Vision; established Stage 0 repository foundation | All Stage 0 ExecPlan completion criteria evidenced                                 |
 |     1 | Product Contracts + Domain Architecture Refinement | NEXT    | Stage 0 governance and verification foundation            | Required refinements consistent; open decisions explicit                           |
 |     2 | Content System + Operations Foundation             | PLANNED | Stage 1 boundaries and decision discipline                | Representative pack passes governed content lifecycle                              |
 |     3 | Youth Exploration                                  | PLANNED | Stage 2 eligible content; accepted delivery approach      | Core exploration works end to end without login-before-value or prohibited scoring |
