@@ -17,22 +17,22 @@ This audit does not modify Product Vision or Product Contracts and does not reso
 
 Each candidate is classified as:
 
-- Supported clarification — existing authority supports making wording or boundaries clearer.
+- Supported clarification — existing authority supports clearer wording or boundaries.
 - Possible overstatement — current wording may exceed higher authority.
-- Architecture ambiguity — product intent is clear but logical responsibility needs refinement.
+- Architecture ambiguity — product intent is clear but responsibility needs refinement.
 - Deferred decision — insufficient authority exists; requires future decision or ADR.
 
 ## Traceability matrix
 
-| Area | Related authority | Classification | Notes |
-| --- | --- | --- | --- |
-| Career Experience Pack and realistic work experiment relationship | PRODUCT_VISION core journey, Career Experience Pack section | Supported clarification / deferred detail | Product Vision defines the journey and Pack concept; implementation-level unit boundaries remain open. |
-| Anonymous first career value | PRODUCT_VISION access requirements | Supported clarification / deferred detail | First value without mandatory login is required; exact minimum interaction remains open. |
-| Post-trial paths | PRODUCT_VISION guided-not-rigid principle | Supported clarification | Paths are defined as possible directions; implementation sequencing remains open. |
-| Evidence categories and separation | PRODUCT_VISION Evidence Portfolio | Supported clarification | Exploration, practice, verified assessment, user-added work, and Employer Quest work remain separate. |
-| Provenance and practitioner review | PRODUCT_VISION Content provenance | Supported clarification | Production-quality packs require practitioner review; workflow details remain open. |
-| Evidence logical domain boundary | Architecture concerns and Stage 1 plan | Architecture ambiguity | Requires architecture refinement and possible ADR; not a product contract decision alone. |
-| Authorization mechanism | Product privacy/security requirements | Deferred decision | Outcome requirements exist; implementation mechanism remains unselected. |
+| Candidate | Vision clause | Contract clause | Classification | Notes |
+| --- | --- | --- | --- | --- |
+| Career Experience Pack and realistic work experiment relationship | PRODUCT_VISION §1 core journey; §4 Career Experience Pack | YWAY-P001, YWAY-P019 | Supported clarification | Clarify boundaries without introducing implementation structure. |
+| Anonymous first career value | PRODUCT_VISION §2 first career value without mandatory login; §4 short realistic trial without login | YWAY-P011 | Possible overstatement | Full anonymous Pack interaction is not implied by Vision; the complete interaction requirement belongs to the contract boundary and must not be expanded into unsupported requirements. |
+| Post-trial paths | PRODUCT_VISION §3.5 guided not rigid; §6 Try → Feedback → Short lesson → Practice variant | YWAY-P013 | Possible overstatement | Vision describes optional next directions and comparison when useful; always requiring every path remains unresolved. |
+| Evidence categories and presentation | PRODUCT_VISION §7 Evidence Portfolio categories; Product integrity separation | YWAY-P007, YWAY-P008 | Deferred decision | Categories must remain separate semantically. A future presentation model must not assume unified views are prohibited without accepted authority. |
+| Provenance and practitioner review | PRODUCT_VISION §5 Content provenance | YWAY-P019, YWAY-E005 | Supported clarification | Provenance and review gates must remain preserved while workflow details are refined later. |
+| Evidence logical domain boundary | PRODUCT_VISION §7 Evidence Portfolio; architecture scope | YWAY-E002 | Architecture ambiguity | Domain responsibility needs refinement without converting domains into packages/services. |
+| Authorization mechanism | PRODUCT_VISION §9 Trust, privacy, and safety | YWAY-P018, YWAY-E001 | Deferred decision | Required outcome is clear; authorization mechanism remains unselected. |
 
 ## Findings
 
@@ -40,11 +40,11 @@ No Product Vision changes are required from this audit.
 
 No Product Contract changes are proposed directly by S1-01.
 
-The following areas require later bounded work:
+Later bounded work should address:
 
-1. Clarify experiment/Pack semantics without inventing product requirements.
-2. Clarify provenance and evidence presentation semantics.
-3. Evaluate logical domain boundaries without converting them into implementation architecture.
+1. Experiment and Pack semantics.
+2. Evidence presentation and provenance semantics.
+3. Logical domain boundaries and implementation-independent architecture.
 
 ## Non-goals preserved
 
