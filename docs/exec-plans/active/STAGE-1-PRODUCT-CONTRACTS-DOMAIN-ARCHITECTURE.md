@@ -147,12 +147,16 @@ Validation: product-integrity review and exact source traceability.
 Clarify:
 
 - Career Experience Pack vs realistic trial vs six-part career experiment
+- "meaningful career experiment" and "real next action" primary-outcome terms
 - anonymous first value
 - post-trial path semantics
 
-Owner decisions are required where Product Vision does not uniquely determine the answer.
+Owner decisions are required where Product Vision does not uniquely determine the answer. Existing
+Product Contract wording that S1-01 classified as a possible overstatement must not be used to decide
+whether owner direction is needed.
 
-Validation: product-integrity review; no unsupported expansion of Product Vision.
+Validation: product-integrity review; exact Vision traceability; no unsupported expansion of Product
+Vision.
 
 ### S1-03 — Provenance, practitioner-review, and evidence-presentation semantics
 
@@ -284,7 +288,8 @@ The classified decision register above remains unresolved until the correspondin
 
 - [x] Stage 1 kickoff scaffold created
 - [x] S1-01 Vision-to-contract refinement audit
-- [ ] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics
+- [ ] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics — analysis
+  complete; owner decisions pending
 - [ ] S1-03 Provenance / practitioner review / evidence presentation semantics
 - [ ] S1-04 Apply approved Product Contract refinements
 - [ ] S1-05 Logical domain responsibility/collaboration matrix
@@ -298,6 +303,7 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-19: S1-01 review found that the initial audit omitted registered contract and architecture candidates and traced the Pack/experiment ambiguity to provenance contract YWAY-P019 instead of experiment-structure contract YWAY-P002.
 - 2026-09-19: The remediated S1-01 audit accounts for all six contract clarification candidates, all seven architecture clarification candidates, and every explicitly deferred implementation choice in this plan. `pnpm agent:doctor` and `pnpm verify:full` passed after the audit update.
 - 2026-09-19: Product-integrity review identified one low-severity omission of YWAY-P005/YWAY-E006 from the affected-contract inventory; the trace was corrected and rechecked. Final product-integrity, architecture, security/privacy, and test reviews reported no material findings.
+- 2026-09-19: S1-02 analysis confirmed that Product Vision does not uniquely define the operational thresholds for "meaningful career experiment," "real next action," the governed six-part experiment unit, the minimum anonymous-first-value interaction, or simultaneous-versus-contextual post-trial route availability. These remain explicit owner decisions, so S1-02 stays open and dependent S1-04 edits remain blocked on the relevant decisions.
 
 ## Decision log
 
@@ -307,6 +313,7 @@ Entries here document execution history only. They are not binding product or ar
 | --- | --- | --- |
 | 2026-09-19 | Stage 1 kickoff plan approved; activate Stage 1 and create S1-01 through S1-08 | Execution direction only; does not resolve product or architecture questions |
 | 2026-09-19 | S1-01 audit completed with exact Product Vision, Product Contract, and Architecture traceability; unresolved semantics and implementation choices remain assigned to later Stage 1 steps or explicit future triggers | Audit evidence only; does not resolve product or architecture questions |
+| 2026-09-19 | S1-02 analysis bounded all registered clarification candidates against Product Vision and identified the remaining owner decisions; no disputed contract wording is treated as authority for resolving those questions | Analysis evidence only; S1-02 remains open pending owner direction |
 
 ## Completion criteria
 
