@@ -13,7 +13,7 @@ const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const requestedMode = process.argv[2];
 
 if (requestedMode !== "fast" && requestedMode !== "full") {
-  console.error("Usage: tsx scripts/run-verification.ts <fast|full>");
+  console.error("Usage: node --import tsx scripts/run-verification.ts <fast|full>");
   process.exit(2);
 }
 
