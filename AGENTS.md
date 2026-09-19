@@ -92,6 +92,19 @@ Multi-step work requires an ExecPlan.
 
 Chat history is not a source of truth.
 
+## Context Hygiene
+
+- Read only the relevant contract IDs and document sections; use targeted search
+  before loading a whole authoritative document.
+- Keep command and tool output bounded. Do not print entire documents, logs,
+  generated files, or dependency inventories when a focused excerpt is enough.
+- Batch related read-only checks when that does not obscure failures.
+- Start a fresh session between unrelated tasks and after a large completed
+  review cycle rather than carrying unrelated history forward.
+- Run the coordinated PR review after the change set is stable. Give reviewers
+  the diff, changed files, relevant contract/decision IDs, and minimal task
+  context; use focused follow-ups instead of spawning duplicate review rounds.
+
 ## Do Not
 
 Do not:
@@ -111,25 +124,16 @@ Do not:
 
 ## Repository Map
 
-- `package.json` — Runtime policy, package manager, dependencies, and repository commands
-- `pnpm-lock.yaml`, `pnpm-workspace.yaml` — Deterministic dependency and workspace configuration
-- `tsconfig.json`, `tsconfig.base.json` — TypeScript project and shared compiler configuration
-- `eslint.config.mjs` — ESLint flat configuration
-- `.prettierrc`, `.prettierignore` — Formatting configuration and exclusions
-- `.editorconfig`, `.gitignore` — Editor conventions and Git exclusions
+- Root package, pnpm, TypeScript, ESLint, Prettier, editor, and Git files define
+  the development toolchain and repository commands.
 - `docs/product/` — Product Vision and Contracts
-- `docs/architecture/ARCHITECTURE.md` — Logical domains, boundaries, and architectural invariants
-- `docs/decisions/` — Architecture decision records
-- `docs/roadmap/ROADMAP.md` — Directional Production V1 outcomes and planning policy
-- `docs/roadmap/STAGE-INDEX.md` — Compact stage status and exit-gate index
-- `docs/exec-plans/active/` — In-progress execution plans
-- `docs/exec-plans/completed/` — Finished execution plans
-- `.codex/agents/` — Codex reviewer agents
-- `.opencode/agents/` — OpenCode reviewer agents
-- `.agents/skills/` — Shared reusable skills
+- `docs/architecture/`, `docs/decisions/`, `docs/roadmap/` — Architecture,
+  accepted choices, and stage direction
+- `docs/exec-plans/` — Active and completed execution plans
+- `.codex/agents/`, `.opencode/agents/`, `.agents/skills/` — Reviewer adapters
+  and shared reusable skills
 - `scripts/` — Verification scripts
-- `.github/ISSUE_TEMPLATE/` — Issue templates
-- `.github/workflows/` — CI workflows
+- `.github/` — Issue templates and CI workflows
 
 ## Agent Harness
 
