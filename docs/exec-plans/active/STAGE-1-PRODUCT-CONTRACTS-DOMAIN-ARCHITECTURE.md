@@ -148,7 +148,7 @@ Clarify:
 
 - Career Experience Pack vs realistic trial vs six-part career experiment
 - "meaningful career experiment" and "real next action" primary-outcome terms
-- anonymous first value
+- anonymous first value within the existing age and safeguarding boundary
 - post-trial path semantics
 
 Owner decisions are required where Product Vision does not uniquely determine the answer. Existing
@@ -304,6 +304,7 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-19: The remediated S1-01 audit accounts for all six contract clarification candidates, all seven architecture clarification candidates, and every explicitly deferred implementation choice in this plan. `pnpm agent:doctor` and `pnpm verify:full` passed after the audit update.
 - 2026-09-19: Product-integrity review identified one low-severity omission of YWAY-P005/YWAY-E006 from the affected-contract inventory; the trace was corrected and rechecked. Final product-integrity, architecture, security/privacy, and test reviews reported no material findings.
 - 2026-09-19: S1-02 analysis confirmed that Product Vision does not uniquely define the operational thresholds for "meaningful career experiment," "real next action," the governed six-part experiment unit, the minimum anonymous-first-value interaction, or simultaneous-versus-contextual post-trial route availability. These remain explicit owner decisions, so S1-02 stays open and dependent S1-04 edits remain blocked on the relevant decisions.
+- 2026-09-19: Security/privacy re-review found that the S1-02 anonymous-first-value analysis omitted the independent YWAY-P012 age and safeguarding boundary. The audit now states that login-free first value preserves 18+ public access and keeps any 16–17 pathway blocked on separate safeguarding and consent review, without selecting an enforcement mechanism. `pnpm verify:full` passed after the correction.
 
 ## Decision log
 

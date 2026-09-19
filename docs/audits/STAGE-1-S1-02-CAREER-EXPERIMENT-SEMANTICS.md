@@ -19,6 +19,7 @@ open.
   - YWAY-P002
   - YWAY-P003
   - YWAY-P011
+  - YWAY-P012
   - YWAY-P013
 
 Product Vision is the deciding authority for whether an S1-02 question is already determined.
@@ -87,11 +88,17 @@ login.
 This supports the clarification that first value cannot be gated on account creation. Product Vision
 does not uniquely define the exact minimum completion threshold for that anonymous experience.
 
+Login-free first value does not waive the existing age and safeguarding boundary. Public access
+remains 18+, and any 16–17 pathway still requires separately reviewed safeguarding and consent. This
+analysis does not select an age-verification, safeguarding, consent, or access-control mechanism.
+
 Any later threshold must preserve:
 
 - meaningful career discovery before login;
-- realistic exposure before commitment; and
-- no mandatory registration gate before first value.
+- realistic exposure before commitment;
+- no mandatory registration gate before first value; and
+- the existing 18+ public-access boundary unless a 16–17 pathway receives the required separate
+  safeguarding and consent review.
 
 The exact minimum interaction for contract purposes remains an owner decision.
 
@@ -131,6 +138,7 @@ the appropriate authoritative product document.
 - No Product Vision changes.
 - No Product Contract edits.
 - No UI flow specification.
+- No age-verification or safeguarding implementation mechanism.
 - No storage or content-authoring schema.
 - No implementation technology decisions.
 
@@ -140,6 +148,7 @@ the appropriate authoritative product document.
   deferred to owner direction.
 - No possible-overstatement contract wording was used to resolve the disputed semantics.
 - No unresolved post-trial availability decision was silently selected.
+- Anonymous first value remains bounded by YWAY-P012 without selecting an enforcement mechanism.
 - Stage 1 scope boundaries remain preserved.
 - S1-02 remains open while the owner-decision candidates above are unresolved; dependent S1-04 edits
   must remain blocked on the relevant decisions.
