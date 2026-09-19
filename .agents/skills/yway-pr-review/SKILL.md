@@ -23,6 +23,19 @@ OpenCode adapters: `.opencode/agents/`
 
 Do not duplicate their full instructions here. Reference them by role name.
 
+## Review Timing and Context
+
+Run one coordinated four-role review after the change set and its verification
+results are stable. Do not start a full review cycle after every intermediate
+edit. If a finding causes a focused revision, return that revision to the same
+reviewer role when possible; repeat the full cycle only when the material scope
+or risk profile changes.
+
+Give each reviewer the actual diff, changed-file list, relevant contract and
+decision IDs, and the minimum task context needed to review independently. When
+the environment supports isolated subagent context, do not copy unrelated chat
+history into the reviewer task.
+
 ## Fallback Behavior
 
 If the active environment cannot invoke one or more reviewer adapters:
@@ -45,6 +58,9 @@ Before reviewing:
 - Inspect verification results that actually exist.
 
 Do not rely only on the author's summary.
+Use targeted searches and section reads first. Load an entire canonical document
+only when the review genuinely requires its full context. Keep reviewer output
+focused on findings and avoid repeating unchanged background.
 
 ## Finding Format
 

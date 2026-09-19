@@ -1,3 +1,58 @@
 # Yway project configuration for Codex
 # No model is pinned — inherits from the active Codex session.
-# Only settings required for the Stage 0 agent harness are configured here.
+# Routine work uses medium reasoning. Raise it explicitly for unusually complex
+# architecture, privacy, security, or debugging tasks.
+model_reasoning_effort = "medium"
+
+# These large packs are not needed for current repository work. Disable them as
+# a reversible token-efficiency choice, not as a product or architecture decision.
+[plugins."vercel@openai-curated-remote"]
+enabled = false
+
+[plugins."figma@openai-curated-remote"]
+enabled = false
+
+[plugins."expo@openai-curated-remote"]
+enabled = false
+
+[plugins."product-design@openai-curated-remote"]
+enabled = false
+
+[plugins."notion@openai-curated-remote"]
+enabled = false
+
+[plugins."plugin-management@openai-curated-remote"]
+enabled = false
+
+# Artifact and interactive UI tooling is opt-in for Yway. Re-enable a specific
+# plugin for a task that actually needs it.
+[plugins."documents@openai-primary-runtime"]
+enabled = false
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = false
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = false
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = false
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = false
+
+[plugins."visualize@openai-bundled"]
+enabled = false
+
+[plugins."browser@openai-bundled"]
+enabled = false
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = false
+
+[plugins."codex-app-tools@openai-bundled"]
+enabled = false
+
+# Pencil is globally configured but not part of Yway's accepted toolchain.
+[mcp_servers.pencil]
+enabled = false
