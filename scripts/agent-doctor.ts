@@ -84,9 +84,11 @@ function run(command: string, args: string[]): { ok: boolean; output: string } {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
+  const errorOutput = result.error ? `${result.error.name}: ${result.error.message}\n` : "";
+
   return {
-    ok: result.status === 0,
-    output: `${result.stdout ?? ""}${result.stderr ?? ""}`.trim(),
+    ok: result.error === undefined && result.status === 0,
+    output: `${errorOutput}${result.stdout ?? ""}${result.stderr ?? ""}`.trim(),
   };
 }
 
@@ -150,7 +152,7 @@ if (!isReadable("node_modules")) {
   const missingDependencies = declaredDependencies.filter(
     (dependency) => !isReadable(resolve("node_modules", dependency)),
   );
-  const requiredBins = ["eslint", "prettier", "tsc", "tsx"];
+  const requiredBins = ["eslint", "prettier", "tsc"];
   const missingBins = requiredBins.filter(
     (bin) =>
       ![bin, `${bin}.cmd`, `${bin}.ps1`].some((candidate) =>
