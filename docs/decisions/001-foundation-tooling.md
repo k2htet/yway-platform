@@ -6,7 +6,7 @@
 - Date: 2026-09-18
 - Status: ACCEPTED
 - Owners: Yway engineering
-- Related ExecPlan: docs/exec-plans/active/STAGE-0-AGENTIC-FOUNDATION.md (Step C1)
+- Related ExecPlan: docs/exec-plans/completed/STAGE-0-AGENTIC-FOUNDATION.md (Step C1)
 - Related Product Contracts: None — this is a development-environment decision only, not a product behavior decision.
 
 ## Context
