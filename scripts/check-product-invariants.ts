@@ -206,10 +206,11 @@ function runRepositoryCheck(): void {
 
 const arguments_ = process.argv.slice(2);
 if (arguments_.length === 0) {
+  runSelfTest();
   runRepositoryCheck();
 } else if (arguments_.length === 1 && arguments_[0] === "--self-test") {
   runSelfTest();
 } else {
-  console.error("Usage: tsx scripts/check-product-invariants.ts [--self-test]");
+  console.error("Usage: node --import tsx scripts/check-product-invariants.ts [--self-test]");
   process.exit(2);
 }

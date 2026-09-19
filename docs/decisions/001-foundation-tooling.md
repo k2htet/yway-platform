@@ -170,7 +170,7 @@ Stage 0 requires initializing a repository that currently contains only document
 
 #### Option: TypeScript scripts executed via tsx
 
-- **Advantages:** Cross-platform (works on Linux, macOS, Windows). Type-safe. Consistent with the repository language choice. `tsx` runs `.ts` files directly without a separate compile step. Suitable for `agent:doctor`, `verify:fast`, `verify:full`, `verify:invariants`. Both Codex and OpenCode can invoke `pnpm tsx scripts/foo.ts`.
+- **Advantages:** Cross-platform (works on Linux, macOS, Windows). Type-safe. Consistent with the repository language choice. `tsx` runs `.ts` files directly without a separate compile step. Suitable for `agent:doctor`, `verify:fast`, `verify:full`, `verify:invariants`. Both Codex and OpenCode can execute the scripts through Node's `--import tsx` hook without a compile step.
 - **Disadvantages:** Requires `tsx` as a devDependency. Slightly more setup than a bash script.
 - **Risks:** `tsx` ESM/CJS interop edge cases. Mitigated by using `"type": "module"` in `package.json`.
 - **Validation evidence available:** tsx is actively maintained and widely used for exactly this purpose.
@@ -266,7 +266,7 @@ This decision is based on pnpm's strict dependency resolution, native workspace 
 
 **Capability requirement:** Cross-platform execution of verification and maintenance scripts.
 
-**Implementation choice:** ACCEPTED — TypeScript scripts executed via `tsx`. All scripts under `scripts/` will be `.ts` files run with `pnpm tsx scripts/<name>.ts`. This ensures cross-platform compatibility, type safety, and consistency with the repository language. Bash-only scripts are rejected as the default approach.
+**Implementation choice:** ACCEPTED — TypeScript scripts executed via `tsx`. All scripts under `scripts/` remain `.ts` files executed through the `tsx` runtime hook. Repository entry points use `node --import tsx scripts/<name>.ts` so managed agent sandboxes do not depend on the `tsx` CLI's local IPC server. This preserves cross-platform TypeScript execution while keeping the accepted runtime choice unchanged. Bash-only scripts are rejected as the default approach.
 
 ### 8. Version Pinning Strategy
 
@@ -385,9 +385,10 @@ These are recorded as DEFERRED, not REJECTED. The Build Report's recommendations
 
 ## Decision History
 
-| Date       | Change                                                                                                                                                                         | Reason                                      |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| 2026-09-18 | Initial record created                                                                                                                                                         | Step C1 evaluation completed during Stage 0 |
-| 2026-09-18 | Node policy amended to >=24 <25; Corepack wording corrected; agent runtime rationale removed; workspace yaml removed from follow-up; .turbo/ removed from .gitignore follow-up | Owner amendment after C1 approval           |
+| Date       | Change                                                                                                                                                                         | Reason                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| 2026-09-18 | Initial record created                                                                                                                                                         | Step C1 evaluation completed during Stage 0                                           |
+| 2026-09-18 | Node policy amended to >=24 <25; Corepack wording corrected; agent runtime rationale removed; workspace yaml removed from follow-up; .turbo/ removed from .gitignore follow-up | Owner amendment after C1 approval                                                     |
+| 2026-09-19 | Script invocation clarified to use `node --import tsx` rather than the `tsx` CLI                                                                                               | Post-Stage-0 portability fix for managed agent sandboxes; technology choice unchanged |
 
 </content>

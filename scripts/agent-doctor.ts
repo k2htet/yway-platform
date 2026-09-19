@@ -1,6 +1,6 @@
 import { accessSync, constants, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
+import { dirname, parse, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 interface PackageManifest {
@@ -84,14 +84,61 @@ function run(command: string, args: string[]): { ok: boolean; output: string } {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
+  const errorOutput = result.error ? `${result.error.name}: ${result.error.message}\n` : "";
+
   return {
-    ok: result.status === 0,
-    output: `${result.stdout ?? ""}${result.stderr ?? ""}`.trim(),
+    ok: result.error === undefined && result.status === 0,
+    output: `${errorOutput}${result.stdout ?? ""}${result.stderr ?? ""}`.trim(),
   };
 }
 
 function commandName(command: string): string {
   return process.platform === "win32" ? `${command}.cmd` : command;
+}
+
+function pnpmVersionFromEnvironment(): string | undefined {
+  const userAgent = process.env.npm_config_user_agent;
+  if (!userAgent) {
+    return undefined;
+  }
+
+  const match = /(?:^|\s)pnpm\/([^\s]+)/.exec(userAgent);
+  return match?.[1];
+}
+
+function pnpmVersionFromExecPath(): string | undefined {
+  const execPath = process.env.npm_execpath;
+  if (!execPath) {
+    return undefined;
+  }
+
+  let directory = dirname(execPath);
+  const root = parse(directory).root;
+
+  while (true) {
+    try {
+      const candidate = JSON.parse(readFileSync(resolve(directory, "package.json"), "utf8")) as {
+        name?: unknown;
+        version?: unknown;
+      };
+
+      if (candidate.name === "pnpm" && typeof candidate.version === "string") {
+        return candidate.version;
+      }
+    } catch {
+      // Keep walking toward the filesystem root.
+    }
+
+    if (directory === root) {
+      return undefined;
+    }
+
+    const parent = dirname(directory);
+    if (parent === directory) {
+      return undefined;
+    }
+    directory = parent;
+  }
 }
 
 let manifest: PackageManifest | undefined;
@@ -127,16 +174,20 @@ if (!packageManagerMatch?.[1]) {
   report("FAIL", "package.json does not declare an exact pnpm packageManager version");
 } else {
   const expectedPnpmVersion = packageManagerMatch[1];
-  const pnpmVersion = run(commandName("pnpm"), ["--version"]);
-  if (!pnpmVersion.ok) {
-    report("FAIL", "pnpm is unavailable or could not report its version");
-  } else if (pnpmVersion.output !== expectedPnpmVersion) {
+  const detectedPnpmVersion = pnpmVersionFromEnvironment() ?? pnpmVersionFromExecPath();
+
+  if (detectedPnpmVersion === undefined || detectedPnpmVersion.length === 0) {
     report(
       "FAIL",
-      `pnpm ${pnpmVersion.output} does not match package.json (${expectedPnpmVersion})`,
+      "pnpm version could not be determined from the active pnpm lifecycle environment",
+    );
+  } else if (detectedPnpmVersion !== expectedPnpmVersion) {
+    report(
+      "FAIL",
+      `pnpm ${detectedPnpmVersion} does not match package.json (${expectedPnpmVersion})`,
     );
   } else {
-    report("PASS", `pnpm ${pnpmVersion.output} matches package.json`);
+    report("PASS", `pnpm ${detectedPnpmVersion} matches package.json`);
   }
 }
 
@@ -150,7 +201,7 @@ if (!isReadable("node_modules")) {
   const missingDependencies = declaredDependencies.filter(
     (dependency) => !isReadable(resolve("node_modules", dependency)),
   );
-  const requiredBins = ["eslint", "prettier", "tsc", "tsx"];
+  const requiredBins = ["eslint", "prettier", "tsc"];
   const missingBins = requiredBins.filter(
     (bin) =>
       ![bin, `${bin}.cmd`, `${bin}.ps1`].some((candidate) =>
