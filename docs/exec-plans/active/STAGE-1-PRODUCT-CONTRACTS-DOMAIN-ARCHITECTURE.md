@@ -283,7 +283,7 @@ The classified decision register above remains unresolved until the correspondin
 ## Progress checklist
 
 - [x] Stage 1 kickoff scaffold created
-- [ ] S1-01 Vision-to-contract refinement audit
+- [x] S1-01 Vision-to-contract refinement audit
 - [ ] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics
 - [ ] S1-03 Provenance / practitioner review / evidence presentation semantics
 - [ ] S1-04 Apply approved Product Contract refinements
@@ -295,6 +295,9 @@ The classified decision register above remains unresolved until the correspondin
 ## Discoveries log
 
 - 2026-09-19: Fresh post-remediation acceptance audit returned `READY_FOR_STAGE_1_KICKOFF` with no findings and all required verification passing.
+- 2026-09-19: S1-01 review found that the initial audit omitted registered contract and architecture candidates and traced the Pack/experiment ambiguity to provenance contract YWAY-P019 instead of experiment-structure contract YWAY-P002.
+- 2026-09-19: The remediated S1-01 audit accounts for all six contract clarification candidates, all seven architecture clarification candidates, and every explicitly deferred implementation choice in this plan. `pnpm agent:doctor` and `pnpm verify:full` passed after the audit update.
+- 2026-09-19: Product-integrity review identified one low-severity omission of YWAY-P005/YWAY-E006 from the affected-contract inventory; the trace was corrected and rechecked. Final product-integrity, architecture, security/privacy, and test reviews reported no material findings.
 
 ## Decision log
 
@@ -303,6 +306,7 @@ Entries here document execution history only. They are not binding product or ar
 | Date | Entry | Authority status |
 | --- | --- | --- |
 | 2026-09-19 | Stage 1 kickoff plan approved; activate Stage 1 and create S1-01 through S1-08 | Execution direction only; does not resolve product or architecture questions |
+| 2026-09-19 | S1-01 audit completed with exact Product Vision, Product Contract, and Architecture traceability; unresolved semantics and implementation choices remain assigned to later Stage 1 steps or explicit future triggers | Audit evidence only; does not resolve product or architecture questions |
 
 ## Completion criteria
 
