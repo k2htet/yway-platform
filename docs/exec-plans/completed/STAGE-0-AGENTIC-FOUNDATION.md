@@ -329,8 +329,7 @@ yway-platform/
 │   │   └── 001-foundation-tooling.md  # Only Stage 0 decision
 │   └── exec-plans/
 │       ├── active/                    # In-progress plans
-│       └── completed/                 # Finished plans (this file moves here at J1)
-│       └── completed/                 # Finished plans (moved here)
+│       └── completed/                 # Finished plans (this file moved here at J1)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   └── task.md                    # Structured task template
