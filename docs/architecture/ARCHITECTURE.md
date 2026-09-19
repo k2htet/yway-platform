@@ -48,9 +48,9 @@ Content owns the definition and lifecycle of Career Experience Packs including t
 
 ### Evidence
 
-Evidence is treated as an independent logical domain rather than a sub-concern of Youth. Rationale: the Product Vision and Product Contracts define five strictly separated evidence categories with distinct lifecycle rules, immutability constraints after creation, presentation boundaries, and sharing semantics. These concerns cross-cut Youth interactions and require their own invariants. Collapsing Evidence into Youth would risk silent conflation of evidence levels — the exact failure mode YWAY-P007 exists to prevent.
+Evidence is treated as an independent logical domain rather than a sub-concern of Youth. Rationale: the Product Vision and Product Contracts define five strictly separated evidence categories with distinct lifecycle rules, provenance-preserving correction boundaries, presentation boundaries, and sharing semantics. These concerns cross-cut Youth interactions and require their own invariants. Collapsing Evidence into Youth would risk silent conflation of evidence levels — the exact failure mode YWAY-P007 exists to prevent.
 
-Responsibilities: evidence category definitions and their meaning, evidence provenance tracking, evidence lifecycle semantics (creation, immutable category assignment), presentation constraints ensuring distinct evidence levels are never combined for external consumption.
+Responsibilities: evidence category definitions and their meaning, evidence provenance tracking, evidence lifecycle semantics (creation and any future explicit correction/reclassification), and presentation constraints ensuring distinct evidence levels are never combined for external consumption. Evidence must never be silently or automatically reclassified into a stronger level; if a future correction mechanism is accepted, it must be explicit, auditable, and provenance-preserving. (YWAY-P007, YWAY-P008, YWAY-E002)
 
 ### Practitioner
 
@@ -74,7 +74,7 @@ No storage model is prescribed. The domain requires capability for persistent, a
 
 Responsibilities: user identities, role definitions (Youth, Practitioner, Employer, Admin), authentication context, authorization context.
 
-No auth provider is selected. Authorization enforcement must occur outside UI-only hiding. (YWAY-P012)
+No auth provider is selected. Authorization enforcement must occur outside UI-only hiding and must preserve private-portfolio and employer-isolation boundaries. (YWAY-P014, YWAY-P018, YWAY-E001)
 
 ### Operations / Safeguarding
 
@@ -139,7 +139,7 @@ No specific technology is selected for local storage, sync engine, remote databa
 
 ### Authorization
 
-Authorization enforcement must be trusted and occur outside UI-only hiding. Role-based and attribute-based access control is required. No specific auth provider, RBAC library, or middleware design is selected.
+Authorization enforcement must be trusted and occur outside UI-only hiding. The architecture requires authorization decisions to enforce role/context/scope boundaries at the server/API/data-access layer, including employer isolation and explicit sharing scope. Role-based plus attribute-based access control is one candidate mechanism, not a required policy model. No specific auth provider, policy model, library, middleware design, or data-layer enforcement mechanism is selected. (YWAY-P014, YWAY-P018, YWAY-E001)
 
 ### Consent
 
