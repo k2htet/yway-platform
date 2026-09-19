@@ -117,9 +117,7 @@ function pnpmVersionFromExecPath(): string | undefined {
 
   while (true) {
     try {
-      const candidate = JSON.parse(
-        readFileSync(resolve(directory, "package.json"), "utf8"),
-      ) as {
+      const candidate = JSON.parse(readFileSync(resolve(directory, "package.json"), "utf8")) as {
         name?: unknown;
         version?: unknown;
       };
