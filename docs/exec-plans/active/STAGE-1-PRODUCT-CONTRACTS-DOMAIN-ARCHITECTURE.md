@@ -1,0 +1,307 @@
+# Stage 1 — Product Contracts + Domain Architecture Refinement
+
+## Status
+
+ACTIVE
+
+Kickoff issue: #15
+
+## Purpose and outcome
+
+Stage 1 refines product contracts and logical domain boundaries where implementation needs greater precision, without weakening Product Vision or silently deciding open product, architecture, or technology questions.
+
+The target outcome is that near-term product behavior and domain responsibilities are precise enough for bounded implementation planning, especially for Stages 2–4.
+
+## Authority
+
+Follow the repository authority order in `AGENTS.md`.
+
+This ExecPlan is an execution artifact, not binding product or architecture authority.
+
+- Product decisions must land in Product Vision or Product Contracts as appropriate.
+- Architecture decisions must land in an ADR and/or `ARCHITECTURE.md` as appropriate.
+- Notes in this plan's decision log do not become authoritative merely because they are recorded here.
+- `PRODUCT_VISION.md` must not change without explicit owner instruction.
+
+## Relevant Product Contracts
+
+All direct contracts `YWAY-P001`–`YWAY-P030` and derived invariants `YWAY-E001`–`YWAY-E006` remain in force.
+
+Focused refinement is expected around:
+
+- `YWAY-P001`–`YWAY-P003`: career experiment meaning and structure
+- `YWAY-P007`–`YWAY-P009`, `YWAY-E002`: evidence separation, provenance, and correction boundaries
+- `YWAY-P011`: first value without mandatory login
+- `YWAY-P013`: guided but non-rigid post-trial paths
+- `YWAY-P019`, `YWAY-E005`: content provenance and practitioner review gate
+- `YWAY-P014`–`YWAY-P018`, `YWAY-E001`, `YWAY-E003`, `YWAY-E004`: privacy, sharing, employer isolation, and access boundaries
+
+## Current state
+
+- Stage 0 is COMPLETE.
+- A fresh post-remediation acceptance audit returned `READY_FOR_STAGE_1_KICKOFF`.
+- Repository verification passed under supported Node 24 and pnpm 11.24.0.
+- No product/application implementation exists.
+- Stage 1 was `NEXT` before this kickoff.
+- Stage 2 remains `PLANNED`.
+
+## Target state
+
+Stage 1 is complete only when near-term contract and logical-domain ambiguities are resolved, corrected, or explicitly deferred without adopting unapproved implementation choices.
+
+## Scope
+
+- Documentation and decision work only.
+- Audit Product Vision-to-contract traceability for Stage 1 refinement candidates.
+- Surface narrow product-owner decisions without deciding them implicitly.
+- Refine Product Contracts only where supported by Product Vision or separately authorized owner intent.
+- Refine logical domain responsibilities and collaboration boundaries.
+- Review the Evidence logical-domain boundary through a technology-neutral ADR if warranted.
+- Reconcile Architecture after approved contract/domain decisions.
+- Keep all implementation and technology choices explicitly deferred unless a separately reviewed ADR accepts them.
+
+## Non-goals
+
+Do not:
+
+- add application code, UI, schema, API, package, database, authentication, synchronization, CMS, or deployment implementation
+- select mobile-native, hybrid, web, Expo/React Native, package/service boundaries, Turborepo, database/ORM, sync technology, auth provider, consent persistence, API protocol, hosting, storage, CMS, workflow engine, analytics, payment processing, or verified-assessment implementation
+- start Stage 2
+- implement a 16–17 pathway
+- modify `PRODUCT_VISION.md` without separate explicit owner instruction
+
+## Dependencies
+
+- Stage 0 governance and verification foundation
+- `AGENTS.md`
+- `docs/product/PRODUCT_VISION.md`
+- `docs/product/PRODUCT_CONTRACTS.md`
+- `docs/architecture/ARCHITECTURE.md`
+- ACCEPTED decisions
+- `.agents/skills/yway-exec-plan/SKILL.md`
+- protected `main` with required `Verify` CI
+
+## Classified decision register
+
+### Contract clarification candidates
+
+1. What constitutes a meaningful career experiment and a real next action? (`YWAY-P001`–`YWAY-P003`)
+2. Is the six-part experiment structure governed per Pack, per trial, or per experiment within a Pack? (`YWAY-P002`)
+3. Does anonymous first value require a short meaningful trial or completion of an entire Pack interaction? (`YWAY-P011`)
+4. Are all four post-trial paths always required, or are they contextual permitted paths? (`YWAY-P013`)
+5. Are AI-assisted, founder-reviewed, and practitioner-reviewed provenance markers cumulative facts, lifecycle states, or both? (`YWAY-P019`, `YWAY-E005`)
+6. May differently labeled evidence categories coexist in one view when their separation remains explicit? (`YWAY-P007`–`YWAY-P009`, `YWAY-E002`)
+
+### Architecture clarification candidates
+
+- Whether Evidence remains an independent logical domain or becomes a concern within Youth
+- Content / Practitioner / Operations responsibility split for provenance, review, approval, and production eligibility
+- Employer Quest work ownership across Evidence, Employer, and Consent/Sharing
+- How content provenance becomes evidence provenance without losing origin or level
+- Vendor-neutral collaboration boundaries for the near-term Youth–Content–Evidence path
+- Privileged/Admin contexts without unrestricted access
+- Classification of existing architecture questions as Stage 1, deferred, or future-ADR work
+
+### Explicitly deferred implementation choices
+
+- physical application boundary and delivery approach
+- package/service layout and monorepo tooling
+- database, ORM, schema library, local/remote persistence
+- synchronization engine and conflict strategy
+- authentication provider and concrete authorization mechanism
+- consent/audit persistence model
+- API protocol, hosting, deployment, storage
+- CMS, Pack authoring format, workflow engine
+- detailed practitioner operations
+- partial downloads, analytics, payments, notifications
+- 16–17 pathway
+- verified-assessment implementation
+
+## Ordered steps
+
+### S1-01 — Vision-to-contract refinement audit
+
+Create a durable evidence base for all later Stage 1 decisions.
+
+- Trace proposed clarifications to exact Product Vision support.
+- Classify findings as supported clarification, possible overstatement, architecture ambiguity, or deferred decision.
+- Do not edit Product Contracts during the audit.
+
+Validation: product-integrity review and exact source traceability.
+
+### S1-02 — Career experiment and anonymous-first-value semantics
+
+Clarify:
+
+- Career Experience Pack vs realistic trial vs six-part career experiment
+- anonymous first value
+- post-trial path semantics
+
+Owner decisions are required where Product Vision does not uniquely determine the answer.
+
+Validation: product-integrity review; no unsupported expansion of Product Vision.
+
+### S1-03 — Provenance, practitioner-review, and evidence-presentation semantics
+
+Clarify:
+
+- provenance meaning and production eligibility
+- practitioner-review boundary
+- evidence presentation separation without introducing unsupported physical/presentation prohibitions
+
+Validation: product-integrity and security/privacy review.
+
+### S1-04 — Apply approved Product Contract refinements
+
+Apply only Vision-supported or owner-authorized corrections.
+
+- Preserve stable IDs.
+- Do not invent new product intent.
+- Do not treat ExecPlan notes as binding authority.
+
+Validation: stable-ID audit, source traceability, product-integrity review, `pnpm verify:full`.
+
+### S1-05 — Logical domain responsibility and collaboration matrix
+
+Cover Youth, Content, Evidence, Practitioner, Operations/Safeguarding, Employer, Consent/Sharing, and Identity/Access.
+
+Keep logical ownership distinct from package/service/schema choices.
+
+Validation: architecture and security/privacy review.
+
+### S1-06 — Evidence logical-domain boundary ADR
+
+Draft a technology-neutral ADR evaluating Evidence as:
+
+- an independent logical domain
+- a concern within Youth
+
+Cover provenance, correction, sharing, and Employer Quest implications.
+
+Do not mark the ADR ACCEPTED without owner and architecture approval.
+
+Validation: product-integrity, architecture, security/privacy, and test review.
+
+### S1-07 — Reconcile Architecture and unresolved questions
+
+Update Architecture only after relevant product/domain decisions are approved.
+
+- remove contradictions
+- keep implementation choices deferred
+- classify remaining architecture questions by future stage / ADR need
+
+Validation: authority-order audit, contract-to-architecture traceability, all four reviewer disciplines, `pnpm verify:full`.
+
+### S1-08 — Validate and close Stage 1
+
+Confirm exit criteria, record final verification/review evidence, update roadmap status, and move this ExecPlan to completed.
+
+Do not activate Stage 2 as part of closure.
+
+Validation: clean scope audit, `pnpm agent:doctor`, `pnpm verify:full`, and Yway PR review.
+
+## Affected documents and logical domains
+
+Likely documents:
+
+- `docs/product/PRODUCT_CONTRACTS.md`
+- `docs/architecture/ARCHITECTURE.md`
+- `docs/decisions/`
+- this ExecPlan
+- `docs/roadmap/ROADMAP.md`
+- `docs/roadmap/STAGE-INDEX.md`
+
+Logical domains in view:
+
+- Youth
+- Content
+- Evidence
+- Practitioner
+- Operations/Safeguarding
+- Employer
+- Consent/Sharing
+- Identity/Access
+
+## Validation and review strategy
+
+Use the repository's reviewer disciplines as appropriate:
+
+- product-integrity
+- architecture
+- security/privacy
+- test
+
+Required repository checks at major integration points:
+
+- `pnpm agent:doctor`
+- `pnpm verify:fast`
+- `pnpm verify:invariants`
+- `pnpm verify:full`
+
+Never claim a check passed unless it actually ran and passed.
+
+## Cross-cutting implications
+
+### Privacy/security
+
+Stage 1 must preserve private portfolios, purpose-specific sharing, employer isolation, explicit candidate/application boundaries, and server/data-layer authorization outcomes without choosing a provider or physical enforcement mechanism.
+
+### Offline
+
+`YWAY-P022` remains binding. Stage 1 must not select sync authority, conflict-resolution, or storage technology.
+
+### Localization/accessibility
+
+`YWAY-P023` and `YWAY-P024` remain binding. Stage 1 may clarify semantics needed by later implementation but does not implement UI or content delivery.
+
+## Risks
+
+- Product clarification accidentally invents intent not present in Product Vision.
+- Logical-domain discussion silently becomes package/service architecture.
+- Evidence separation becomes an unsupported presentation ban.
+- Provenance semantics overreach into Stage 2 operational workflow.
+- ADRs are treated as accepted before owner review.
+- Stage 1 drifts into technology selection or Stage 2 work.
+
+## Unresolved questions
+
+The classified decision register above remains unresolved until the corresponding issue produces reviewed evidence and, where necessary, explicit owner decisions or ADR status.
+
+## Progress checklist
+
+- [x] Stage 1 kickoff scaffold created
+- [ ] S1-01 Vision-to-contract refinement audit
+- [ ] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics
+- [ ] S1-03 Provenance / practitioner review / evidence presentation semantics
+- [ ] S1-04 Apply approved Product Contract refinements
+- [ ] S1-05 Logical domain responsibility/collaboration matrix
+- [ ] S1-06 Evidence logical-domain boundary ADR
+- [ ] S1-07 Reconcile Architecture and classify remaining questions
+- [ ] S1-08 Validate and close Stage 1
+
+## Discoveries log
+
+- 2026-09-19: Fresh post-remediation acceptance audit returned `READY_FOR_STAGE_1_KICKOFF` with no findings and all required verification passing.
+
+## Decision log
+
+Entries here document execution history only. They are not binding product or architecture authority.
+
+| Date | Entry | Authority status |
+| --- | --- | --- |
+| 2026-09-19 | Stage 1 kickoff plan approved; activate Stage 1 and create S1-01 through S1-08 | Execution direction only; does not resolve product or architecture questions |
+
+## Completion criteria
+
+Stage 1 is complete only when:
+
+- every Stage 1 audit finding is resolved, corrected, or explicitly deferred with a future trigger
+- Evidence, provenance, practitioner review, operations, consent, and Employer Quest ownership are internally consistent
+- significant architecture decisions have reviewed ADRs with valid statuses
+- unresolved implementation choices remain visibly deferred
+- no physical app, package, service, database, API, auth, sync, CMS, or deployment choice has been adopted
+- no product/application code has been added
+- `PRODUCT_VISION.md` remains unchanged unless separately authorized by the owner
+- required reviews have no unresolved blockers
+- `pnpm agent:doctor` and `pnpm verify:full` pass and are recorded
+- Roadmap and Stage Index show Stage 1 COMPLETE and Stage 2 remains PLANNED
