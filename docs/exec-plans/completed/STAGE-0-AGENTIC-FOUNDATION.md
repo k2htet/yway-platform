@@ -832,6 +832,7 @@ Stage 0 is complete when ALL of the following are true:
 - Confirmed the repository still contains no product/application source tree, database schema, authentication implementation, or product feature implementation.
 - Confirmed Product Vision, Product Contracts, and Architecture were not changed by J1.
 - Moved this ExecPlan from `docs/exec-plans/active/` to `docs/exec-plans/completed/`.
+- The first closure CI run exposed that removing the last active plan also removed the tracked `docs/exec-plans/active/` directory required by `agent:doctor`; added `docs/exec-plans/active/.gitkeep` to preserve the empty in-progress-plan directory.
 - Updated Roadmap and Stage Index to Stage 0 `COMPLETE` and Stage 1 `NEXT`.
 - Stage 1 was not activated or implemented as part of J1.
 
