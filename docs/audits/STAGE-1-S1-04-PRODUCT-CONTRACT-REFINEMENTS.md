@@ -63,6 +63,22 @@ documentation.
 - Unreviewed changed content cannot inherit stale practitioner approval.
 - No implementation technology, schema, CMS, workflow engine, or UI control is selected.
 
+## Verification hardening
+
+- The derived-invariant preamble now correctly states that enforcement invariants derive from
+  "product contracts", covering both direct Vision contracts and owner-authorized contracts.
+- `scripts/check-product-invariants.ts` now parses Product Contract sections and rejects unknown or
+  missing classifications.
+- Product contracts and derived invariants are checked for the appropriate Source / Derived from
+  fields and classification family.
+- Owner-authorized contracts must cite both a Product Vision boundary and a durable owner-decision
+  record.
+- YWAY-P008 and YWAY-P019 are explicitly regression-protected as
+  `OWNER_AUTHORIZED_PRODUCT_CONTRACT`; returning either to `DIRECT_PRODUCT_CONTRACT` or dropping the
+  S1-03 owner-decision source causes `verify:invariants` to fail.
+- The invariant checker self-test includes both misclassification and missing-owner-record negative
+  cases.
+
 ## Completion status
 
 The approved S1-03 subset of S1-04 is applied. S1-04 as a whole remains open because the S1-02 owner
