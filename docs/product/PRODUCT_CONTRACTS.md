@@ -102,7 +102,7 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## YWAY-P009: Evidence provenance preservation
 
-- **Source:** §7 (Evidence Portfolio)
+- **Source:** §5 (Content provenance), §7 (Evidence Portfolio)
 - **Classification:** DIRECT_PRODUCT_CONTRACT
 - **Requirement:** When evidence is organized, hidden, exported, or selectively shared, its provenance metadata must remain intact. Evidence provenance includes origin, creation context, and evidence level. Evidence provenance is distinct from Career Experience Pack content provenance under YWAY-P019; when evidence arises from Pack interaction, later architecture must preserve enough traceability to interpret both without conflating them.
 - **Rationale:** Directly stated: "Provenance must remain intact." Product Vision separately defines content provenance and Evidence Portfolio provenance.
