@@ -102,8 +102,8 @@ Do not:
 2. Is the six-part experiment structure governed per Pack, per trial, or per experiment within a Pack? (`YWAY-P002`)
 3. Does anonymous first value require a short meaningful trial or completion of an entire Pack interaction? (`YWAY-P011`)
 4. Are all four post-trial paths always required, or are they contextual permitted paths? (`YWAY-P013`)
-5. Are AI-assisted, founder-reviewed, and practitioner-reviewed provenance markers cumulative facts, lifecycle states, or both? (`YWAY-P019`, `YWAY-E005`)
-6. May differently labeled evidence categories coexist in one view when their separation remains explicit? (`YWAY-P007`–`YWAY-P009`, `YWAY-E002`)
+5. RESOLVED by owner direction: AI-assisted, founder-reviewed, and practitioner-reviewed provenance are cumulative historical facts; any current review/release status is separate and must not erase history. (`YWAY-P019`, `YWAY-E005`)
+6. RESOLVED by owner direction: differently labeled evidence categories may coexist in one Portfolio view when separation is explicit; category-specific viewing should also be supported. (`YWAY-P007`–`YWAY-P009`, `YWAY-E002`)
 
 ### Architecture clarification candidates
 
@@ -290,7 +290,8 @@ The classified decision register above remains unresolved until the correspondin
 - [x] S1-01 Vision-to-contract refinement audit
 - [ ] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics — analysis
   complete; owner decisions pending
-- [ ] S1-03 Provenance / practitioner review / evidence presentation semantics
+- [x] S1-03 Provenance / practitioner review / evidence presentation semantics — analysis and
+  required owner decisions complete
 - [ ] S1-04 Apply approved Product Contract refinements
 - [ ] S1-05 Logical domain responsibility/collaboration matrix
 - [ ] S1-06 Evidence logical-domain boundary ADR
@@ -305,6 +306,9 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-19: Product-integrity review identified one low-severity omission of YWAY-P005/YWAY-E006 from the affected-contract inventory; the trace was corrected and rechecked. Final product-integrity, architecture, security/privacy, and test reviews reported no material findings.
 - 2026-09-19: S1-02 analysis confirmed that Product Vision does not uniquely define the operational thresholds for "meaningful career experiment," "real next action," the governed six-part experiment unit, the minimum anonymous-first-value interaction, or simultaneous-versus-contextual post-trial route availability. These remain explicit owner decisions, so S1-02 stays open and dependent S1-04 edits remain blocked on the relevant decisions.
 - 2026-09-19: Security/privacy re-review found that the S1-02 anonymous-first-value analysis omitted the independent YWAY-P012 age and safeguarding boundary. The audit now states that login-free first value preserves 18+ public access and keeps any 16–17 pathway blocked on separate safeguarding and consent review, without selecting an enforcement mechanism. `pnpm verify:full` passed after the correction.
+- 2026-09-20: S1-03 analysis separated content provenance from youth evidence provenance, bounded the qualified-practitioner gate as a necessary content-quality condition rather than capability certification or complete release readiness, and confirmed that evidence separation does not itself require separate screens or physical storage. Product Vision does not uniquely decide whether provenance markers are cumulative facts or lifecycle states, or whether multiple evidence categories should be normatively permitted in one view; those remain owner decisions for any dependent S1-04 contract wording.
+- 2026-09-20: Code review found that the initial S1-03 wording deferred version invalidation and re-review rules too broadly, allowing stale practitioner approval to appear transferable to changed content. The analysis now preserves the binding YWAY-P019/YWAY-E005 invariant that practitioner approval covers only reviewed content; changed content outside that review scope cannot inherit prior practitioner-reviewed or production-quality status. Exact versioning, materiality triggers, review granularity, and workflow remain deferred.
+- 2026-09-20: The owner resolved both S1-03 product questions. Provenance history is cumulative and preserved across AI assistance, founder review, and practitioner review, with any current status kept separately. Evidence categories may coexist in one Portfolio view when clearly grouped and labeled, and category-specific viewing should also be supported; exact UI controls remain deferred to later design.
 
 ## Decision log
 
@@ -315,6 +319,8 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-19 | Stage 1 kickoff plan approved; activate Stage 1 and create S1-01 through S1-08 | Execution direction only; does not resolve product or architecture questions |
 | 2026-09-19 | S1-01 audit completed with exact Product Vision, Product Contract, and Architecture traceability; unresolved semantics and implementation choices remain assigned to later Stage 1 steps or explicit future triggers | Audit evidence only; does not resolve product or architecture questions |
 | 2026-09-19 | S1-02 analysis bounded all registered clarification candidates against Product Vision and identified the remaining owner decisions; no disputed contract wording is treated as authority for resolving those questions | Analysis evidence only; S1-02 remains open pending owner direction |
+| 2026-09-20 | S1-03 analysis bounded content/evidence provenance, practitioner-review, production-quality, and evidence-presentation semantics against Product Vision | Analysis evidence |
+| 2026-09-20 | Owner direction: preserve cumulative provenance history with separate current status; allow clearly separated evidence categories to coexist in one Portfolio view with category-specific viewing | Explicit owner product direction for S1-04 contract refinement |
 
 ## Completion criteria
 
