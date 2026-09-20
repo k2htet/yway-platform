@@ -294,7 +294,7 @@ The classified decision register above remains unresolved until the correspondin
   required owner decisions complete
 - [ ] S1-04 Apply approved Product Contract refinements — approved S1-03 subset applied; S1-02
   owner decisions still block the remaining refinements
-- [ ] S1-05 Logical domain responsibility/collaboration matrix
+- [x] S1-05 Logical domain responsibility/collaboration matrix
 - [ ] S1-06 Evidence logical-domain boundary ADR
 - [ ] S1-07 Reconcile Architecture and classify remaining questions
 - [ ] S1-08 Validate and close Stage 1
@@ -314,6 +314,7 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-20: Code review found that YWAY-P008 and YWAY-P019 still used DIRECT_PRODUCT_CONTRACT even though their new S1-03 requirements came from explicit owner direction rather than Product Vision alone. Product Contracts now distinguish OWNER_AUTHORIZED_PRODUCT_CONTRACT from direct Vision contracts, cite the durable S1-03 owner-decision record, and preserve Product Vision as the highest authority.
 - 2026-09-20: Follow-up review found two remaining governance gaps: the derived-invariant preamble still referred only to direct product contracts, and automated verification did not validate contract authority structure. The preamble now refers to product contracts generally, and `verify:invariants` parses Product Contracts to enforce known classifications, required source fields, and explicit Vision-boundary plus owner-record citations for owner-authorized contracts, including regression checks for YWAY-P008 and YWAY-P019.
 - 2026-09-20: A second follow-up review found that the authority checker could omit missing or malformed stable IDs and accept unregistered owner-authorized contracts, and that YWAY-P009 omitted its new §5 source dependency. The checker now validates the complete unique YWAY-P001–P030 and YWAY-E001–E006 ID set, requires every owner-authorized contract to map to a specific existing decision record, and exercises those failure modes in its self-test. YWAY-P009 now cites Product Vision §§5 and 7. `pnpm agent:doctor` and `pnpm verify:full` passed after the corrections.
+- 2026-09-20: S1-05 defined a vendor-neutral logical responsibility/collaboration matrix across Youth, Content, Evidence responsibility, Practitioner, Operations/Safeguarding, Employer, Consent/Sharing, and Identity/Access. The matrix keeps Evidence placement neutral for S1-06, preserves employer/private-youth isolation and purpose-specific consent, separates Pack content provenance from youth evidence provenance, bounds privileged/Admin context as authorization rather than bypass, and explicitly escalates the unresolved Yway-side owner for reviewing/structuring employer-supplied Quest definitions to S1-07 or a later architecture/operations decision. No physical package, API, schema, service, database, or provider choice was made.
 
 ## Decision log
 
@@ -327,6 +328,7 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-20 | S1-03 analysis bounded content/evidence provenance, practitioner-review, production-quality, and evidence-presentation semantics against Product Vision | Analysis evidence |
 | 2026-09-20 | Owner direction: preserve cumulative provenance history with separate current status; allow clearly separated evidence categories to coexist in one Portfolio view with category-specific viewing | Explicit owner product direction for S1-04 contract refinement |
 | 2026-09-20 | Apply the approved S1-03 contract subset now while leaving all unresolved S1-02-dependent wording unchanged | Execution step only; S1-04 remains open pending S1-02 owner direction |
+| 2026-09-20 | Define the S1-05 logical responsibility/collaboration matrix while keeping Evidence placement and physical architecture unresolved | Analysis evidence only; the Evidence placement decision remains assigned to S1-06 and the unresolved Quest-structuring owner is escalated |
 
 ## Completion criteria
 
