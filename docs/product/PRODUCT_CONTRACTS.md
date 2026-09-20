@@ -1,12 +1,13 @@
 # Yway Product Contracts
 
-This document encodes the non-negotiable product rules of Yway as checkable contracts. Every contract is derived from `PRODUCT_VISION.md`, which is the sole authoritative source. If any contract here conflicts with the Product Vision, the Product Vision prevails.
+This document encodes the non-negotiable product rules of Yway as checkable contracts. Product Vision remains the highest product authority. Product Contracts may contain either rules directly stated in `PRODUCT_VISION.md` or explicit owner-authorized refinements recorded after Product Vision left a question open. If any Product Contract conflicts with Product Vision, Product Vision prevails.
 
 Each contract has a stable ID, source reference, requirement statement, rationale, violation conditions, future verification strategy, and classification.
 
 **Classifications:**
 - `DIRECT_PRODUCT_CONTRACT` — explicitly stated in PRODUCT_VISION.md as a product rule.
-- `DERIVED_ENFORCEMENT_INVARIANT` — an engineering/architectural enforcement mechanism logically necessary to uphold a direct product contract. Not itself quoted from the Product Vision. Implementation mechanisms proposed here are candidates, not mandates.
+- `OWNER_AUTHORIZED_PRODUCT_CONTRACT` — a product rule whose canonical wording includes explicit owner direction for a question that Product Vision did not uniquely determine. Its source must identify both the relevant Product Vision boundary and the durable owner-decision record.
+- `DERIVED_ENFORCEMENT_INVARIANT` — an engineering/architectural enforcement mechanism logically necessary to uphold a product contract. Not itself quoted from the Product Vision. Implementation mechanisms proposed here are candidates, not mandates.
 
 ---
 
@@ -89,8 +90,8 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## YWAY-P008: Evidence category separation
 
-- **Source:** §7 (Evidence Portfolio)
-- **Classification:** DIRECT_PRODUCT_CONTRACT
+- **Source:** §7 (Evidence Portfolio); S1-03 explicit owner direction recorded in `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`
+- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT
 - **Requirement:** The Evidence Portfolio maintains five semantically distinct categories: exploration signals, practice evidence, verified assessment evidence, user-added work, and employer quest work. Completion records state exactly what was completed. They must not be presented as professional certification, hiring evidence, or verified capability unless appropriate support exists. Provenance must remain intact through any sharing or export. Different categories may coexist in one Portfolio view when grouping, labels, meaning, and provenance remain explicit; the product must also support viewing a single category on its own. Semantic separation, correct labeling, and provenance preservation are required regardless of physical storage or presentation approach.
 - **Rationale:** Users need to understand what their evidence represents. External parties must not misinterpret exploration as certification.
 - **What would violate it:** Presenting one category as another. Combining categories into an undifferentiated Portfolio output. Inflating completion records beyond what was actually done. Stripping provenance metadata during export. Misrepresenting the meaning of an evidence category in any display or export context.
@@ -212,8 +213,8 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## YWAY-P019: Content provenance and practitioner review gate
 
-- **Source:** §5 (Content provenance)
-- **Classification:** DIRECT_PRODUCT_CONTRACT
+- **Source:** §5 (Content provenance); S1-03 explicit owner direction recorded in `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`
+- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT
 - **Requirement:** Every Career Experience Pack carries provenance metadata distinguishing AI-assisted work, founder-reviewed work, and practitioner-reviewed work. These are cumulative historical provenance facts and must remain preserved rather than being replaced by a single mutually exclusive lifecycle label. A separate current review or release status may exist, but it must not erase provenance history. AI is not a verified practitioner and does not certify workplace reality. A qualified practitioner remains the final content-quality gate for production-quality packs. Practitioner approval applies only to the content covered by that review; changed content outside that review scope cannot inherit an earlier version's practitioner-reviewed or production-quality status.
 - **Rationale:** Product Vision requires the provenance distinctions and states: "A qualified practitioner remains the final content-quality gate for a production-quality Career Experience Pack." The cumulative-history interpretation and separate-current-status rule are explicit owner direction recorded by S1-03.
 - **What would violate it:** Shipping a Career Experience Pack to end users without practitioner review. Labeling AI-drafted content as practitioner-reviewed. Replacing provenance history with only the latest review label. Treating changed, unreviewed content as still practitioner-reviewed because an earlier version was approved. Missing or falsified provenance metadata on any pack.
