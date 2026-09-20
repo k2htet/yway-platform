@@ -346,7 +346,7 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## Derived Enforcement Invariants
 
-These are engineering and architectural enforcement mechanisms derived from the direct product contracts above. They describe implementation constraints necessary to uphold the product contracts. They are NOT themselves quoted from the Product Vision. Proposed implementation mechanisms are candidates subject to future validation.
+These are engineering and architectural enforcement mechanisms derived from the product contracts above. They describe implementation constraints necessary to uphold the product contracts. They are NOT themselves quoted from the Product Vision. Proposed implementation mechanisms are candidates subject to future validation.
 
 ---
 
