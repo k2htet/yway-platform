@@ -83,7 +83,7 @@ Each contract has a stable ID, source reference, requirement statement, rational
 - **Requirement:** Exploration signals, practice evidence, and verified assessment evidence are three distinct levels. One evidence level must never be presented as another. There is no automatic promotion between levels.
 - **Rationale:** Directly stated in the Product Vision: "One evidence level must never be presented as another."
 - **What would violate it:** Displaying exploration completions as practice achievements. Auto-promoting practice results to verified status. Any UI or API that blends categories into a single undifferentiated list without explicit labeling.
-- **Future verification strategy:** Presentation-layer tests verifying each category renders distinctly. Property-based tests proving no query path returns mixed categories as a unified output.
+- **Future verification strategy:** Presentation-layer tests verifying each category remains explicitly identified wherever categories are shown together or separately. Query/API tests verifying mixed-category results preserve category identity and never collapse evidence levels into an undifferentiated output.
 
 ---
 
@@ -91,11 +91,11 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 - **Source:** §7 (Evidence Portfolio)
 - **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** The Evidence Portfolio maintains five strictly separated categories: exploration signals, practice evidence, verified assessment evidence, user-added work, and employer quest work. Completion records state exactly what was completed. They must not be presented as professional certification, hiring evidence, or verified capability unless appropriate support exists. Provenance must remain intact through any sharing or export. Semantic separation, correct labeling, and provenance preservation are required regardless of physical storage approach.
+- **Requirement:** The Evidence Portfolio maintains five semantically distinct categories: exploration signals, practice evidence, verified assessment evidence, user-added work, and employer quest work. Completion records state exactly what was completed. They must not be presented as professional certification, hiring evidence, or verified capability unless appropriate support exists. Provenance must remain intact through any sharing or export. Different categories may coexist in one Portfolio view when grouping, labels, meaning, and provenance remain explicit; the product must also support viewing a single category on its own. Semantic separation, correct labeling, and provenance preservation are required regardless of physical storage or presentation approach.
 - **Rationale:** Users need to understand what their evidence represents. External parties must not misinterpret exploration as certification.
-- **What would violate it:** Presenting one category as another. Inflating completion records beyond what was actually done. Stripping provenance metadata during export. Misrepresenting the meaning of an evidence category in any display or export context.
-- **Note:** Storing multiple evidence categories in a single physical datastore or table is not itself a violation, provided semantic separation, correct labeling, provenance, and non-misrepresentation are maintained.
-- **Future verification strategy:** Data model tests enforcing category discriminators. Export pipeline tests verifying provenance preservation. UI tests confirming category boundaries in portfolio views.
+- **What would violate it:** Presenting one category as another. Combining categories into an undifferentiated Portfolio output. Inflating completion records beyond what was actually done. Stripping provenance metadata during export. Misrepresenting the meaning of an evidence category in any display or export context.
+- **Note:** Multiple evidence categories may be stored together or presented together. Neither shared physical storage nor a unified Portfolio view is itself a violation when category identity, meaning, provenance, and boundaries remain explicit. Exact UI controls and layout are deferred.
+- **Future verification strategy:** Data model tests enforcing category discriminators. Export pipeline tests verifying provenance preservation. UI tests confirming categories remain visibly distinct in combined views and that category-specific viewing is available.
 
 ---
 
@@ -103,10 +103,10 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 - **Source:** §7 (Evidence Portfolio)
 - **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** When evidence is organized, hidden, exported, or selectively shared, its provenance metadata must remain intact. Provenance includes origin, creation context, and evidence level.
-- **Rationale:** Directly stated: "Provenance must remain intact."
-- **What would violate it:** Any export or sharing operation that strips origin metadata. Any transformation that discards evidence-level labeling.
-- **Future verification strategy:** Round-trip export/import tests verifying provenance fields survive all operations.
+- **Requirement:** When evidence is organized, hidden, exported, or selectively shared, its provenance metadata must remain intact. Evidence provenance includes origin, creation context, and evidence level. Evidence provenance is distinct from Career Experience Pack content provenance under YWAY-P019; when evidence arises from Pack interaction, later architecture must preserve enough traceability to interpret both without conflating them.
+- **Rationale:** Directly stated: "Provenance must remain intact." Product Vision separately defines content provenance and Evidence Portfolio provenance.
+- **What would violate it:** Any export or sharing operation that strips origin metadata. Any transformation that discards evidence-level labeling. Treating practitioner review of Pack content as if it strengthened the resulting youth evidence level.
+- **Future verification strategy:** Round-trip export/import tests verifying evidence provenance survives all operations. Traceability tests for Pack-derived evidence confirming content-review provenance does not alter evidence-level meaning.
 
 ---
 
@@ -214,10 +214,10 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 - **Source:** §5 (Content provenance)
 - **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** Every Career Experience Pack carries provenance metadata distinguishing AI-assisted work, founder-reviewed work, and practitioner-reviewed work. AI is not a verified practitioner and does not certify workplace reality. A qualified practitioner remains the final content-quality gate for production-quality packs.
-- **Rationale:** Directly stated: "A qualified practitioner remains the final content-quality gate for a production-quality Career Experience Pack."
-- **What would violate it:** Shipping a Career Experience Pack to end users without practitioner review. Labeling AI-drafted content as practitioner-reviewed. Missing or falsified provenance metadata on any pack.
-- **Future verification strategy:** Content pipeline tests verifying no pack reaches production status without practitioner approval gate. Provenance metadata validation on every published pack.
+- **Requirement:** Every Career Experience Pack carries provenance metadata distinguishing AI-assisted work, founder-reviewed work, and practitioner-reviewed work. These are cumulative historical provenance facts and must remain preserved rather than being replaced by a single mutually exclusive lifecycle label. A separate current review or release status may exist, but it must not erase provenance history. AI is not a verified practitioner and does not certify workplace reality. A qualified practitioner remains the final content-quality gate for production-quality packs. Practitioner approval applies only to the content covered by that review; changed content outside that review scope cannot inherit an earlier version's practitioner-reviewed or production-quality status.
+- **Rationale:** Product Vision requires the provenance distinctions and states: "A qualified practitioner remains the final content-quality gate for a production-quality Career Experience Pack." The cumulative-history interpretation and separate-current-status rule are explicit owner direction recorded by S1-03.
+- **What would violate it:** Shipping a Career Experience Pack to end users without practitioner review. Labeling AI-drafted content as practitioner-reviewed. Replacing provenance history with only the latest review label. Treating changed, unreviewed content as still practitioner-reviewed because an earlier version was approved. Missing or falsified provenance metadata on any pack.
+- **Future verification strategy:** Content pipeline tests verifying no pack reaches production status without practitioner approval covering the published content. Provenance-history tests confirming AI/founder/practitioner facts remain intact across review and release transitions. Revision tests confirming unreviewed changed content cannot inherit prior practitioner approval.
 
 ---
 
@@ -401,11 +401,11 @@ These are engineering and architectural enforcement mechanisms derived from the 
 
 - **Derived from:** YWAY-P019 (Content provenance and practitioner review gate)
 - **Classification:** DERIVED_ENFORCEMENT_INVARIANT
-- **Requirement:** A Career Experience Pack must not be publishable to end users without passing through a practitioner review gate. Provenance metadata must be attached at creation and preserved through all publishing transitions.
-- **Rationale:** The Product Vision requires a qualified practitioner as the final content-quality gate (YWAY-P019). Enforcing that gate structurally is the derived requirement. The specific workflow mechanism is an implementation choice.
-- **What would violate it:** Publishing workflow that skips practitioner review. Transitions that drop provenance metadata. No distinction between draft and production content.
-- **Future verification strategy:** Pipeline tests verifying all publishing paths require practitioner approval. Provenance preservation tests across publishing transitions.
-- **Candidate mechanisms:** Explicit state machine in domain logic. Workflow engine. CMS with approval gates. Specific approach is deferred.
+- **Requirement:** A Career Experience Pack must not be publishable to end users without passing through a practitioner review gate that covers the content being published. Provenance history must be attached and preserved through publishing transitions. Content changes outside the scope of prior practitioner review must lose eligibility to rely on that prior approval until the changed content is covered by qualified-practitioner review. The exact version model, review granularity, materiality trigger, and workflow are deferred.
+- **Rationale:** The Product Vision requires a qualified practitioner as the final content-quality gate (YWAY-P019). Enforcing that gate against the content actually published is the derived requirement; an older approval cannot truthfully cover later unreviewed changes. The specific workflow mechanism remains an implementation choice.
+- **What would violate it:** Publishing workflow that skips practitioner review. Publishing changed content under stale approval from an earlier reviewed version. Transitions that drop provenance history. No enforceable distinction between content eligible for production and content still awaiting required review.
+- **Future verification strategy:** Pipeline tests verifying all publishing paths require practitioner approval covering the published content. Revision tests confirming changed, unreviewed content cannot inherit prior approval. Provenance-history preservation tests across publishing transitions.
+- **Candidate mechanisms:** Explicit state machine in domain logic. Workflow engine. CMS with approval gates. Version-linked review records. Specific approach is deferred.
 
 ---
 
