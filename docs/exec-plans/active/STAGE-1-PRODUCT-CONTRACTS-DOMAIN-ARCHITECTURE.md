@@ -292,7 +292,8 @@ The classified decision register above remains unresolved until the correspondin
   complete; owner decisions pending
 - [x] S1-03 Provenance / practitioner review / evidence presentation semantics — analysis and
   required owner decisions complete
-- [ ] S1-04 Apply approved Product Contract refinements
+- [ ] S1-04 Apply approved Product Contract refinements — approved S1-03 subset applied; S1-02
+  owner decisions still block the remaining refinements
 - [ ] S1-05 Logical domain responsibility/collaboration matrix
 - [ ] S1-06 Evidence logical-domain boundary ADR
 - [ ] S1-07 Reconcile Architecture and classify remaining questions
@@ -309,6 +310,7 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-20: S1-03 analysis separated content provenance from youth evidence provenance, bounded the qualified-practitioner gate as a necessary content-quality condition rather than capability certification or complete release readiness, and confirmed that evidence separation does not itself require separate screens or physical storage. Product Vision does not uniquely decide whether provenance markers are cumulative facts or lifecycle states, or whether multiple evidence categories should be normatively permitted in one view; those remain owner decisions for any dependent S1-04 contract wording.
 - 2026-09-20: Code review found that the initial S1-03 wording deferred version invalidation and re-review rules too broadly, allowing stale practitioner approval to appear transferable to changed content. The analysis now preserves the binding YWAY-P019/YWAY-E005 invariant that practitioner approval covers only reviewed content; changed content outside that review scope cannot inherit prior practitioner-reviewed or production-quality status. Exact versioning, materiality triggers, review granularity, and workflow remain deferred.
 - 2026-09-20: The owner resolved both S1-03 product questions. Provenance history is cumulative and preserved across AI assistance, founder review, and practitioner review, with any current status kept separately. Evidence categories may coexist in one Portfolio view when clearly grouped and labeled, and category-specific viewing should also be supported; exact UI controls remain deferred to later design.
+- 2026-09-20: S1-04 applied the approved S1-03 refinements to YWAY-P007–P009, YWAY-P019, and YWAY-E005 without adding or renumbering contract IDs. S1-02 owner decisions remain unresolved, so the corresponding career-experiment, anonymous-first-value, and post-trial contract refinements remain intentionally blocked and S1-04 stays open.
 
 ## Decision log
 
@@ -321,6 +323,7 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-19 | S1-02 analysis bounded all registered clarification candidates against Product Vision and identified the remaining owner decisions; no disputed contract wording is treated as authority for resolving those questions | Analysis evidence only; S1-02 remains open pending owner direction |
 | 2026-09-20 | S1-03 analysis bounded content/evidence provenance, practitioner-review, production-quality, and evidence-presentation semantics against Product Vision | Analysis evidence |
 | 2026-09-20 | Owner direction: preserve cumulative provenance history with separate current status; allow clearly separated evidence categories to coexist in one Portfolio view with category-specific viewing | Explicit owner product direction for S1-04 contract refinement |
+| 2026-09-20 | Apply the approved S1-03 contract subset now while leaving all unresolved S1-02-dependent wording unchanged | Execution step only; S1-04 remains open pending S1-02 owner direction |
 
 ## Completion criteria
 
