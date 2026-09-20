@@ -26,6 +26,16 @@ contracts or claim S1-04 is fully complete.
 | YWAY-P019 | Records AI-assisted, founder-reviewed, and practitioner-reviewed as cumulative provenance history; current status may be separate; prior practitioner approval cannot cover changed content outside the reviewed scope.    | Product Vision §5 plus explicit S1-03 owner direction and existing practitioner gate |
 | YWAY-E005 | Aligns enforcement with YWAY-P019 so publication approval must cover the content actually being published; stale approval cannot carry over to unreviewed changes.                                                         | Derived from YWAY-P019; S1-03 code-review correction                                 |
 
+## Authority-classification audit
+
+- `DIRECT_PRODUCT_CONTRACT` remains reserved for requirements explicitly stated in Product Vision.
+- `OWNER_AUTHORIZED_PRODUCT_CONTRACT` records canonical product requirements that combine a Product
+  Vision boundary with explicit owner direction for an otherwise unresolved question.
+- YWAY-P008 and YWAY-P019 use the owner-authorized classification because their S1-03 refinements are
+  not uniquely determined by Product Vision alone.
+- Product Vision remains the highest product authority and prevails over any conflicting contract
+  wording.
+
 ## Stable-ID audit
 
 - No Product Contract or derived-invariant ID was added, removed, or renumbered.
