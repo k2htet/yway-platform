@@ -32,7 +32,10 @@ interface ProductContractSection {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const checkerPath = resolve(repositoryRoot, "scripts/check-product-invariants.ts");
-const productContractsPath = resolve(repositoryRoot, "docs/product/PRODUCT_CONTRACTS.md");
+const productContractsPath = resolve(
+  repositoryRoot,
+  "docs/product/PRODUCT_CONTRACTS.md",
+);
 
 const knownContractClassifications = new Set<ContractClassification>([
   "DIRECT_PRODUCT_CONTRACT",
@@ -41,14 +44,8 @@ const knownContractClassifications = new Set<ContractClassification>([
 ]);
 
 const ownerAuthorizedContracts = new Map([
-  [
-    "YWAY-P008",
-    "docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md",
-  ],
-  [
-    "YWAY-P019",
-    "docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md",
-  ],
+  ["YWAY-P008", "docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md"],
+  ["YWAY-P019", "docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md"],
 ]);
 
 const codeExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -207,7 +204,9 @@ function inspectProductContractStructure(sourceText: string): string[] {
         failures.push(`${section.id}: owner-authorized contract source lacks a Vision boundary`);
       }
       if (!section.source?.includes("docs/audits/")) {
-        failures.push(`${section.id}: owner-authorized contract source lacks an owner-decision record`);
+        failures.push(
+          `${section.id}: owner-authorized contract source lacks an owner-decision record`,
+        );
       }
     }
   }
@@ -342,9 +341,7 @@ function runSelfTest(): void {
 }
 
 function runRepositoryCheck(): void {
-  const contractFailures = inspectProductContractStructure(
-    readFileSync(productContractsPath, "utf8"),
-  );
+  const contractFailures = inspectProductContractStructure(readFileSync(productContractsPath, "utf8"));
 
   if (contractFailures.length > 0) {
     for (const failure of contractFailures) {
