@@ -7,9 +7,9 @@ presentation separation, and the boundary between content provenance and evidenc
 introducing unsupported product intent or prematurely defining Stage 2 workflow or physical evidence
 representation.
 
-This document records S1-03 analysis. It does not modify Product Vision, Product Contracts,
-Architecture, or implementation requirements, and it does not resolve owner decisions that Product
-Vision leaves open.
+This document records S1-03 analysis and the explicit owner direction supplied for the questions that
+Product Vision leaves open. It does not modify Product Vision, Product Contracts, Architecture, or
+implementation requirements; dependent Product Contract wording belongs to S1-04.
 
 ## Authority reviewed
 
@@ -54,9 +54,10 @@ define the relationship among the three markers as:
 - mutually exclusive lifecycle states; or
 - a combination of durable provenance facts plus a separate current review or release state.
 
-S1-03 therefore must not silently select one of those models. Whatever model is chosen later must
-preserve the underlying distinctions so that practitioner review does not erase or misrepresent AI
-assistance or other relevant content origin.
+The owner has now selected a cumulative-history model. AI-assisted, founder-reviewed, and
+practitioner-reviewed are durable historical facts that may all remain true for the same Pack. A
+separate current review or release status may exist, but changing that current status must not erase
+or overwrite the underlying history.
 
 The specific storage shape, workflow state machine, CMS representation, and transition mechanism
 remain deferred implementation choices.
@@ -98,15 +99,15 @@ be presented as another, and completion records must state exactly what was comp
 That is a semantic and truthfulness constraint. Product Vision does not state that each category must
 live on a different screen, page, physical datastore, package, or service.
 
-Existing authority is therefore compatible with more than one presentation approach, including:
+The owner has selected a unified Portfolio presentation: differently labeled evidence categories may
+coexist in one Portfolio view when category boundaries, labels, meaning, and provenance remain
+explicit. The experience should also support category-specific viewing so a user can narrow the
+Portfolio to one evidence category without implying that one category is stronger or more valuable
+than another.
 
-- separate category views; or
-- a view that presents multiple categories while keeping category boundaries, labels, meaning, and
-  provenance explicit.
-
-S1-03 does not choose between those approaches. A later design must not use visual grouping,
-aggregation, export, or sharing to make distinct evidence categories appear equivalent or stronger
-than they are.
+The exact interaction control, screen layout, navigation pattern, and visual design remain deferred.
+A later design must not use grouping, filtering, aggregation, export, or sharing to make distinct
+evidence categories appear equivalent or stronger than they are.
 
 ### 4. Content provenance and evidence provenance are different concerns
 
@@ -145,27 +146,28 @@ This clarification does not broaden access to youth evidence or change consent b
 No authentication provider, authorization mechanism, persistence model, audit store, CMS, workflow
 engine, or UI implementation is selected here.
 
-## Owner decision candidates
+## Owner decisions
 
-Explicit owner direction is required before S1-04 makes either of these additional normative product
-choices:
+The owner explicitly resolved both S1-03 product questions:
 
-1. Should AI-assisted, founder-reviewed, and practitioner-reviewed provenance be modeled at the
-   product-contract level as cumulative facts, lifecycle states, or durable facts plus a separate
-   current state?
-2. Should Product Contracts explicitly permit differently labeled evidence categories to coexist in
-   one portfolio view when semantic separation is preserved, or leave the presentation model
-   unspecified?
+1. **Preserve the full provenance history.** AI-assisted, founder-reviewed, and
+   practitioner-reviewed are cumulative historical facts. They must not be collapsed into a single
+   mutually exclusive lifecycle label. A separate current review or release status may be maintained,
+   but it must not erase the historical provenance record.
+2. **Allow clearly separated evidence categories in one Portfolio view.** Different evidence
+   categories may appear together when they are visibly grouped and labeled so their meanings remain
+   distinct. The product should also support category-specific viewing. Exact UI controls and layout
+   remain a later design decision.
 
-No dependent Product Contract wording should encode either choice until the required owner direction
-is recorded in the appropriate authoritative product document.
+These decisions are explicit owner authorization for the corresponding S1-04 Product Contract
+refinements. They do not authorize a CMS, workflow engine, schema, storage model, or specific UI
+implementation.
 
 The minimum practitioner-review gate and the distinction between content provenance and evidence
-provenance do not require a new owner decision to remain enforceable. Neither does the invariant that
-unreviewed changed content cannot inherit an earlier version's practitioner approval. Detailed
-practitioner qualification, version model, review granularity, materiality or re-review trigger, and
-workflow remain deferred operational or architecture questions unless later product authority makes
-them normative.
+provenance remain enforceable. So does the invariant that unreviewed changed content cannot inherit
+an earlier version's practitioner approval. Detailed practitioner qualification, version model,
+review granularity, materiality or re-review trigger, and workflow remain deferred operational or
+architecture questions unless later product authority makes them normative.
 
 ## Non-goals preserved
 
@@ -181,15 +183,16 @@ them normative.
 
 ## Validation status
 
-- The registered S1-03 provenance question is bounded without selecting an unsupported lifecycle
-  model.
+- The provenance question is resolved by explicit owner direction: full historical provenance is
+  preserved, while any current review or release status remains separate.
 - The practitioner gate is defined at its minimum Product Vision-supported meaning without treating it
   as capability certification or the complete release-readiness definition; prior approval cannot
   cover changed content that was not within the scope of practitioner review.
-- Evidence separation is preserved without inventing a universal separate-screen or separate-storage
-  requirement.
+- Evidence presentation is resolved by explicit owner direction: categories may coexist in one
+  Portfolio view with clear grouping and labels, with category-specific viewing supported; no
+  separate-screen or separate-storage requirement is introduced.
 - Content provenance and evidence provenance remain distinct, and practitioner-reviewed content does
   not strengthen youth evidence.
 - Privacy, sharing, export, and employer-isolation constraints remain independently binding.
-- S1-03 analysis is complete; the owner-decision candidates above remain unresolved, and S1-04 must
-  not encode those specific choices until authoritative owner direction exists.
+- S1-03 analysis and its required owner decisions are complete. S1-04 may apply the corresponding
+  Product Contract refinements while preserving the remaining deferred implementation choices.
