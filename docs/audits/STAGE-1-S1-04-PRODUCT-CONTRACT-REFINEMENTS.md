@@ -18,13 +18,13 @@ contracts or claim S1-04 is fully complete.
 
 ## Applied refinements
 
-| Contract | Refinement | Authority |
-| --- | --- | --- |
-| YWAY-P007 | Verification wording now permits mixed-category results when category identity remains explicit; only undifferentiated blending is prohibited. | Product Vision §3.3 and §7; S1-03 evidence-presentation clarification |
-| YWAY-P008 | Replaces the ambiguous phrase “strictly separated categories” with semantic distinction; explicitly permits multiple categories in one Portfolio view when clearly grouped/labeled and requires category-specific viewing. | Product Vision §7 plus explicit S1-03 owner direction |
-| YWAY-P009 | Clarifies that evidence provenance is distinct from Pack content provenance and that Pack review must not strengthen youth evidence level. | Product Vision §5 and §7; S1-03 content-vs-evidence provenance analysis |
-| YWAY-P019 | Records AI-assisted, founder-reviewed, and practitioner-reviewed as cumulative provenance history; current status may be separate; prior practitioner approval cannot cover changed content outside the reviewed scope. | Product Vision §5 plus explicit S1-03 owner direction and existing practitioner gate |
-| YWAY-E005 | Aligns enforcement with YWAY-P019 so publication approval must cover the content actually being published; stale approval cannot carry over to unreviewed changes. | Derived from YWAY-P019; S1-03 code-review correction |
+| Contract  | Refinement                                                                                                                                                                                                                 | Authority                                                                            |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| YWAY-P007 | Verification wording now permits mixed-category results when category identity remains explicit; only undifferentiated blending is prohibited.                                                                             | Product Vision §3.3 and §7; S1-03 evidence-presentation clarification                |
+| YWAY-P008 | Replaces the ambiguous phrase “strictly separated categories” with semantic distinction; explicitly permits multiple categories in one Portfolio view when clearly grouped/labeled and requires category-specific viewing. | Product Vision §7 plus explicit S1-03 owner direction                                |
+| YWAY-P009 | Clarifies that evidence provenance is distinct from Pack content provenance and that Pack review must not strengthen youth evidence level.                                                                                 | Product Vision §5 and §7; S1-03 content-vs-evidence provenance analysis              |
+| YWAY-P019 | Records AI-assisted, founder-reviewed, and practitioner-reviewed as cumulative provenance history; current status may be separate; prior practitioner approval cannot cover changed content outside the reviewed scope.    | Product Vision §5 plus explicit S1-03 owner direction and existing practitioner gate |
+| YWAY-E005 | Aligns enforcement with YWAY-P019 so publication approval must cover the content actually being published; stale approval cannot carry over to unreviewed changes.                                                         | Derived from YWAY-P019; S1-03 code-review correction                                 |
 
 ## Stable-ID audit
 
