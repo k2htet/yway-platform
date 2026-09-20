@@ -48,9 +48,9 @@ Content owns the definition and lifecycle of Career Experience Packs including t
 
 ### Evidence
 
-Evidence is treated as an independent logical domain rather than a sub-concern of Youth. Rationale: the Product Vision and Product Contracts define five strictly separated evidence categories with distinct lifecycle rules, provenance-preserving correction boundaries, presentation boundaries, and sharing semantics. These concerns cross-cut Youth interactions and require their own invariants. Collapsing Evidence into Youth would risk silent conflation of evidence levels — the exact failure mode YWAY-P007 exists to prevent.
+Under accepted decision YWAY-D002, Evidence is an independent logical domain rather than a sub-concern of Youth. The Product Vision and Product Contracts define five semantically distinct evidence categories with lifecycle rules, provenance-preserving correction boundaries, presentation boundaries, and sharing semantics. These concerns cross Youth, Content, Consent/Sharing, Employer, and future assessment contexts and require one logical authority. This logical ownership does not imply a separate package, service, application, schema, database, deployable, API, or network boundary.
 
-Responsibilities: evidence category definitions and their meaning, evidence provenance tracking, evidence lifecycle semantics (creation and any future explicit correction/reclassification), and presentation constraints ensuring distinct evidence levels are never combined for external consumption. Evidence must never be silently or automatically reclassified into a stronger level; if a future correction mechanism is accepted, it must be explicit, auditable, and provenance-preserving. (YWAY-P007, YWAY-P008, YWAY-E002)
+Responsibilities: evidence category definitions and their meaning, evidence provenance tracking, evidence lifecycle semantics (creation and any future explicit correction/reclassification), and presentation constraints ensuring category identity, meaning, labeling, and provenance remain explicit whether categories are shown separately or together. Evidence must never be silently or automatically reclassified into a stronger level; if a future correction mechanism is accepted, it must be explicit, auditable, and provenance-preserving. (YWAY-P007, YWAY-P008, YWAY-E002, YWAY-D002)
 
 ### Practitioner
 
@@ -238,18 +238,17 @@ Logical domains defined in this document must not be converted into directories,
 
 ## 11. Unresolved Architecture Questions
 
-| Question                                                       | Why Unresolved                                                                                                           |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Evidence as independent logical domain vs concern within Youth | Treated as independent domain in this document based on contract separation requirements; validate during implementation |
-| Authority/conflict model for synchronized data                 | Which node (local vs server) is authoritative for which data types remains undefined                                     |
-| First real physical application boundary                       | No app/package structure chosen yet                                                                                      |
-| Mobile implementation approach                                 | Product Vision requires Android-first but does not specify native vs hybrid vs web delivery                              |
-| Server data ownership model                                    | Centralized vs distributed data authority is undefined                                                                   |
-| Consent/audit persistence model                                | Tables, event sourcing, append logs — none selected                                                                      |
-| Authorization enforcement architecture                         | Middleware, policy engine, data-layer filters — none selected                                                            |
-| Safeguarding architecture for future 16–17 pathway             | Requires separate safeguarding review per YWAY-P012; no design exists yet                                                |
-| Content authoring format                                       | MDX, JSON, custom DSL, CMS — undefined                                                                                   |
-| Partial pack download strategy                                 | Whether text-only download is supported for low-storage devices is undefined                                             |
+| Question                                           | Why Unresolved                                                                              |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Authority/conflict model for synchronized data     | Which node (local vs server) is authoritative for which data types remains undefined        |
+| First real physical application boundary           | No app/package structure chosen yet                                                         |
+| Mobile implementation approach                     | Product Vision requires Android-first but does not specify native vs hybrid vs web delivery |
+| Server data ownership model                        | Centralized vs distributed data authority is undefined                                      |
+| Consent/audit persistence model                    | Tables, event sourcing, append logs — none selected                                         |
+| Authorization enforcement architecture             | Middleware, policy engine, data-layer filters — none selected                               |
+| Safeguarding architecture for future 16–17 pathway | Requires separate safeguarding review per YWAY-P012; no design exists yet                   |
+| Content authoring format                           | MDX, JSON, custom DSL, CMS — undefined                                                      |
+| Partial pack download strategy                     | Whether text-only download is supported for low-storage devices is undefined                |
 
 Do not answer these questions in implementation code until a decision record accepts a specific choice.
 
