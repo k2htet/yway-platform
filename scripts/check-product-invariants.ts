@@ -317,7 +317,7 @@ function runSelfTest(): void {
   }
 
   const missingOwnerRecord = validContractStructure.replace(
-    "§5; \`docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md\`",
+    "§5; `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`",
     "§5",
   );
   if (
