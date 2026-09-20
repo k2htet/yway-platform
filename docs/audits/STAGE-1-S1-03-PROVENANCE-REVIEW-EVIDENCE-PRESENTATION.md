@@ -71,6 +71,9 @@ The minimum product meaning is therefore:
 - AI assistance or founder review cannot substitute for the qualified-practitioner gate.
 - A Pack must not be represented as production-quality with respect to content quality before that
   practitioner gate has been satisfied.
+- Practitioner approval applies only to content actually covered by the qualified-practitioner
+  review. Changed content that has not itself been covered by qualified-practitioner review cannot
+  inherit a prior version's practitioner-reviewed or production-quality status.
 - A practitioner-review claim is about Pack content quality. It does not by itself certify a young
   person's capability, turn exploration or practice evidence into verified assessment evidence, or
   create hiring evidence.
@@ -79,9 +82,12 @@ The minimum product meaning is therefore:
   localization and comprehension requirements, remain in force.
 
 Product Vision does not uniquely define practitioner qualification operations, review granularity,
-approval tooling, re-review triggers after content changes, or the exact workflow used to establish
-production eligibility. S1-03 leaves those details to later operational and architecture work unless
-the owner explicitly makes them normative product requirements.
+approval tooling, the exact trigger or materiality rule for re-review after changes, or the workflow
+used to establish production eligibility. S1-03 leaves those mechanisms to later operational and
+architecture work unless the owner explicitly makes them normative product requirements. That
+deferral does not weaken the gate: content changes outside the scope of prior practitioner review must
+not be treated as practitioner-reviewed or production-quality merely because an earlier version was
+approved.
 
 ### 3. Evidence presentation separation
 
@@ -155,9 +161,11 @@ No dependent Product Contract wording should encode either choice until the requ
 is recorded in the appropriate authoritative product document.
 
 The minimum practitioner-review gate and the distinction between content provenance and evidence
-provenance do not require a new owner decision to remain enforceable. Detailed practitioner
-qualification, review workflow, version invalidation, and re-review rules remain deferred operational
-or architecture questions unless later product authority makes them normative.
+provenance do not require a new owner decision to remain enforceable. Neither does the invariant that
+unreviewed changed content cannot inherit an earlier version's practitioner approval. Detailed
+practitioner qualification, version model, review granularity, materiality or re-review trigger, and
+workflow remain deferred operational or architecture questions unless later product authority makes
+them normative.
 
 ## Non-goals preserved
 
@@ -176,7 +184,8 @@ or architecture questions unless later product authority makes them normative.
 - The registered S1-03 provenance question is bounded without selecting an unsupported lifecycle
   model.
 - The practitioner gate is defined at its minimum Product Vision-supported meaning without treating it
-  as capability certification or the complete release-readiness definition.
+  as capability certification or the complete release-readiness definition; prior approval cannot
+  cover changed content that was not within the scope of practitioner review.
 - Evidence separation is preserved without inventing a universal separate-screen or separate-storage
   requirement.
 - Content provenance and evidence provenance remain distinct, and practitioner-reviewed content does
