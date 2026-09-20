@@ -20,13 +20,14 @@ behavior. YWAY-D001 remains the relevant accepted tooling decision.
   needed for current repository work; routine sessions inherit high reasoning
   effort; review guidance permits repeated broad document reads and duplicate
   reviewer cycles.
-- Target: project-local plugin restrictions leave only generally useful and Yway
-  skills active, routine reasoning uses medium effort, and review work uses one
-  scoped four-discipline cycle with focused follow-ups.
+- Target: unused local plugins are disabled for Yway, unused remote plugin packs
+  are removed from the Codex account, routine reasoning uses medium effort, and
+  review work uses one scoped four-discipline cycle with focused follow-ups.
 
 ## Scope and non-goals
 
-- Configure Codex only for this repository; do not remove global plugins.
+- Keep repository settings project-local where Codex supports that scope. Remote
+  marketplace plugins require account-level removal to stop skill injection.
 - Tighten context hygiene in shared project instructions and reviewer guidance.
 - Preserve all four reviewer roles and authority ordering.
 - Do not change Product Vision, Product Contracts, application architecture, or
@@ -69,11 +70,11 @@ No product logical domain is affected.
 
 ## Risks
 
-- A disabled capability may be needed for a future task. Mitigation: restrictions
-  are repository-local and reversible, and can be overridden deliberately.
-- Project config may not control workspace-managed remote plugins. Mitigation:
-  validate local parsing and report any remote settings that still require the
-  plugin directory UI.
+- A removed remote capability may be needed for a future task. Mitigation: each
+  plugin can be reinstalled deliberately with `codex plugin add`.
+- Plugin Management is installed by default and cannot be uninstalled.
+  Mitigation: suppress its single skill with a documented user-level
+  `[[skills.config]]` entry.
 
 ## Unresolved questions
 
@@ -103,19 +104,28 @@ None blocking.
   because network access was unavailable, but it successfully resolved all nine
   locally installed plugins as disabled. The model-visible prompt renderer is
   the stronger end-state check for remote skill-pack exclusion.
+- 2026-09-20: A true fresh desktop session still exposed 99 skills. With remote
+  catalog access, the CLI confirmed that project `[plugins]` flags did not
+  disable account-installed remote marketplace plugins.
+- 2026-09-20: Expo, Figma, Notion, Product Design, and Vercel were uninstalled
+  from the Codex account. Plugin Management returned 403 because installed-by-
+  default plugins cannot be uninstalled, so its single skill was disabled in
+  the user Codex configuration instead.
 
 ## Decision log
 
-- 2026-09-20: Use repository-local restrictions instead of uninstalling global
-  capabilities used by other projects.
+- 2026-09-20: Use repository-local restrictions for local plugins. Use supported
+  account-level removal for unused remote plugins because project flags do not
+  control their skill discovery in the desktop session.
 - 2026-09-20: Preserve the four-discipline review gate; reduce duplicate cycles
   and broad context inheritance instead.
 
 ## Completion result
 
 - `codex plugin list --json`: exit 0; 9 locally installed plugins found, 0
-  enabled. The remote-catalog refresh emitted a network warning, so this command
-  alone does not prove remote catalog state.
+  enabled. A later network-enabled check confirmed the five removable remote
+  skill packs were uninstalled. Plugin Management remains installed by default,
+  with its skill separately disabled.
 - `codex mcp list`: exit 0; Pencil is disabled and the core Node REPL remains
   enabled.
 - `codex debug prompt-input "test"`: exit 0; 8 active skills and a 3,633-byte
