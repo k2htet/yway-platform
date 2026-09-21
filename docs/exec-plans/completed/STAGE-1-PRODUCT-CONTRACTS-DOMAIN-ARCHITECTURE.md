@@ -2,7 +2,9 @@
 
 ## Status
 
-ACTIVE
+COMPLETE
+
+Completion date: 2026-09-21
 
 Kickoff issue: #15
 
@@ -310,7 +312,7 @@ The classified decision register above remains unresolved until the correspondin
   reviews found no material issue. YWAY-D002's evidence collaboration boundaries are binding;
   broader S1-05 Practitioner, Operations, and unresolved Quest-structuring ownership proposals
   require an ACCEPTED decision before becoming normative
-- [ ] S1-08 Validate and close Stage 1
+- [x] S1-08 Validate and close Stage 1 — exit gate evidenced; final verification and four reviewer disciplines completed; roadmap/index updated; ExecPlan moved to completed; Stage 2 remains PLANNED
 
 ## Discoveries log
 
@@ -400,6 +402,22 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-21 | Perform an interim reconciliation against currently approved Stage 1 outcomes and classify remaining questions by future trigger | Execution classification only; S1-07 remains open pending S1-02/S1-04, YWAY-D002 boundaries remain binding, and broader S1-05 ownership proposals remain non-binding without an ACCEPTED decision |
 | 2026-09-21 | Approve the four S1-02 career-experiment, anonymous-first-value, and post-trial-path recommendations | Explicit owner product direction; canonical wording is in YWAY-P002, YWAY-P003, YWAY-P011, and YWAY-P013 |
 
+## S1-08 closure validation
+
+Status: COMPLETE
+
+Completion evidence recorded on 2026-09-21:
+
+- Dependency audit confirms S1-01 through S1-07 (#16–#22) are closed; #23 is the only Stage 1 closure item.
+- GitHub Actions run 35577066690 completed successfully on the closure branch under Node 24 and pnpm 11.24.0. It explicitly ran and passed `pnpm agent:doctor`, `pnpm verify:fast`, `pnpm verify:invariants`, and `pnpm verify:full`. The full verification continues to report that no runtime test script is configured.
+- Product-integrity review: direct read-only fallback review of the Stage 1 evidence and final closure diff found no product-contract change, prohibited scoring/ranking, evidence conflation, consent weakening, employer-access expansion, public Portfolio exposure, or silently resolved product question.
+- Architecture review: direct read-only fallback review found no new physical or technology choice; YWAY-D002 remains the only accepted Stage 1 logical-boundary decision, and deferred implementation choices remain deferred.
+- Security/privacy review: direct read-only fallback review found no change to private-Portfolio, purpose-specific sharing, 18+ public access, employer-isolation, safeguarding, or authorization outcomes.
+- Test review: direct read-only fallback review confirmed that the required repository commands passed and that the repository still has no configured runtime test script; no stronger runtime-coverage claim is made.
+- Clean-scope audit: final closure changes are documentation/governance only. The temporary CI instrumentation used to make all four required commands explicit was removed before final review.
+- No product/application code or unaccepted implementation choice was introduced by Stage 1.
+- Stage 1 is COMPLETE in both roadmap views. Stage 2 remains `PLANNED` and is not activated.
+
 ## Completion criteria
 
 Stage 1 is complete only when:
@@ -413,4 +431,9 @@ Stage 1 is complete only when:
 - `PRODUCT_VISION.md` remains unchanged unless separately authorized by the owner
 - required reviews have no unresolved blockers
 - `pnpm agent:doctor` and `pnpm verify:full` pass and are recorded
-- Roadmap and Stage Index show Stage 1 COMPLETE and Stage 2 NEXT
+- Roadmap and Stage Index show Stage 1 COMPLETE and Stage 2 PLANNED
+
+
+## Completion record
+
+Stage 1 closed on 2026-09-21 under issue #23. All Stage 1 dependencies are complete or explicitly deferred with future triggers, required verification passed, the four reviewer disciplines found no unresolved blocker, no product/application implementation was introduced, and no unaccepted physical or technology choice became normative. Stage 2 remains PLANNED and requires separate owner authority before activation.

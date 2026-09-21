@@ -32,7 +32,7 @@ Supporting records:
   refinements reconciled here.
 - `docs/audits/STAGE-1-S1-05-LOGICAL-DOMAIN-RESPONSIBILITY-COLLABORATION.md`: responsibility
   matrix and unresolved ownership proposals classified here.
-- `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`: S1-07 progress and
+- `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`: S1-07 progress and
   follow-up governance findings.
 
 ## Contract and decision traceability

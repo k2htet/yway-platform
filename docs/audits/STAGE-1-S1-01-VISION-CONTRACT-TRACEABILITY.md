@@ -11,7 +11,7 @@ This audit does not modify Product Vision or Product Contracts and does not reso
 - `docs/product/PRODUCT_VISION.md`
 - `docs/product/PRODUCT_CONTRACTS.md`
 - `docs/architecture/ARCHITECTURE.md`
-- `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`
+- `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`
 
 ## Classification rules
 

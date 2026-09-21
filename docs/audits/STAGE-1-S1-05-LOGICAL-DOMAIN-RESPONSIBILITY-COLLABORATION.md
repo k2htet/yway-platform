@@ -13,7 +13,7 @@ This audit is an analysis artifact. It does not amend `docs/architecture/ARCHITE
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/audits/STAGE-1-S1-01-VISION-CONTRACT-TRACEABILITY.md`
 - `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`
-- `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`
+- `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`
 
 Relevant contracts are YWAY-P006–YWAY-P009, YWAY-P012, YWAY-P014–YWAY-P019, YWAY-P022, YWAY-P030, and YWAY-E001–YWAY-E005. YWAY-P023 is also relevant where Operations coordinates independent localization release gates.
 
