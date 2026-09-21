@@ -7,7 +7,7 @@
 - Status: ACCEPTED
 - Owners: Yway product owner, Yway architecture
 - Related ExecPlan:
-  `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md` (S1-06)
+  `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md` (S1-06)
 - Related Product Contracts: YWAY-P007–YWAY-P009, YWAY-P014–YWAY-P019, YWAY-P022,
   YWAY-E001–YWAY-E004
 
