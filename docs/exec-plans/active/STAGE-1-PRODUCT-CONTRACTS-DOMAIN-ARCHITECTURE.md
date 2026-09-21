@@ -107,7 +107,9 @@ Do not:
 
 ### Architecture clarification candidates
 
-- Whether Evidence remains an independent logical domain or becomes a concern within Youth
+- RESOLVED by accepted YWAY-D002: Evidence remains an independent logical domain. This establishes
+  semantic ownership only and does not select a package, service, application, schema, database, API,
+  authorization, consent-persistence, or synchronization mechanism.
 - Content / Practitioner / Operations responsibility split for provenance, review, approval, and production eligibility
 - Employer Quest work ownership across Evidence, Employer, and Consent/Sharing
 - How content provenance becomes evidence provenance without losing origin or level
@@ -295,8 +297,10 @@ The classified decision register above remains unresolved until the correspondin
 - [ ] S1-04 Apply approved Product Contract refinements — approved S1-03 subset applied; S1-02
   owner decisions still block the remaining refinements
 - [x] S1-05 Logical domain responsibility/collaboration matrix
-- [ ] S1-06 Evidence logical-domain boundary ADR
-- [ ] S1-07 Reconcile Architecture and classify remaining questions
+- [x] S1-06 Evidence logical-domain boundary ADR — YWAY-D002 ACCEPTED after owner approval and
+  product-integrity, architecture, security/privacy, and test review
+- [ ] S1-07 Reconcile Architecture and classify remaining questions — Evidence-placement sections
+  reconciled; broader question classification remains open
 - [ ] S1-08 Validate and close Stage 1
 
 ## Discoveries log
@@ -315,6 +319,21 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-20: Follow-up review found two remaining governance gaps: the derived-invariant preamble still referred only to direct product contracts, and automated verification did not validate contract authority structure. The preamble now refers to product contracts generally, and `verify:invariants` parses Product Contracts to enforce known classifications, required source fields, and explicit Vision-boundary plus owner-record citations for owner-authorized contracts, including regression checks for YWAY-P008 and YWAY-P019.
 - 2026-09-20: A second follow-up review found that the authority checker could omit missing or malformed stable IDs and accept unregistered owner-authorized contracts, and that YWAY-P009 omitted its new §5 source dependency. The checker now validates the complete unique YWAY-P001–P030 and YWAY-E001–E006 ID set, requires every owner-authorized contract to map to a specific existing decision record, and exercises those failure modes in its self-test. YWAY-P009 now cites Product Vision §§5 and 7. `pnpm agent:doctor` and `pnpm verify:full` passed after the corrections.
 - 2026-09-20: S1-05 defined a vendor-neutral logical responsibility/collaboration matrix across Youth, Content, Evidence responsibility, Practitioner, Operations/Safeguarding, Employer, Consent/Sharing, and Identity/Access. The matrix keeps Evidence placement neutral for S1-06, preserves employer/private-youth isolation and purpose-specific consent, separates Pack content provenance from youth evidence provenance, bounds privileged/Admin context as authorization rather than bypass, and explicitly escalates the unresolved Yway-side owner for reviewing/structuring employer-supplied Quest definitions to S1-07 or a later architecture/operations decision. No physical package, API, schema, service, database, or provider choice was made.
+- 2026-09-20: The owner selected Evidence as an independent logical domain for S1-06. YWAY-D002
+  records the rationale, evaluates placement within Youth fairly, and keeps all package, service,
+  application, schema, database, API, authorization, consent-persistence, and synchronization choices
+  unresolved. The ADR remains PROPOSED until architecture review is complete.
+- 2026-09-20: Product-integrity, architecture, security/privacy, and test reviewers reported no
+  material findings on YWAY-D002. Architecture review approved the boundary without selecting a
+  physical implementation. YWAY-D002 is ACCEPTED, the Architecture Evidence section now permits
+  clearly separated combined-category presentation under YWAY-P008, and the resolved Evidence
+  placement was removed from the unresolved-question register. Broader S1-07 work remains open.
+- 2026-09-20: Focused final-diff follow-ups from product-integrity, architecture, and
+  security/privacy reviewers reported no material findings. The test-reviewer follow-up could not
+  run because its adapter reached its usage limit, so the required read-only fallback review was
+  performed directly against the final diff, verification runner, and actual `verify:full` output;
+  it found no material test or enforceability issue. The earlier test-reviewer approval remains
+  recorded, and the final fallback does not claim runtime coverage where no test script exists.
 
 ## Decision log
 
@@ -329,6 +348,8 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-20 | Owner direction: preserve cumulative provenance history with separate current status; allow clearly separated evidence categories to coexist in one Portfolio view with category-specific viewing | Explicit owner product direction for S1-04 contract refinement |
 | 2026-09-20 | Apply the approved S1-03 contract subset now while leaving all unresolved S1-02-dependent wording unchanged | Execution step only; S1-04 remains open pending S1-02 owner direction |
 | 2026-09-20 | Define the S1-05 logical responsibility/collaboration matrix while keeping Evidence placement and physical architecture unresolved | Analysis evidence only; the Evidence placement decision remains assigned to S1-06 and the unresolved Quest-structuring owner is escalated |
+| 2026-09-20 | Owner direction: keep Evidence as an independent logical domain without implying physical separation | Explicit owner architecture direction for YWAY-D002; acceptance remains pending architecture review |
+| 2026-09-20 | Accept YWAY-D002 after all four reviewer disciplines reported no material findings; reconcile the Evidence-specific Architecture text | Binding architecture decision; broader S1-07 reconciliation remains open |
 
 ## Completion criteria
 
