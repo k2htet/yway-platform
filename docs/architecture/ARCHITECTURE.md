@@ -1,265 +1,132 @@
 # Yway Architecture
 
-## 1. Purpose
+## 1. Purpose and authority
 
 This document defines Yway's logical architecture and invariants while keeping implementation mechanisms reversible.
 
-- Normative sections define boundaries and required behavior.
-- Provisional hypotheses are not binding.
-- Candidate technologies are not accepted decisions.
-- Physical app/package mapping is deferred.
+Authority order remains:
 
-Logical domain != physical package != deployable service != database != app. No one-to-one mapping between logical domains and future packages, apps, or services is implied or required.
+`PRODUCT_VISION.md` > `PRODUCT_CONTRACTS.md` > this document > accepted ADRs > advisory reports.
 
-Authority hierarchy: `PRODUCT_VISION.md` > `PRODUCT_CONTRACTS.md` > this document > accepted decision records > Build Report (advisory only).
+Logical domain ownership does not imply packages, services, schemas, databases, APIs, or deployment boundaries.
 
----
+## 2. Architecture principles
 
-## 2. Architecture Principles
+- Product contracts drive architecture and architectural choices must not weaken product invariants.
+- Youth value is independent of employer participation.
+- Evidence meaning, category identity, and provenance must remain explicit.
+- Consent is purpose-specific and auditable.
+- Offline-supported youth work must survive synchronization without silent loss.
+- Content provenance must survive transformations and sharing.
+- Implementation choices remain reversible until separately accepted.
 
-- Product contracts drive architecture; no architectural choice may weaken a product invariant. (YWAY-P001 through YWAY-P030)
-- Youth value is independent of employer participation. The system must be complete and meaningful with zero employers. (YWAY-P010)
-- Privacy boundaries are architectural constraints, not presentation-only hiding. Enforcement must occur at the data/access layer, not solely in UI. (YWAY-P018, YWAY-E001)
-- Evidence semantics must remain explicit. Distinct evidence levels must never be silently collapsed, promoted, or conflated. (YWAY-P007)
-- Signal types must remain separate. One signal category must never silently replace another. (YWAY-P006)
-- Consent is purpose-specific. Each sharing action requires its own explicit consent. (YWAY-P015, YWAY-P016)
-- Offline-supported work must survive synchronization without loss. (YWAY-P022)
-- Content provenance must survive transformations and sharing. (YWAY-P019)
-- Implementation choices remain reversible while evidence is incomplete.
-- One canonical source of truth per concern; no domain may silently reinterpret another domain's concepts.
-- Guidance is reversible; no deterministic career verdict may be produced by any architectural path. (YWAY-P004)
-- No scoring, ranking, or composite suitability metric may exist in any domain. (YWAY-P005, YWAY-E006)
-
----
-
-## 3. Logical Domains
+## 3. Logical domains and responsibilities
 
 ### Youth
 
-Responsibilities: career exploration, trials/career experiments, reflection, direction choices, learning/practice interactions, youth-owned evidence views.
-
-The Youth domain owns the meaning and lifecycle of a young person's exploratory and practice interactions. It does not own evidence categorization semantics (see Evidence) or content definitions (see Content).
+Owns youth exploration, practice interactions, reflection, direction choices, and youth-facing evidence views. Youth does not redefine Content or Evidence meaning.
 
 ### Content
 
-Responsibilities: Career Experience Packs, content provenance metadata, content review state and approval semantics, production eligibility gating.
+Owns Career Experience Pack definitions, content provenance history, review-scope validity, release eligibility, and content lifecycle semantics.
 
-Content owns the definition and lifecycle of Career Experience Packs including their versioning and provenance. It does not determine how youth interact with packs — that is the Youth domain's concern.
+Content provenance is cumulative historical information. Current release status is separate. A reviewed release status applies only to the reviewed scope; changed content outside that scope cannot inherit eligibility without the required review process. Exact versioning, materiality rules, and workflow remain future decisions.
 
 ### Evidence
 
-Under accepted decision YWAY-D002, Evidence is an independent logical domain rather than a sub-concern of Youth. The Product Vision and Product Contracts define five semantically distinct evidence categories with lifecycle rules, provenance-preserving correction boundaries, presentation boundaries, and sharing semantics. These concerns cross Youth, Content, Consent/Sharing, Employer, and future assessment contexts and require one logical authority. This logical ownership does not imply a separate package, service, application, schema, database, deployable, API, or network boundary.
+Accepted decision YWAY-D002 establishes Evidence as an independent logical domain. This establishes semantic ownership only; it does not require a separate package, service, schema, database, API, or application.
 
-Responsibilities: evidence category definitions and their meaning, evidence provenance tracking, evidence lifecycle semantics (creation and any future explicit correction/reclassification), and presentation constraints ensuring category identity, meaning, labeling, and provenance remain explicit whether categories are shown separately or together. Evidence must never be silently or automatically reclassified into a stronger level; if a future correction mechanism is accepted, it must be explicit, auditable, and provenance-preserving. (YWAY-P007, YWAY-P008, YWAY-E002, YWAY-D002)
+Evidence owns evidence-category meaning, evidence provenance, lifecycle semantics, and presentation constraints. Categories may be displayed together when labels, meaning, and provenance remain explicit. Category-specific viewing remains supported.
 
 ### Practitioner
 
-Responsibilities: practitioner identity and qualification context, content review workflows, practitioner-contributed experiences, practitioner-specific operational workflows.
-
-Practitioners act as reviewers and contributors within the Content domain's approval pipeline but maintain their own identity and qualification context here.
-
-### Employer
-
-Responsibilities: Employer Quests, opportunities, explicitly submitted youth work within Quest/application contexts, employment applications.
-
-Employers must never gain access to private youth exploration data, reflections, or ordinary unshared practice evidence. This is an architectural boundary, not a UI suggestion. (YWAY-P018, YWAY-E001)
-
-### Consent / Sharing
-
-Responsibilities: purpose-specific consent records, sharing scope definition, consent history and auditability, separation of Quest submission consent from employment application consent.
-
-No storage model is prescribed. The domain requires capability for persistent, auditable consent history — not a specific table or event log design.
-
-### Identity / Access
-
-Responsibilities: user identities, role definitions (Youth, Practitioner, Employer, Admin), authentication context, authorization context.
-
-No auth provider is selected. Authorization enforcement must occur outside UI-only hiding and must preserve private-portfolio and employer-isolation boundaries. (YWAY-P014, YWAY-P018, YWAY-E001)
+Owns practitioner identity and qualification context, practitioner contribution context, and practitioner-specific operational workflows. Practitioner review provides content review authority within the approved review boundary; it does not create unrestricted capability certification.
 
 ### Operations / Safeguarding
 
-Responsibilities: content approval operations, moderation and safeguarding workflows, release gates (including Burmese fluency review), operational controls.
+Owns operational controls, moderation, safeguarding workflows, content approval operations, and release gates. Operations access is bounded by authorization and explicit workflows.
 
-Operations does not have unrestricted access to every domain. Access follows the same boundary rules as other domains — privileged workflows operate on defined interfaces, not bypass paths.
+### Employer
 
----
+Owns Employer Quest/application context and employer workflows. Employer does not own submitted youth work meaning, evidence semantics, or youth evidence provenance. Employer access to youth material requires explicit sharing boundaries and consent.
 
-## 4. Ownership Boundaries
+### Consent / Sharing
 
-- Each domain owns the meaning and invariants of its data and concepts. Another domain must not silently reinterpret those concepts.
-- Cross-domain access must happen through explicit contracts or interfaces. Direct data queries across domain boundaries are prohibited.
-- Private youth data must not become employer-visible through incidental reuse, shared query paths, or leaked references.
-- Evidence category semantics are owned by the Evidence domain. The Youth domain consumes them but does not redefine them.
-- Content provenance metadata is owned by the Content domain and must flow intact through any transformation or sharing operation.
-- Consent records are owned by the Consent domain. Other domains reference consent state but do not duplicate or reinterpret it.
-- Domain ownership does not imply separate databases, services, packages, or schemas. These are implementation choices deferred to later stages.
+Owns purpose-specific sharing scope, consent records, consent history, and auditability. Quest submission consent and employment application consent remain distinct purposes.
 
----
+### Identity / Access
 
-## 5. Normative Forbidden Access Paths
+Owns identity context, roles, and authorization context. Authorization is not satisfied by UI hiding and must preserve access boundaries.
 
-| Forbidden Flow                                                                                             | Contract Source                 |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| Employer context accessing private youth exploration data                                                  | YWAY-P018, YWAY-E001            |
-| Employer context accessing private youth reflections                                                       | YWAY-P018, YWAY-E001            |
-| Employer context accessing ordinary unshared practice evidence                                             | YWAY-P018, YWAY-E001            |
-| Quest completion automatically creating candidate status                                                   | YWAY-P017                       |
-| Quest submission consent being treated as employment application consent                                   | YWAY-P015, YWAY-P016, YWAY-P017 |
-| Exploration evidence being automatically promoted to practice or verified assessment                       | YWAY-P007                       |
-| Sponsorship or payment influencing ranking or favorable treatment                                          | YWAY-P020                       |
-| Unauthenticated or public access reaching private portfolio data                                           | YWAY-P014, YWAY-P011            |
-| AI-generated content shipping as a production-quality pack without practitioner review                     | YWAY-P019                       |
-| Synchronization silently destroying offline-supported youth work                                           | YWAY-P022                       |
-| Any system producing a career-fit score, employability score, hidden candidate score, or composite ranking | YWAY-P005, YWAY-E006            |
-| One signal type silently replacing another (e.g., interest replacing observed behavior)                    | YWAY-P006                       |
-| Evidence Portfolio having a public URL field                                                               | YWAY-P014                       |
-| Deterministic career verdict produced by any guidance pathway                                              | YWAY-P004                       |
+## 4. Provenance and sharing boundaries
 
-These describe forbidden outcomes. Specific implementation techniques for enforcement are deferred.
+The Content/Youth-to-Evidence provenance handoff preserves origin, meaning, and applicable provenance history without selecting a storage schema or transport.
 
----
+The Evidence-to-Consent/Sharing boundary exposes only explicitly selected evidence and approved sharing scope. Consent determines what may be shared; Evidence retains ownership of meaning.
 
-## 6. Required Capability Boundaries
+## 5. Ownership constraints
 
-### Offline Capability
+- Domains own concepts and invariants; another domain must not silently reinterpret them.
+- Cross-domain collaboration uses explicit contracts or interfaces.
+- Employer context must not access private youth exploration, reflections, or ordinary unshared practice evidence.
+- Admin and Operations workflows do not bypass domain authorization boundaries.
+- Privileged access is controlled access, not an exception path.
 
-The system requires capability for:
+## 6. Required capabilities
 
-```
-durable local state
-    ↕
-conflict-aware synchronization capability
-    ↕
-remote persisted/shared state
-```
+### Offline preservation
 
-Neither side is universally authoritative. Conflict resolution strategy and authority semantics remain a future architecture decision. Whether a particular conflict approach (including last-write-wins variants) satisfies the preservation requirement depends on the data model and conflict types — this must be validated per case, not universally pre-judged.
+The architecture requires durable preservation of offline-supported youth work and future conflict handling without selecting local/server authority, synchronization technology, or conflict strategy.
 
-No specific technology is selected for local storage, sync engine, remote database, or conflict resolution strategy.
+### Authorization and consent
 
-### Authorization
+The architecture requires enforceable authorization, purpose-specific consent, and auditability. It does not select providers, policy engines, persistence models, or middleware designs.
 
-Authorization enforcement must be trusted and occur outside UI-only hiding. The architecture requires authorization decisions to enforce role/context/scope boundaries at the server/API/data-access layer, including employer isolation and explicit sharing scope. Role-based plus attribute-based access control is one candidate mechanism, not a required policy model. No specific auth provider, policy model, library, middleware design, or data-layer enforcement mechanism is selected. (YWAY-P014, YWAY-P018, YWAY-E001)
+### Content provenance
 
-### Consent
+The architecture requires provenance and review eligibility to remain enforceable. It does not select CMS, workflow, or state-machine implementations.
 
-The system requires capability for explicit purpose-specific consent with sufficient history and auditability to prove what was shared, with whom, for what purpose, and when. Quest submission consent and employment application consent must be separately auditable. No specific persistence model (tables, event sourcing, etc.) is prescribed.
+## 7. Architectural invariants
 
-### Evidence Separation
+- No career-fit, employability, candidate score, ranking, or composite suitability metric.
+- Evidence categories are not silently collapsed or promoted.
+- Employer workflows do not create candidate state automatically.
+- Private youth data is not exposed through incidental reuse.
+- Consent remains purpose-specific.
+- Practitioner-reviewed status applies only to reviewed content scope.
+- Offline work is preserved.
 
-Evidence categories must be semantically and structurally distinguishable to prevent accidental conflation. The architecture requires type-level or schema-level discrimination sufficient to enforce separation. One table per category or one package per category is not required.
+## 8. Non-normative candidates
 
-### Content Provenance
+Technology candidates remain non-normative and require separate ADRs before adoption.
 
-Provenance metadata and practitioner-review eligibility must remain enforceable through the publishing pipeline. AI-drafted content must not reach end users without passing the practitioner review gate. No specific CMS, workflow engine, or state-machine library is selected.
+## 9. Deferred physical architecture
 
----
+This document does not decide:
 
-## 7. Architectural Invariants
+- application boundaries
+- package/service topology
+- database topology
+- APIs
+- deployment topology
+- synchronization mechanisms
+- authentication providers
+- CMS or workflow technology
 
-| Invariant                                  | Source Contracts     | Architectural Consequence                                                                           |
-| ------------------------------------------ | -------------------- | --------------------------------------------------------------------------------------------------- |
-| No composite suitability scoring           | YWAY-P005, YWAY-E006 | No field, query, or aggregation may produce a career-fit, employability, or candidate ranking value |
-| Evidence levels remain distinct            | YWAY-P007            | Separate data representations; no automatic promotion path between levels                           |
-| Employer isolation from private youth data | YWAY-P018, YWAY-E001 | No query path from employer context into youth exploration/reflection/unshared practice             |
-| No implicit candidate creation             | YWAY-P017            | Browsing, exploring, or completing Quests does not create application or candidate state            |
-| No public portfolio URL                    | YWAY-P014            | Evidence Portfolio has no publicly addressable identifier                                           |
-| Purpose-specific sharing only              | YWAY-P015, YWAY-P016 | Every share action carries its own consent record with explicit purpose                             |
-| Practitioner review gate                   | YWAY-P019            | No content reaches production without provenance metadata confirming practitioner review            |
-| Offline work preservation                  | YWAY-P022            | Sync capability must not destroy locally created youth work                                         |
-| Youth value independence                   | YWAY-P010            | Core youth journey functions without employer, job, or opportunity entities                         |
-| Signal separation                          | YWAY-P006            | Interest, behavior, preferences, and constraints stored as distinct attributes                      |
-| Reversible guidance                        | YWAY-P004            | No pathway produces a deterministic career verdict                                                  |
-| First value without login                  | YWAY-P011            | At least one complete interaction flow accessible without authentication                            |
+## 10. Classified unresolved questions
 
----
+| Question group | Disposition |
+| --- | --- |
+| Content authoring, review granularity, materiality, publishing workflow | Stage 2; future content/operations architecture decision or ADR |
+| First application boundary, mobile delivery, partial Pack downloads | Stage 3; delivery ADR before implementation |
+| Pack-content provenance to evidence-reference shape | Stage 4; future evidence/data architecture ADR |
+| Local/server authority, conflicts, synchronization, server ownership | Stage 5; future sync/data ADR with representative scenarios |
+| Authentication, authorization, consent persistence, Admin privileges, access auditing | Stage 6; future identity/consent/authorization ADR; hardened later in Stage 12 |
+| Practitioner qualification, vetting, accountability | Stage 7; future practitioner-operations decision |
+| Employer vetting and Yway ownership of Quest review/structuring | Stage 8; future architecture/operations decision before Quest implementation |
+| Physical communication, packages, services, APIs, deployment/data topology | Stage 10 or first implementation stage requiring it; future physical architecture ADR |
+| Future 16–17 pathway | Outside current 18+ scope until owner-approved safeguarding, consent, and access review |
 
-## 8. Provisional Architecture Hypotheses
+## 11. Change discipline
 
-**NON-NORMATIVE / NOT YET ACCEPTED**
-
-These are hypotheses recorded for future evaluation. They are not dependency rules and must not be treated as normative.
-
-- Youth domain may consume Content capabilities to deliver exploration and practice experiences.
-- Employer domain may consume explicitly shared Consent and Opportunity capabilities.
-- Consent may function as a cross-cutting capability depended upon by all domains.
-- Identity may serve as shared infrastructure across all domains.
-- Operations may require privileged workflows that cross domain boundaries under controlled interfaces.
-- Evidence domain may depend on Content for provenance metadata and on Consent for sharing rules.
-
-These will be validated or rejected through future decision records. Do not write code that assumes these as facts.
-
----
-
-## 9. Candidate Implementations
-
-**CANDIDATES — NOT ACCEPTED BY THIS DOCUMENT**
-
-These candidates originate from project analysis and Build Report recommendations. They are recorded here for future evaluation via decision records. None are adopted.
-
-| Capability                             | Candidates                         |
-| -------------------------------------- | ---------------------------------- |
-| Durable local storage                  | SQLite or equivalent               |
-| Conflict-aware synchronization         | PowerSync or alternative           |
-| Remote persisted state                 | PostgreSQL / Neon or alternative   |
-| Authentication and multi-role sessions | Better Auth or alternative         |
-| Schema validation                      | Zod or alternative                 |
-| Type-safe data access                  | Drizzle ORM or alternative         |
-| Mobile delivery                        | Expo + React Native or alternative |
-| Web surfaces                           | Next.js or alternative             |
-| Asset storage                          | Cloudflare R2 or alternative       |
-| Web hosting                            | Vercel or alternative              |
-| Mobile build/deploy/OTA                | EAS or alternative                 |
-| Design environment                     | pen.dev or alternative             |
-
-No ranking is implied. No winner is recommended. Acceptance requires a future decision record following the template in `docs/decisions/000-TEMPLATE.md`.
-
----
-
-## 10. Deferred Physical Architecture
-
-Stage 0 does NOT decide:
-
-- Number of applications
-- Mobile/web implementation framework
-- Package boundaries
-- Monorepo physical layout
-- Service boundaries
-- Database topology
-- Deployment topology
-- API protocol (REST, GraphQL, RPC, etc.)
-- Queue/event architecture
-- Synchronization engine
-- Auth provider
-
-Logical domains defined in this document must not be converted into directories, packages, or services simply because they appear here. Physical architecture will be decided later based on validated needs.
-
----
-
-## 11. Unresolved Architecture Questions
-
-| Question                                           | Why Unresolved                                                                              |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Authority/conflict model for synchronized data     | Which node (local vs server) is authoritative for which data types remains undefined        |
-| First real physical application boundary           | No app/package structure chosen yet                                                         |
-| Mobile implementation approach                     | Product Vision requires Android-first but does not specify native vs hybrid vs web delivery |
-| Server data ownership model                        | Centralized vs distributed data authority is undefined                                      |
-| Consent/audit persistence model                    | Tables, event sourcing, append logs — none selected                                         |
-| Authorization enforcement architecture             | Middleware, policy engine, data-layer filters — none selected                               |
-| Safeguarding architecture for future 16–17 pathway | Requires separate safeguarding review per YWAY-P012; no design exists yet                   |
-| Content authoring format                           | MDX, JSON, custom DSL, CMS — undefined                                                      |
-| Partial pack download strategy                     | Whether text-only download is supported for low-storage devices is undefined                |
-
-Do not answer these questions in implementation code until a decision record accepts a specific choice.
-
----
-
-## 12. Architecture Change Discipline
-
-- Product Vision changes require explicit owner action. This document cannot initiate them.
-- Product Contract changes must remain aligned with the Product Vision.
-- Significant architecture choices require decision records in `docs/decisions/` following the template.
-- Accepted architecture decisions may refine this document. Update normative sections only when backed by an ACCEPTED decision record.
-- Speculative implementation ideas must not be silently promoted to normative architecture.
-- Historical accepted decisions should not be rewritten silently. Decision history tables preserve the record.
-- Candidate implementations in Section 9 move to normative status only through the decision record process, never through gradual documentation drift.
+Accepted decisions may refine this document. Speculative mechanisms must not become normative through documentation drift.
