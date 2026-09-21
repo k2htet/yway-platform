@@ -56,15 +56,17 @@ Responsibilities: evidence category definitions and their meaning, evidence prov
 
 ### Practitioner
 
-Responsibilities: practitioner identity and qualification context, practitioner review actions and their scope, practitioner-contributed experiences, practitioner-specific operational workflows.
+Responsibilities: practitioner identity and qualification context, content review workflows, practitioner-contributed experiences, practitioner-specific operational workflows.
 
-Practitioners supply qualified review facts and coverage to Content. Content owns the resulting content-quality eligibility semantics. Practitioner review of Pack content does not certify youth capability or strengthen youth evidence. (YWAY-P019, YWAY-P029, YWAY-E005)
+Practitioners act as reviewers and contributors within the Content domain's approval pipeline but maintain their own identity and qualification context here.
 
 ### Employer
 
-Responsibilities: employer-supplied Quest business context, opportunities, Quest submission context and workflow, and employment-application lifecycle.
+Responsibilities: Employer Quests, opportunities, explicitly submitted youth work within Quest/application contexts, employment applications.
 
-Employer does not own submitted youth work, evidence meaning, or evidence provenance. Employers receive only the payload explicitly authorized for the recorded purpose and must never gain access to private youth exploration data, reflections, ordinary unshared practice evidence, or the wider private Portfolio. This is an architectural boundary, not a UI suggestion. (YWAY-P015, YWAY-P018, YWAY-E001, YWAY-E004)
+Employers must never gain access to private youth exploration data, reflections, or ordinary unshared practice evidence. This is an architectural boundary, not a UI suggestion. (YWAY-P018, YWAY-E001)
+
+Under YWAY-D002, Employer receives only the explicitly authorized payload for the recorded purpose and gains no path to the private Portfolio. Employer does not own or reinterpret evidence meaning. (YWAY-P015, YWAY-P018, YWAY-E001, YWAY-E004, YWAY-D002)
 
 ### Consent / Sharing
 
@@ -80,22 +82,22 @@ No auth provider is selected. Authorization enforcement must occur outside UI-on
 
 ### Operations / Safeguarding
 
-Responsibilities: moderation and safeguarding workflows, operational controls, and coordination of independent release gates including Burmese fluency and comprehension review.
+Responsibilities: content approval operations, moderation and safeguarding workflows, release gates (including Burmese fluency review), operational controls.
 
-Operations coordinates release workflows without owning Content's provenance or content-quality eligibility semantics. Operations does not have unrestricted access to every domain. Access follows the same boundary rules as other domains — privileged workflows operate on defined interfaces, not bypass paths. (YWAY-P019, YWAY-P023, YWAY-E005)
+Operations does not have unrestricted access to every domain. Access follows the same boundary rules as other domains — privileged workflows operate on defined interfaces, not bypass paths.
 
 ---
 
 ## 4. Ownership Boundaries
 
 - Each domain owns the meaning and invariants of its data and concepts. Another domain must not silently reinterpret those concepts.
-- Cross-domain collaboration must preserve explicit logical contracts and owner invariants. This does not select an API, query, event, transport, package, or storage mechanism.
+- Cross-domain access must happen through explicit contracts or interfaces. Direct data queries across domain boundaries are prohibited.
 - Private youth data must not become employer-visible through incidental reuse, shared query paths, or leaked references.
 - Evidence category semantics are owned by the Evidence domain. The Youth domain consumes them but does not redefine them.
 - Content provenance metadata is owned by the Content domain and must flow intact through any transformation or sharing operation.
 - Consent records are owned by the Consent domain. Other domains reference consent state but do not duplicate or reinterpret it.
-- When Pack interaction produces evidence, Youth supplies bounded interaction facts, Content supplies the source provenance context needed for traceability, and Evidence owns the resulting evidence category, meaning, and provenance. Practitioner review of Pack content must not strengthen youth evidence.
-- Consent/Sharing receives only the user-selected payload plus recipient and purpose context. Employer receives only that authorized disclosure and gains no standing path to the private Portfolio.
+- Under YWAY-D002, when Pack interaction produces evidence, Youth supplies only the bounded interaction facts needed for evidence creation, Content supplies only the source traceability context needed to interpret Pack-derived evidence, and Evidence owns the resulting evidence category, meaning, provenance, and later explicit correction/reclassification semantics. Practitioner review of Pack content must not strengthen youth evidence.
+- Under YWAY-D002, Consent/Sharing owns the disclosure purpose, inspected payload scope, recipient, and auditable consent record. Employer receives only that authorized disclosure and gains no standing path to the private Portfolio; Identity/Access enforces actor and scope boundaries without owning evidence meaning.
 - Domain ownership does not imply separate databases, services, packages, or schemas. These are implementation choices deferred to later stages.
 
 ---

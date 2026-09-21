@@ -2,14 +2,16 @@
 
 ## Scope
 
-This audit records the reconciliation of `ARCHITECTURE.md` against approved Stage 1
-outcomes, including S1-03 Product Contract refinements, the S1-05 responsibility matrix,
-and accepted decision YWAY-D002.
+This audit records an interim reconciliation of `ARCHITECTURE.md` against approved Stage 1
+outcomes: the S1-03 Product Contract refinements and accepted decision YWAY-D002. It also
+classifies unresolved questions surfaced by the non-binding S1-05 analysis.
 
-The reconciliation preserves existing architectural guardrails while adding approved
-ownership clarifications and explicit dispositions for remaining architecture questions.
-It introduces no product code, schema, API, runtime type, migration, technology selection,
-new product decision, or Stage 2 activation.
+The reconciliation preserves existing architectural guardrails and the cross-domain evidence
+collaboration boundaries accepted by YWAY-D002 without promoting S1-05's broader Practitioner,
+Operations, or unresolved Quest-structuring ownership proposals into normative Architecture. Those
+remaining ownership additions require a separately ACCEPTED architecture decision before they can
+become binding. This interim work introduces no product code, schema, API, runtime type, migration,
+technology selection, new product decision, or Stage 2 activation, and it does not complete S1-07.
 
 ## Authority used
 
@@ -23,40 +25,42 @@ new product decision, or Stage 2 activation.
 
 ## Contract and decision traceability
 
-| Source                                          | Preserved or reconciled architecture outcome                                                                                                                                                                                                                                            |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| YWAY-P004                                       | Reversible guidance remains an architectural invariant; no deterministic career verdict is permitted.                                                                                                                                                                                   |
-| YWAY-P005, YWAY-E006                            | Career-fit, employability, candidate-quality, and composite suitability scoring remain prohibited.                                                                                                                                                                                      |
-| YWAY-P006                                       | Interest, observed behavior, preferences, and constraints remain distinct signal types.                                                                                                                                                                                                 |
-| YWAY-P007–P009, YWAY-E002, YWAY-D002            | Evidence remains an independent logical domain; category identity, evidence provenance, combined-view labeling, category-specific viewing, and explicit auditable provenance-preserving correction boundaries remain enforceable without physical separation.                           |
-| YWAY-P010–P011                                  | The core journey remains employer-independent and first value remains available without authentication.                                                                                                                                                                                 |
-| YWAY-P012                                       | Public access remains 18+; any 16–17 pathway remains outside current scope pending separately approved safeguarding, consent, and access review.                                                                                                                                        |
-| YWAY-P014                                       | Profiles and Portfolios remain private, have no public URL, and are unavailable through unauthenticated or unauthorized routes.                                                                                                                                                         |
-| YWAY-P015–P016, YWAY-E003                       | Sharing remains purpose-specific; the youth inspects payload, recipient, and purpose before submission; consent records preserve what, who, purpose, and time; Quest and application consent remain separate.                                                                           |
-| YWAY-P017–P018, YWAY-P030, YWAY-E001, YWAY-E004 | Employer access remains limited to the explicitly authorized payload; exploration, browsing, and Quest activity create neither candidate nor application state; trusted authorization remains outside UI-only hiding.                                                                   |
-| YWAY-P019, YWAY-E005                            | Content provenance remains cumulative, current status stays separate, review coverage is scope-bound, and no Pack is publishable to end users without qualified-practitioner review covering the published content.                                                                     |
-| YWAY-P020, YWAY-P029                            | Sponsorship or payment cannot buy ranking, favorable evaluation, better direction, hiring priority, or capability certification.                                                                                                                                                        |
-| YWAY-P022                                       | Offline-supported youth work must survive synchronization; authority, conflict strategy, and technology remain deferred.                                                                                                                                                                |
-| YWAY-P023–P024                                  | Localization and accessibility release outcomes remain binding; Operations coordinates independent release gates without replacing Content's content-quality eligibility ownership.                                                                                                     |
-| S1-05 responsibility matrix                     | Content owns Pack provenance and content-quality eligibility; Practitioner supplies qualified review facts; Operations coordinates independent operational gates; Employer owns business context and workflow rather than youth evidence; Admin context is not an authorization bypass. |
+| Source                                          | Preserved or reconciled architecture outcome                                                                                                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| YWAY-P004                                       | Reversible guidance remains an architectural invariant; no deterministic career verdict is permitted.                                                                                                                                                         |
+| YWAY-P005, YWAY-E006                            | Career-fit, employability, candidate-quality, and composite suitability scoring remain prohibited.                                                                                                                                                            |
+| YWAY-P006                                       | Interest, observed behavior, preferences, and constraints remain distinct signal types.                                                                                                                                                                       |
+| YWAY-P007–P009, YWAY-E002, YWAY-D002            | Evidence remains an independent logical domain; category identity, evidence provenance, combined-view labeling, category-specific viewing, and explicit auditable provenance-preserving correction boundaries remain enforceable without physical separation. |
+| YWAY-P010–P011                                  | The core journey remains employer-independent and first value remains available without authentication.                                                                                                                                                       |
+| YWAY-P012                                       | Public access remains 18+; any 16–17 pathway remains outside current scope pending separately approved safeguarding, consent, and access review.                                                                                                              |
+| YWAY-P014                                       | Profiles and Portfolios remain private, have no public URL, and are unavailable through unauthenticated or unauthorized routes.                                                                                                                               |
+| YWAY-P015–P016, YWAY-E003                       | Sharing remains purpose-specific; the youth inspects payload, recipient, and purpose before submission; consent records preserve what, who, purpose, and time; Quest and application consent remain separate.                                                 |
+| YWAY-P017–P018, YWAY-P030, YWAY-E001, YWAY-E004 | Employer access remains limited to the explicitly authorized payload; exploration, browsing, and Quest activity create neither candidate nor application state; trusted authorization remains outside UI-only hiding.                                         |
+| YWAY-P019, YWAY-E005                            | Content provenance remains cumulative, current status stays separate, review coverage is scope-bound, and no Pack is publishable to end users without qualified-practitioner review covering the published content.                                           |
+| YWAY-P020, YWAY-P029                            | Sponsorship or payment cannot buy ranking, favorable evaluation, better direction, hiring priority, or capability certification.                                                                                                                              |
+| YWAY-P022                                       | Offline-supported youth work must survive synchronization; authority, conflict strategy, and technology remain deferred.                                                                                                                                      |
+| YWAY-P023–P024                                  | Localization and accessibility release outcomes remain binding while implementation and ownership mechanisms remain deferred.                                                                                                                                 |
+| S1-05 responsibility matrix                     | Analysis only except where YWAY-D002 separately accepted its evidence collaboration boundaries. Its broader Practitioner, Operations, and unresolved Quest-structuring ownership proposals remain non-binding pending an ACCEPTED architecture decision.      |
 
-## Approved reconciliation
+## Binding reconciliation
 
 - Content provenance history is cumulative; current status is separate and cannot transfer
   stale approval to changed content outside the reviewed scope.
 - Evidence categories may coexist in one view only with explicit grouping, labels, meaning,
   and provenance, while category-specific viewing remains supported.
-- Pack-derived evidence receives bounded Youth interaction facts and Content source context;
-  Evidence owns the resulting evidence meaning and provenance.
-- Consent/Sharing receives only the selected payload, recipient, and purpose context; Employer
-  receives only the authorized disclosure and gains no standing Portfolio access.
+- Youth and Content supply only bounded evidence-creation facts and traceability context; Evidence
+  owns the resulting evidence semantics and provenance. Content review does not strengthen youth
+  evidence.
+- Consent/Sharing owns the inspected disclosure scope, recipient, purpose, and consent record;
+  Employer receives only the authorized payload and gains no private-Portfolio path; Identity/Access
+  enforces actor and scope boundaries without owning evidence meaning.
 - Cross-domain logical boundaries do not select APIs, events, queries, packages, services,
   schemas, databases, or deployment topology.
 
 ## Remaining-question completeness
 
-Architecture Section 11 classifies every pre-existing unresolved question and the S1-05
-escalations without answering them:
+Architecture Section 11 classifies pre-existing unresolved questions and the S1-05 escalations
+without answering them or adopting S1-05 proposals beyond the boundaries accepted by YWAY-D002:
 
 - Stage 2: content authoring/review workflow and the minimum practitioner qualification
   required for the content-quality gate.
@@ -87,11 +91,11 @@ Assessment:
 
 - COMPATIBLE.
 
-No unresolved product decision is resolved by this reconciliation.
+No unresolved product or architecture ownership decision is resolved by this reconciliation.
 
 ## Validation
 
-Completed on 2026-09-21:
+Earlier validation on 2026-09-21, before the follow-up governance review:
 
 - Product-integrity review: no material findings after focused correction.
 - Architecture review: no material findings.
@@ -99,5 +103,14 @@ Completed on 2026-09-21:
 - Test review: no material findings; no runtime tests apply to this documentation-only change.
 - `pnpm agent:doctor`: `READY`.
 - `pnpm verify:fast`: passed lint and typecheck.
+- `pnpm verify:full`: passed lint, typecheck, formatting, and structural invariants; tests were
+  skipped because no test script is configured.
+
+The follow-up governance review supersedes the earlier no-findings architecture result for the
+two issues recorded in the active ExecPlan.
+
+Remediation validation on 2026-09-21:
+
+- `pnpm agent:doctor`: `READY` (with the expected dirty-working-tree warning).
 - `pnpm verify:full`: passed lint, typecheck, formatting, and structural invariants; tests were
   skipped because no test script is configured.
