@@ -43,6 +43,12 @@ trial; deeper and comparison paths depend on context, and comparison is never a 
 
 ## Remaining architecture questions disposition
 
+The complete, canonical decision-gate register is
+[Architecture §11: Classified Unresolved Architecture Questions](ARCHITECTURE.md#11-classified-unresolved-architecture-questions).
+Use that register before implementation because it preserves every question, trigger, and constraint.
+The table below records only the S1-07-specific subset of those dispositions; it is not a replacement
+for the canonical register.
+
 | Question                                                                                    | Disposition                                                                                               |
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Content authoring format, review granularity, materiality rules, and workflow               | Deferred to Stage 2 / future decision                                                                     |
