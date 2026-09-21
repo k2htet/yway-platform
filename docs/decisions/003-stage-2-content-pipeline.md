@@ -53,7 +53,7 @@ This decision is intentionally limited to the Stage 2 repository content pipelin
 - **Risks:** Premature coupling; difficulty proving fixture isolation and deterministic repository artifacts; may silently decide deferred auth/database/UI boundaries.
 - **Validation evidence available:** None required by Stage 2 that justifies this dependency.
 - **Unknowns:** Future authoring scale, operator roles, permissions, vendor constraints, integration boundaries.
- 
+
 ### Option: Repository-local lifecycle records and commands
 
 - **Advantages:** Review/attestation/provenance changes are inspectable in Git; Stage 2 can enforce atomic no-overwrite semantics and deterministic behavior without external infrastructure; keeps the release boundary artifact-only.
@@ -145,6 +145,6 @@ Migration must preserve all historical provenance and review scope; no migration
 
 ## Decision History
 
-| Date | Change | Reason |
-|------|--------|--------|
+| Date       | Change                             | Reason                                                                                                      |
+| ---------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | 2026-09-21 | Initial record created as PROPOSED | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative |
