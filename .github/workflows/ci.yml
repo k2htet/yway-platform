@@ -42,11 +42,5 @@ jobs:
       - name: Check agent environment
         run: pnpm agent:doctor
 
-      - name: Run fast verification
-        run: pnpm verify:fast
-
-      - name: Run product invariants
-        run: pnpm verify:invariants
-
       - name: Run full verification
         run: pnpm verify:full
