@@ -72,8 +72,8 @@ Statuses reflect current repository evidence, not aspiration. See
   evidenced, including enforced branch protection, onboarding documentation,
   and the fresh-session acceptance test.
 - **Status:** COMPLETE.
-- **Important unresolved questions:** Stage 0 closure is complete. Stage 1 remains
-  ACTIVE with its own kickoff and active ExecPlan; Stage 2 remains PLANNED.
+- **Important unresolved questions:** Stage 0 and Stage 1 are complete. Stage 2 remains
+  PLANNED and requires separate activation authority.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 
@@ -89,11 +89,11 @@ Statuses reflect current repository evidence, not aspiration. See
 - **Exit gate:** Required refinements are internally consistent, unresolved
   decisions remain explicit, and significant implementation choices have
   appropriately reviewed decision records.
-- **Status:** ACTIVE.
-- **Active ExecPlan:** `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`.
-- **Important unresolved questions:** The unresolved architecture questions in
-  `ARCHITECTURE.md` remain open unless separately decided; the first physical
-  application boundary and future product technology choices are not selected.
+- **Status:** COMPLETE.
+- **Completed ExecPlan:** `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`.
+- **Important unresolved questions:** Deferred architecture questions remain open unless
+  separately decided; the first physical application boundary and future product
+  technology choices are not selected. Stage 2 remains PLANNED.
 
 ## Stage 2 — Content System + Operations Foundation
 
