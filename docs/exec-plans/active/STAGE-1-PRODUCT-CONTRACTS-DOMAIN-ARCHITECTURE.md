@@ -299,8 +299,11 @@ The classified decision register above remains unresolved until the correspondin
 - [x] S1-05 Logical domain responsibility/collaboration matrix
 - [x] S1-06 Evidence logical-domain boundary ADR — YWAY-D002 ACCEPTED after owner approval and
   product-integrity, architecture, security/privacy, and test review
-- [ ] S1-07 Reconcile Architecture and classify remaining questions — Evidence-placement sections
-  reconciled; broader question classification remains open
+- [ ] S1-07 Reconcile Architecture and classify remaining questions — interim accepted-outcome
+  reconciliation and question classification complete; rerun after S1-02/S1-04. YWAY-D002's
+  evidence collaboration boundaries are binding; broader S1-05 Practitioner, Operations, and
+  unresolved Quest-structuring ownership proposals require an ACCEPTED decision before becoming
+  normative
 - [ ] S1-08 Validate and close Stage 1
 
 ## Discoveries log
@@ -334,6 +337,28 @@ The classified decision register above remains unresolved until the correspondin
   performed directly against the final diff, verification runner, and actual `verify:full` output;
   it found no material test or enforceability issue. The earlier test-reviewer approval remains
   recorded, and the final fallback does not claim runtime coverage where no test script exists.
+- 2026-09-21: An interim S1-07 pass reconciled Architecture with the approved S1-03
+  provenance/evidence refinements and accepted YWAY-D002, and classified remaining questions
+  across Stages 2–8 and 10. The future 16–17 pathway remains outside current scope. No technology
+  or physical boundary was selected.
+- 2026-09-21: The initial S1-07 rewrite failed formatting and semantic review because it removed
+  explicit canonical guardrails and used inaccurate grouped traceability. The repair restored the
+  canonical Architecture baseline, applied only focused reconciliation edits, corrected each
+  contract mapping, preserved the full qualified-practitioner publication gate, and left partial
+  Pack behavior and future minor-pathway design sequencing unresolved.
+- 2026-09-21: Initial product-integrity, architecture, security/privacy, and test reviews reported
+  no material findings. `pnpm agent:doctor`, `pnpm verify:fast`, and `pnpm verify:full` passed; the
+  full verification reported that no test script is configured and passed all currently
+  implemented lint, typecheck, formatting, and structural-invariant checks.
+- 2026-09-21: Follow-up governance review found that the interim pass had promoted non-binding
+  S1-05 ownership proposals without an ACCEPTED decision and had marked S1-07 complete while
+  S1-02/S1-04 remained open. The unsupported Practitioner, Operations, and unresolved
+  Quest-structuring ownership additions were removed from normative Architecture while YWAY-D002's
+  accepted evidence collaboration boundaries were preserved. S1-07 is open and must be rerun after
+  S1-04; any remaining normative ownership split requires an ACCEPTED decision.
+- 2026-09-21: After the governance remediation, `pnpm agent:doctor` returned `READY` with the
+  expected dirty-working-tree warning, and `pnpm verify:full` passed lint, typecheck, formatting,
+  and structural invariants. Tests were skipped because no test script is configured.
 
 ## Decision log
 
@@ -350,6 +375,7 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-20 | Define the S1-05 logical responsibility/collaboration matrix while keeping Evidence placement and physical architecture unresolved | Analysis evidence only; the Evidence placement decision remains assigned to S1-06 and the unresolved Quest-structuring owner is escalated |
 | 2026-09-20 | Owner direction: keep Evidence as an independent logical domain without implying physical separation | Explicit owner architecture direction for YWAY-D002; acceptance remains pending architecture review |
 | 2026-09-20 | Accept YWAY-D002 after all four reviewer disciplines reported no material findings; reconcile the Evidence-specific Architecture text | Binding architecture decision; broader S1-07 reconciliation remains open |
+| 2026-09-21 | Perform an interim reconciliation against currently approved Stage 1 outcomes and classify remaining questions by future trigger | Execution classification only; S1-07 remains open pending S1-02/S1-04, YWAY-D002 boundaries remain binding, and broader S1-05 ownership proposals remain non-binding without an ACCEPTED decision |
 
 ## Completion criteria
 
