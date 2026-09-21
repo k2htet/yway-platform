@@ -299,8 +299,8 @@ The classified decision register above remains unresolved until the correspondin
 - [x] S1-05 Logical domain responsibility/collaboration matrix
 - [x] S1-06 Evidence logical-domain boundary ADR — YWAY-D002 ACCEPTED after owner approval and
   product-integrity, architecture, security/privacy, and test review
-- [ ] S1-07 Reconcile Architecture and classify remaining questions — Evidence-placement sections
-  reconciled; broader question classification remains open
+- [x] S1-07 Reconcile Architecture and classify remaining questions — Architecture reconciled
+  against approved Stage 1 outcomes; remaining questions have explicit future triggers
 - [ ] S1-08 Validate and close Stage 1
 
 ## Discoveries log
@@ -334,6 +334,20 @@ The classified decision register above remains unresolved until the correspondin
   performed directly against the final diff, verification runner, and actual `verify:full` output;
   it found no material test or enforceability issue. The earlier test-reviewer approval remains
   recorded, and the final fallback does not claim runtime coverage where no test script exists.
+- 2026-09-21: S1-07 reconciled Architecture with the approved S1-03 provenance/evidence
+  refinements, the S1-05 responsibility matrix, and accepted YWAY-D002 while preserving existing
+  product, privacy, consent, practitioner-review, offline, localization, accessibility, and
+  governance guardrails. Remaining questions are classified across Stages 2–8 and 10, with the
+  future 16–17 pathway kept outside current scope. No technology or physical boundary was selected.
+- 2026-09-21: The initial S1-07 rewrite failed formatting and semantic review because it removed
+  explicit canonical guardrails and used inaccurate grouped traceability. The repair restored the
+  canonical Architecture baseline, applied only focused reconciliation edits, corrected each
+  contract mapping, preserved the full qualified-practitioner publication gate, and left partial
+  Pack behavior and future minor-pathway design sequencing unresolved.
+- 2026-09-21: Final product-integrity, architecture, security/privacy, and test reviews reported no
+  material findings. `pnpm agent:doctor`, `pnpm verify:fast`, and `pnpm verify:full` passed; the full
+  verification reported that no test script is configured and passed all currently implemented
+  lint, typecheck, formatting, and structural-invariant checks.
 
 ## Decision log
 
@@ -350,6 +364,7 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-20 | Define the S1-05 logical responsibility/collaboration matrix while keeping Evidence placement and physical architecture unresolved | Analysis evidence only; the Evidence placement decision remains assigned to S1-06 and the unresolved Quest-structuring owner is escalated |
 | 2026-09-20 | Owner direction: keep Evidence as an independent logical domain without implying physical separation | Explicit owner architecture direction for YWAY-D002; acceptance remains pending architecture review |
 | 2026-09-20 | Accept YWAY-D002 after all four reviewer disciplines reported no material findings; reconcile the Evidence-specific Architecture text | Binding architecture decision; broader S1-07 reconciliation remains open |
+| 2026-09-21 | Reconcile Architecture with approved Stage 1 outcomes and classify remaining questions by future trigger without choosing their answers | Execution classification only; creates no product, technology, physical-boundary, or Stage 2 activation decision |
 
 ## Completion criteria
 
