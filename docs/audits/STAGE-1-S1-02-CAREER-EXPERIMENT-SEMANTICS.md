@@ -6,9 +6,9 @@ Clarify the relationship among Career Experience Packs, realistic trials, career
 anonymous first value, primary-outcome terms, and post-trial paths without introducing unsupported
 product intent.
 
-This document records S1-02 analysis. It does not modify Product Vision, Product Contracts, or
-implementation requirements, and it does not resolve owner decisions that Product Vision leaves
-open.
+This document records S1-02 analysis and subsequent owner direction. It does not modify Product
+Vision, Product Contracts, or implementation requirements; the approved refinements are made
+normative in Product Contracts.
 
 ## Authority reviewed
 
@@ -130,13 +130,34 @@ Explicit owner direction is required wherever Product Vision does not uniquely d
 4. Must all four post-trial routes always be simultaneously available, or may context expose a
    permitted subset?
 
-No dependent Product Contract wording should change until required owner decisions are recorded in
-the appropriate authoritative product document.
+The candidates above remained unresolved during the initial audit. Their resolution is recorded
+below and traced into Product Contracts.
+
+## Owner direction — 2026-09-21
+
+The owner approved the following refinements to Product Vision §§1, 2, 3.5, 3.6, and 4. They are
+recorded here for source traceability and become product rules through the corresponding Product
+Contract edits. Product Vision itself is unchanged.
+
+1. A meaningful career experiment includes a realistic task, noticing something about the work,
+   reflection, and a next fork. A real next action is a concrete, reversible step the young person
+   starts, not merely an option viewed or selected. An outside-app step may be self-reported, but
+   self-report does not make it verified evidence. Pausing is a valid post-trial choice without being
+   counted as a real next action.
+2. The six-part structure governs an explicitly identified experiment within a Career Experience
+   Pack. A Pack may contain multiple experiments. A smaller activity needs all six parts only when
+   presented as an experiment.
+3. Anonymous first value requires a short realistic trial that yields a useful insight and offers a
+   next step. It does not require completing an entire Pack or creating an account. The existing 18+
+   public-access boundary remains in force.
+4. Post-trial routes may vary by context. Trying another career and pausing remain available; going
+   deeper is offered when a suitable next experience exists, and comparison when it would be useful.
+   Comparison is never a required gate.
 
 ## Non-goals preserved
 
 - No Product Vision changes.
-- No Product Contract edits.
+- No Product Contract edits within this audit; approved wording is applied in Product Contracts.
 - No UI flow specification.
 - No age-verification or safeguarding implementation mechanism.
 - No storage or content-authoring schema.
@@ -144,11 +165,11 @@ the appropriate authoritative product document.
 
 ## Validation status
 
-- Every registered S1-02 clarification candidate is now either bounded by Product Vision or explicitly
-  deferred to owner direction.
+- Every registered S1-02 clarification candidate was bounded by Product Vision or surfaced for owner
+  direction; all four owner decisions are now recorded above.
 - No possible-overstatement contract wording was used to resolve the disputed semantics.
-- No unresolved post-trial availability decision was silently selected.
+- Post-trial availability was resolved by explicit owner direction, not inferred from Product Vision.
 - Anonymous first value remains bounded by YWAY-P012 without selecting an enforcement mechanism.
 - Stage 1 scope boundaries remain preserved.
-- S1-02 remains open while the owner-decision candidates above are unresolved; dependent S1-04 edits
-  must remain blocked on the relevant decisions.
+- The dependent Product Contract edits cite this owner record and passed structural verification.
+  Final semantic review and S1-04/S1-07 completion are tracked in the Stage 1 ExecPlan.
