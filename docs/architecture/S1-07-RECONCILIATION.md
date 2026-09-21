@@ -32,15 +32,17 @@ The following ownership boundaries remain explicit:
 
 ## Remaining architecture questions disposition
 
-| Question | Disposition |
-| --- | --- |
-| Content authoring format, review granularity, materiality rules, and workflow | Deferred to Stage 2 / future decision |
-| Practitioner qualification and operational workflow | Deferred to future practitioner-operations decision |
-| Physical application, package, service, API, and deployment boundaries | Deferred until implementation requires a decision record |
-| Synchronization authority and conflict resolution | Deferred to future sync/data ADR |
-| Authentication provider and concrete authorization mechanism | Deferred to future identity/access ADR |
-| Consent persistence mechanism | Deferred; purpose-specific auditable consent remains required |
-| Future 16–17 pathway | Outside current scope until separate safeguarding and consent review |
+| Question                                                                                    | Disposition                                                                                               |
+| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Content authoring format, review granularity, materiality rules, and workflow               | Deferred to Stage 2 / future decision                                                                     |
+| Minimum practitioner qualification for the content-quality gate                             | Stage 2: define minimum criteria for validating qualified-practitioner review under YWAY-P019/YWAY-E005   |
+| Broader practitioner identity, vetting operations, and accountability workflows             | Stage 7: future practitioner-operations decision                                                          |
+| First physical application boundary and mobile delivery approach                            | Stage 3: delivery-architecture ADR required before implementing the first application boundary            |
+| Physical cross-domain communication, package, service, API, deployment, and data boundaries | Stage 10 or the first earlier implementation stage requiring the choice: future physical-architecture ADR |
+| Synchronization authority and conflict resolution                                           | Deferred to future sync/data ADR                                                                          |
+| Authentication provider and concrete authorization mechanism                                | Deferred to future identity/access ADR                                                                    |
+| Consent persistence mechanism                                                               | Deferred; purpose-specific auditable consent remains required                                             |
+| Future 16–17 pathway                                                                        | Outside current scope until separate safeguarding and consent review                                      |
 
 ## Non-normative items preserved
 
