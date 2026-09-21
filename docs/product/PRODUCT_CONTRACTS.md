@@ -24,23 +24,23 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## YWAY-P002: Career experiment structure
 
-- **Source:** §3.6 (Increase reality before commitment)
-- **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** A career experiment uses the structure: Question → Action → Timebox → What to notice → Reflection → Next fork. Each next step should increase real-world exposure before it increases commitment.
-- **Rationale:** Directly specified by the Product Vision as the method for increasing reality before commitment.
-- **What would violate it:** Career exploration flows that skip reflection. Experiments without timeboxes. Commitment escalation before real-world exposure increases.
-- **Future verification strategy:** Content schema validation confirming all six structural elements exist in every Career Experience Pack trial component.
+- **Source:** §3.6 (Increase reality before commitment), §4 (Core exploration experience); S1-02 owner direction recorded in `docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md`
+- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT
+- **Requirement:** A career experiment uses the structure: Question → Action → Timebox → What to notice → Reflection → Next fork. The structure governs an explicitly identified experiment within a Career Experience Pack; a Pack may contain multiple experiments, and a smaller activity needs all six parts only when presented as an experiment. Each next step should increase real-world exposure before it increases commitment.
+- **Rationale:** Product Vision specifies the six-part experiment structure but not whether it governs a Pack or each trial component. The owner defined the governed unit as an explicitly identified experiment within a Pack.
+- **What would violate it:** Presenting an activity as a career experiment without its six elements. Requiring every Pack trial component to independently contain all six elements. Commitment escalation before real-world exposure increases.
+- **Future verification strategy:** Content review confirming every identified experiment has all six elements, without imposing that requirement on every smaller Pack activity.
 
 ---
 
 ## YWAY-P003: Primary youth outcome
 
-- **Source:** §1 (Product purpose)
-- **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** The primary user outcome is completing a meaningful career experiment and taking a real next action. App opens, time spent, registrations, streaks, and content views are not the main outcome.
-- **Rationale:** Directly stated in the Product Vision as the definition of success.
-- **What would violate it:** Optimizing for engagement metrics over experiment completion. Treating registrations or streaks as primary success indicators. Designing features whose main purpose is increasing app opens rather than facilitating real next actions.
-- **Future verification strategy:** Product metric definitions reviewed against this contract. Feature proposals evaluated for whether their primary measured outcome aligns with experiment completion and next action.
+- **Source:** §1 (Product purpose), §3.6 (Increase reality before commitment); S1-02 owner direction recorded in `docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md`
+- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT
+- **Requirement:** The primary user outcome is completing a meaningful career experiment and taking a real next action. A meaningful experiment includes a realistic task, noticing something about the work, reflection, and a next fork. A real next action is a concrete, reversible step the young person starts, not merely an option viewed or selected. An outside-app action may be self-reported but must not be represented as verified evidence. Pausing remains a valid post-trial choice without being counted as a real next action. App opens, time spent, registrations, streaks, and content views are not the main outcome.
+- **Rationale:** Product Vision names the primary outcome without defining its minimum completion boundary. The owner defined meaningful completion and a real next action while preserving reversible guidance and the distinction between self-report and verification.
+- **What would violate it:** Counting a view or option selection as a completed experiment or real next action. Treating a self-reported outside-app action as verified evidence. Forcing a user to take an action instead of pausing. Optimizing for registrations or streaks over the primary outcome.
+- **Future verification strategy:** Review outcome definitions and flows to confirm realistic action, noticing, reflection, and next fork are present; distinguish started actions from viewed or selected options, and self-report from verified evidence.
 
 ---
 
@@ -124,12 +124,12 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## YWAY-P011: First career value without mandatory login
 
-- **Source:** §2 (Audience, language, and access), §4 (Core exploration experience), §11 (Explicit exclusions)
-- **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** At least one complete Career Experience Pack interaction must be accessible without account creation or authentication. The user must receive real career discovery value before being asked to register.
-- **Rationale:** Directly stated: "First career value must be available without mandatory login."
-- **What would violate it:** Requiring authentication to view any Career Experience Pack. Placing registration walls before the first meaningful trial interaction.
-- **Future verification strategy:** Automated flow test completing a Career Experience Pack without any auth token or session. Architecture review confirming anonymous access path exists.
+- **Source:** §2 (Audience, language, and access), §4 (Core exploration experience), §11 (Explicit exclusions); S1-02 owner direction recorded in `docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md`
+- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT
+- **Requirement:** Without account creation or authentication, a young person must be able to complete a short realistic work trial that yields a useful career insight and offers a next step. Completing an entire Career Experience Pack is not required for first value. Public access remains 18+ under YWAY-P012.
+- **Rationale:** Product Vision requires immediate career discovery and a short realistic work trial without mandatory login. The owner clarified the minimum first-value interaction without making full-Pack completion a gate.
+- **What would violate it:** Requiring authentication before the first short realistic trial or its useful insight. Requiring completion of an entire Pack before first value. Treating login-free first value as permission to bypass the 18+ boundary.
+- **Future verification strategy:** Anonymous flow test completing a short realistic trial, receiving a useful insight, and seeing a next step without an auth token or session; separate age-boundary review under YWAY-P012.
 
 ---
 
@@ -147,12 +147,12 @@ Each contract has a stable ID, source reference, requirement statement, rational
 
 ## YWAY-P013: Guided, not rigid
 
-- **Source:** §3.5 (Guided, not rigid)
-- **Classification:** DIRECT_PRODUCT_CONTRACT
-- **Requirement:** After a meaningful trial, a user may go deeper, try another career, compare when useful, or pause. Comparison is not a mandatory gate.
-- **Rationale:** Directly stated in the Product Vision.
-- **What would violate it:** Forcing comparison before allowing progression. Blocking a user from trying another career. Requiring completion of a comparison step as a prerequisite for any subsequent action.
-- **Future verification strategy:** Flow tests confirming all four post-trial options (deeper, another, compare, pause) are available without mandatory gates. Navigation tests verifying comparison is optional.
+- **Source:** §3.5 (Guided, not rigid); S1-02 owner direction recorded in `docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md`
+- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT
+- **Requirement:** After a meaningful trial, post-trial routes may vary by context. Trying another career and pausing remain available. Going deeper is offered when a suitable next experience exists, and comparison when it would be useful. Comparison is never a mandatory gate.
+- **Rationale:** Product Vision permits four non-sequential paths without requiring that all four appear simultaneously. The owner authorized context-dependent availability while preserving youth choice.
+- **What would violate it:** Blocking a user from trying another career or pausing. Forcing comparison before progression. Offering a deeper path with no suitable experience or requiring all four routes regardless of context.
+- **Future verification strategy:** Flow tests confirming try-another and pause remain available, deeper and comparison appear in appropriate contexts, and no route requires comparison first.
 
 ---
 

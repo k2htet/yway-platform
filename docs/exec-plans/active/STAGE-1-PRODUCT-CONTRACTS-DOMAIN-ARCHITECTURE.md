@@ -98,10 +98,15 @@ Do not:
 
 ### Contract clarification candidates
 
-1. What constitutes a meaningful career experiment and a real next action? (`YWAY-P001`–`YWAY-P003`)
-2. Is the six-part experiment structure governed per Pack, per trial, or per experiment within a Pack? (`YWAY-P002`)
-3. Does anonymous first value require a short meaningful trial or completion of an entire Pack interaction? (`YWAY-P011`)
-4. Are all four post-trial paths always required, or are they contextual permitted paths? (`YWAY-P013`)
+1. RESOLVED by owner direction: a meaningful experiment includes realistic work, noticing, reflection,
+   and a next fork; a real next action is a concrete reversible step begun, not merely selected.
+   (`YWAY-P001`–`YWAY-P003`)
+2. RESOLVED by owner direction: the six-part structure governs an explicitly identified experiment
+   within a Pack, not every Pack activity. (`YWAY-P002`)
+3. RESOLVED by owner direction: anonymous first value is a short realistic trial yielding a useful
+   insight and next step, without full-Pack completion. (`YWAY-P011`)
+4. RESOLVED by owner direction: post-trial routes may vary by context; try-another and pause remain
+   available, and comparison is never a gate. (`YWAY-P013`)
 5. RESOLVED by owner direction: AI-assisted, founder-reviewed, and practitioner-reviewed provenance are cumulative historical facts; any current review/release status is separate and must not erase history. (`YWAY-P019`, `YWAY-E005`)
 6. RESOLVED by owner direction: differently labeled evidence categories may coexist in one Portfolio view when separation is explicit; category-specific viewing should also be supported. (`YWAY-P007`–`YWAY-P009`, `YWAY-E002`)
 
@@ -290,20 +295,21 @@ The classified decision register above remains unresolved until the correspondin
 
 - [x] Stage 1 kickoff scaffold created
 - [x] S1-01 Vision-to-contract refinement audit
-- [ ] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics — analysis
-  complete; owner decisions pending
+- [x] S1-02 Career experiment / Pack / anonymous-first-value / post-trial semantics — owner decisions
+  recorded and traced into Product Contracts; product-integrity review found no material issue
 - [x] S1-03 Provenance / practitioner review / evidence presentation semantics — analysis and
   required owner decisions complete
-- [ ] S1-04 Apply approved Product Contract refinements — approved S1-03 subset applied; S1-02
-  owner decisions still block the remaining refinements
+- [x] S1-04 Apply approved Product Contract refinements — approved S1-03 and S1-02 refinements
+  applied; stable IDs and owner-authority structure verified; product-integrity review found no
+  material issue
 - [x] S1-05 Logical domain responsibility/collaboration matrix
 - [x] S1-06 Evidence logical-domain boundary ADR — YWAY-D002 ACCEPTED after owner approval and
   product-integrity, architecture, security/privacy, and test review
-- [ ] S1-07 Reconcile Architecture and classify remaining questions — interim accepted-outcome
-  reconciliation and question classification complete; rerun after S1-02/S1-04. YWAY-D002's
-  evidence collaboration boundaries are binding; broader S1-05 Practitioner, Operations, and
-  unresolved Quest-structuring ownership proposals require an ACCEPTED decision before becoming
-  normative
+- [x] S1-07 Reconcile Architecture and classify remaining questions — S1-02 outcome reconciled and
+  remaining questions classified; product-integrity, architecture, security/privacy, and test
+  reviews found no material issue. YWAY-D002's evidence collaboration boundaries are binding;
+  broader S1-05 Practitioner, Operations, and unresolved Quest-structuring ownership proposals
+  require an ACCEPTED decision before becoming normative
 - [ ] S1-08 Validate and close Stage 1
 
 ## Discoveries log
@@ -359,6 +365,22 @@ The classified decision register above remains unresolved until the correspondin
 - 2026-09-21: After the governance remediation, `pnpm agent:doctor` returned `READY` with the
   expected dirty-working-tree warning, and `pnpm verify:full` passed lint, typecheck, formatting,
   and structural invariants. Tests were skipped because no test script is configured.
+- 2026-09-21: The owner approved all four S1-02 decisions: meaningful experiment and started real
+  next action; explicitly identified experiment as the six-part unit within a Pack; short realistic
+  trial for anonymous first value; and context-dependent post-trial routes with try-another and
+  pause always available. The direction is recorded in the S1-02 audit and traced into YWAY-P002,
+  YWAY-P003, YWAY-P011, and YWAY-P013 as owner-authorized refinements. The contract-authority
+  checker now registers those four IDs. Architecture and the S1-07 reconciliation record reflect
+  the new contracts. `pnpm verify:invariants` and `pnpm verify:full` passed; full verification
+  skipped tests because no test script is configured. Final semantic review remains pending.
+- 2026-09-21: Final S1-02/S1-04/S1-07 review found no material findings across product integrity,
+  architecture, security/privacy, and test perspectives. Product review identified stale S1-02
+  audit status wording; it was corrected and the same reviewer found no remaining issue. The
+  architecture review confirmed YWAY-D002's logical boundary and Stage 2/3/10 decision triggers
+  remained intact. Security/privacy review confirmed 18+ access and self-report versus verified
+  evidence remained distinct. Test review confirmed that `verify:full` runs structural checks but
+  no runtime tests because no test script is configured. S1-02, S1-04, and S1-07 are complete;
+  S1-08 remains pending and this does not activate Stage 2.
 
 ## Decision log
 
@@ -376,6 +398,7 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-20 | Owner direction: keep Evidence as an independent logical domain without implying physical separation | Explicit owner architecture direction for YWAY-D002; acceptance remains pending architecture review |
 | 2026-09-20 | Accept YWAY-D002 after all four reviewer disciplines reported no material findings; reconcile the Evidence-specific Architecture text | Binding architecture decision; broader S1-07 reconciliation remains open |
 | 2026-09-21 | Perform an interim reconciliation against currently approved Stage 1 outcomes and classify remaining questions by future trigger | Execution classification only; S1-07 remains open pending S1-02/S1-04, YWAY-D002 boundaries remain binding, and broader S1-05 ownership proposals remain non-binding without an ACCEPTED decision |
+| 2026-09-21 | Approve the four S1-02 career-experiment, anonymous-first-value, and post-trial-path recommendations | Explicit owner product direction; canonical wording is in YWAY-P002, YWAY-P003, YWAY-P011, and YWAY-P013 |
 
 ## Completion criteria
 

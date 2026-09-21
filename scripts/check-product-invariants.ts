@@ -40,7 +40,11 @@ const knownContractClassifications = new Set<ContractClassification>([
 ]);
 
 const ownerAuthorizedContracts = new Map([
+  ["YWAY-P002", "docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md"],
+  ["YWAY-P003", "docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md"],
   ["YWAY-P008", "docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md"],
+  ["YWAY-P011", "docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md"],
+  ["YWAY-P013", "docs/audits/STAGE-1-S1-02-CAREER-EXPERIMENT-SEMANTICS.md"],
   ["YWAY-P019", "docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md"],
 ]);
 
@@ -344,8 +348,8 @@ function runSelfTest(): void {
   }
 
   const misclassifiedOwnerContract = validContractStructure.replace(
-    "OWNER_AUTHORIZED_PRODUCT_CONTRACT",
-    "DIRECT_PRODUCT_CONTRACT",
+    "## YWAY-P008: Fixture contract\n- **Source:** §7; `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`\n- **Classification:** OWNER_AUTHORIZED_PRODUCT_CONTRACT",
+    "## YWAY-P008: Fixture contract\n- **Source:** §7; `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`\n- **Classification:** DIRECT_PRODUCT_CONTRACT",
   );
   if (
     !inspectProductContractStructure(misclassifiedOwnerContract).some((failure) =>

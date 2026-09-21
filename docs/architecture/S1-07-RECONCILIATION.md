@@ -30,6 +30,17 @@ The following ownership boundaries remain explicit:
 - Employer receives only explicitly authorized disclosure payloads.
 - Identity/Access owns identity and authorization context, not domain meaning.
 
+### Career-experiment and anonymous-first-value boundaries
+
+The S1-02 owner direction is reflected in YWAY-P002, YWAY-P003, YWAY-P011, and YWAY-P013. An
+explicitly identified experiment within a Pack has the six-part structure; smaller Pack activities
+do not inherit that requirement merely by being part of a Pack. Meaningful completion includes a
+realistic task, noticing, reflection, and a next fork. A real next action is a concrete reversible
+step begun by the young person; self-reported outside-app action is not verified evidence. A short
+realistic trial can deliver first value without account creation or full-Pack completion, subject to
+the 18+ public-access boundary. Trying another career and pausing remain available after a meaningful
+trial; deeper and comparison paths depend on context, and comparison is never a gate.
+
 ## Remaining architecture questions disposition
 
 | Question                                                                                    | Disposition                                                                                               |
