@@ -1,8 +1,7 @@
 # Yway Agent Instructions
 
-Yway is a youth-first career discovery and growth product for people in Myanmar,
-initially ages 18–25. This file applies repository-wide. Put specialized guidance in a
-nested `AGENTS.md`; local guidance must not weaken product, privacy, or safety rules.
+Yway is a youth-first career discovery and growth product for people in Myanmar, initially ages
+18–25. These rules apply repository-wide. A closer `AGENTS.md` may add but not weaken them.
 
 ## Sources of truth
 
@@ -15,68 +14,59 @@ When sources conflict, use this order:
 5. `docs/exec-plans/`
 6. Platform Build Report — advisory only
 
-Do not modify `PRODUCT_VISION.md` without explicit owner instruction. Chat is task context,
-not durable product authority.
+Chat is not durable product authority. Changing `PRODUCT_VISION.md` requires explicit owner
+instruction.
 
-## Product guardrails
+## Product, privacy, and safety guardrails
 
-Read the exact applicable contracts before changing product behavior. In particular:
+Before changing product behavior, read the exact applicable contract sections. Preserve:
 
-- Career exploration must come before choice; guidance stays reversible. Never create
-  career-fit, employability, candidate-quality, or equivalent scores or rankings
-  (`YWAY-P001`, `YWAY-P004`, `YWAY-P005`, `YWAY-E006`).
-- Keep signal types and evidence levels distinct. Exploration is not Practice or Verified
-  Assessment (`YWAY-P006`, `YWAY-P007`, `YWAY-E002`).
-- The core journey must work without employers, and first value must not require login.
-  Public access is 18+; any 16–17 pathway requires separately reviewed safeguarding and
-  consent before shipping
-  (`YWAY-P010`–`YWAY-P012`).
-- Profiles and portfolios are private and have no public URL. Sharing must be explicit and
-  purpose-specific. A Quest is not an application and must not create candidate status or
-  employer access to private youth data (`YWAY-P014`–`YWAY-P018`, `YWAY-E001`, `YWAY-E003`,
-  `YWAY-E004`).
-- Preserve content provenance and the practitioner review gate (`YWAY-P019`, `YWAY-E005`).
-- Offline-supported youth work must survive synchronization (`YWAY-P022`).
+- exploration before choice and reversible guidance; no career-fit, employability,
+  candidate-quality, composite, or equivalent scores or rankings (`YWAY-P001`, `YWAY-P004`,
+  `YWAY-P005`, `YWAY-E006`)
+- separate signal types and evidence levels; Exploration is not Practice or Verified Assessment,
+  and evidence is never silently strengthened (`YWAY-P006`, `YWAY-P007`, `YWAY-E002`)
+- an employer-independent core journey and first career value without login; public access is 18+,
+  and any 16–17 pathway needs separate safeguarding and consent review (`YWAY-P010`–`YWAY-P012`)
+- private profiles and portfolios with no public URL; explicit, purpose-specific sharing; Quest
+  and application separation; no implicit candidate state or employer access to private youth data
+  (`YWAY-P014`–`YWAY-P018`, `YWAY-E001`, `YWAY-E003`, `YWAY-E004`)
+- evidence/content provenance and the qualified-practitioner review gate (`YWAY-P019`, `YWAY-E005`)
+- preservation of offline-supported youth work during synchronization (`YWAY-P022`)
 
-## Architecture and decisions
+## Decision and Stage authority
 
-- Read `docs/architecture/ARCHITECTURE.md` before changing domain, privacy, sync, or physical
-  architecture boundaries.
-- Logical domains do not imply packages, services, apps, or databases.
-- Unresolved product questions require explicit owner authority and an update to the canonical
-  product documents.
-- Significant architecture or technology choices require the appropriate architecture update
-  and, when applicable, an `ACCEPTED` decision using `docs/decisions/000-TEMPLATE.md`.
-- `YWAY-D001` accepts the repository tooling only; app, framework, database, auth, and sync
-  choices remain undecided.
+- Logical domains do not imply physical boundaries.
+- Significant architecture or technology choices need an applicable `ACCEPTED` decision and
+  architecture update. `YWAY-D001` accepts repository tooling only; app framework, database,
+  authentication, and synchronization remain undecided.
+- Surface unresolved product or architecture questions instead of deciding them implicitly.
+- Do not activate, advance, close, or begin work from a new roadmap Stage without explicit owner
+  authority. An audit, roadmap label, or ExecPlan is not that authority.
+
+## Context boundaries
+
+- Start with named files and the applicable `AGENTS.md` chain; do not broadly scan or preload
+  context.
+- Load exact Product Vision/Contract sections only for affected product, privacy, sharing, consent,
+  evidence, safeguarding, or offline semantics.
+- Load relevant Architecture sections for affected domain, privacy, synchronization, or physical
+  boundaries.
+- For decision discovery, start from changed files and referenced decision IDs or filenames. Check
+  status headers, then read only directly applicable `ACCEPTED` decisions. Do not enumerate or
+  preload all decisions.
+- Use ExecPlan requirements only when a matching plan is already identified or the task requires
+  one. Inspect filenames first and read only the matching plan; do not search plans for trivial
+  tasks.
+- Follow nested instructions; do not inspect unrelated application, test, or tooling trees.
 
 ## Working agreement
 
-- Read the relevant contracts, active ExecPlan, architecture sections, and accepted decisions.
-- Multi-step work requires an ExecPlan; trivial edits do not.
-- Make the smallest bounded change, preserve user work, and update tests and docs when needed.
-- Follow repository TypeScript, ESLint, Prettier, and EditorConfig configuration.
-- Never claim a check or review passed unless it ran. Report failures and skipped checks.
-- Keep shared rules here or in canonical docs, not in tool-specific reviewer adapters.
-
-## Setup and verification
-
-Requires Node.js 24 and pnpm 11.24.0.
-
-```sh
-corepack enable
-pnpm install --frozen-lockfile
-pnpm agent:doctor
-```
-
-- `pnpm verify:fast` — lint and typecheck during work.
-- `pnpm verify:full` — lint, typecheck, formatting, configured tests, and invariants before
-  handoff; it does not replace `agent:doctor`.
-- `pnpm verify:invariants` — structural guardrails only; it does not prove semantic, privacy,
-  authorization, consent, offline, accessibility, or localization correctness.
-
-## Review
-
-Follow `CONTRIBUTING.md` and `.github/PULL_REQUEST_TEMPLATE.md`. After the change is stable,
-use the relevant product-integrity, architecture, security/privacy, and test reviewers from
-`.agents/skills/`, `.codex/agents/`, or `.opencode/agents/`.
+- Make the smallest bounded change and preserve user work.
+- Multi-step work needs an ExecPlan; trivial edits do not.
+- Follow repository format/tool configuration for affected files.
+- Verify proportionately to the change and matching plan. Structural checks do not prove semantic,
+  privacy, authorization, consent, offline, accessibility, or localization correctness.
+- Report actual results and skipped checks; never claim an unrun check or review passed.
+- After stabilization, use only risk-relevant product, architecture, security/privacy, and test
+  reviews. Adapters do not replace canonical sources.

@@ -13,15 +13,27 @@ remaining ownership additions require a separately ACCEPTED architecture decisio
 become binding. This interim work introduces no product code, schema, API, runtime type, migration,
 technology selection, new product decision, or Stage 2 activation, and it does not complete S1-07.
 
-## Authority used
+## Sources consulted
 
-- `docs/product/PRODUCT_VISION.md`
-- `docs/product/PRODUCT_CONTRACTS.md`
-- `docs/architecture/ARCHITECTURE.md`
-- `docs/decisions/002-evidence-logical-domain.md` (ACCEPTED)
-- `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`
-- `docs/audits/STAGE-1-S1-05-LOGICAL-DOMAIN-RESPONSIBILITY-COLLABORATION.md`
-- `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`
+Canonical sources:
+
+- `docs/product/PRODUCT_CONTRACTS.md`: YWAY-P004–P012, YWAY-P014–P020,
+  YWAY-P022–P024, YWAY-P029–P030, and YWAY-E001–E006.
+- `docs/architecture/ARCHITECTURE.md`: Sections 2–7 (principles, logical domains, ownership
+  boundaries, forbidden access paths, required capability boundaries, and invariants), Sections
+  8–10 (provisional hypotheses, candidate implementations, and deferred physical architecture),
+  and Sections 11–12 (classified unresolved questions and architecture change discipline).
+- `docs/decisions/002-evidence-logical-domain.md`: accepted decision YWAY-D002, specifically its
+  evidence-domain outcome and cross-domain collaboration boundaries.
+
+Supporting records:
+
+- `docs/audits/STAGE-1-S1-03-PROVENANCE-REVIEW-EVIDENCE-PRESENTATION.md`: Product Contract
+  refinements reconciled here.
+- `docs/audits/STAGE-1-S1-05-LOGICAL-DOMAIN-RESPONSIBILITY-COLLABORATION.md`: responsibility
+  matrix and unresolved ownership proposals classified here.
+- `docs/exec-plans/active/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`: S1-07 progress and
+  follow-up governance findings.
 
 ## Contract and decision traceability
 

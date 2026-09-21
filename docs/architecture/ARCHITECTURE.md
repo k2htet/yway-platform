@@ -11,7 +11,7 @@ This document defines Yway's logical architecture and invariants while keeping i
 
 Logical domain != physical package != deployable service != database != app. No one-to-one mapping between logical domains and future packages, apps, or services is implied or required.
 
-Authority hierarchy: `PRODUCT_VISION.md` > `PRODUCT_CONTRACTS.md` > this document > accepted decision records > ExecPlans > Build Report (advisory only).
+Repository-wide authority ordering is defined by root AGENTS.md. This document defines architecture boundaries only.
 
 ---
 
