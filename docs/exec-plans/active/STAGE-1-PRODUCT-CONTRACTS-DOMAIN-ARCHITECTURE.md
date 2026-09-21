@@ -400,6 +400,15 @@ Entries here document execution history only. They are not binding product or ar
 | 2026-09-21 | Perform an interim reconciliation against currently approved Stage 1 outcomes and classify remaining questions by future trigger | Execution classification only; S1-07 remains open pending S1-02/S1-04, YWAY-D002 boundaries remain binding, and broader S1-05 ownership proposals remain non-binding without an ACCEPTED decision |
 | 2026-09-21 | Approve the four S1-02 career-experiment, anonymous-first-value, and post-trial-path recommendations | Explicit owner product direction; canonical wording is in YWAY-P002, YWAY-P003, YWAY-P011, and YWAY-P013 |
 
+## S1-08 closure validation
+
+Status: IN PROGRESS
+
+- Dependency audit on 2026-09-21 confirms S1-01 through S1-07 (#16–#22) are closed; #23 is the only open Stage 1 item.
+- Stage 2 remains `PLANNED` and must not be activated or promoted as part of Stage 1 closure.
+- Final closure requires the product-integrity, architecture, security/privacy, and test reviewer disciplines; a clean-scope audit; and explicit execution of `pnpm agent:doctor`, `pnpm verify:fast`, `pnpm verify:invariants`, and `pnpm verify:full`.
+- The draft closure PR is the validation surface. Temporary CI steps make the four required commands explicit for the closure run; the CI-only change will be removed before the final documentation-only closure diff.
+
 ## Completion criteria
 
 Stage 1 is complete only when:
