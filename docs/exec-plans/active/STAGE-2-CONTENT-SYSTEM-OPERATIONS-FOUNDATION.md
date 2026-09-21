@@ -141,12 +141,12 @@ Stage 2 stores only synthetic actor identities and non-sensitive qualification e
 
 Implement:
 
-- `pnpm content:new-version -- --pack <id> [--from <version>]`
-- `pnpm content:attest -- --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested>`
-- `pnpm content:status -- --pack <id> --version <n> [--json]`
-- `pnpm content:retire -- --pack <id> --version <n> --actor <id> --reason <reason>`
+- `pnpm content:new-version --pack <id> [--from <version>]`
+- `pnpm content:attest --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested>`
+- `pnpm content:status --pack <id> --version <n> [--json]`
+- `pnpm content:retire --pack <id> --version <n> --actor <id> --reason <reason>`
 
-`content:retire` appends a retirement event bound to the exact immutable version and digest; it does not rewrite source content, prior provenance, attestations, or release history. A retired version is no longer artifact-eligible and cannot be released again. Duplicate retirement must be refused.
+`content:retire` appends a retirement event bound to the exact immutable version and digest. If that version was released, it also commits an immutable canonical JSON retirement notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release. The notice binds the Pack ID, version, content digest, release-manifest digest, and retirement-event digest; it contains no private actor or reason details. The prior bundle, release manifest, source content, provenance, attestations, and release history remain intact. A retired version is no longer artifact-eligible and cannot be released again. Duplicate retirement and retirement-notice overwrite must be refused.
 
 Use exit code 0 for success, 1 for validation/gate failure, and 2 for invalid invocation. Writes must be atomic and refuse overwrite.
 
@@ -160,14 +160,14 @@ Runtime themes, scaling, screen readers, reduced motion, Burmese rendering, targ
 
 Implement:
 
-- `pnpm content:release -- --pack <id> --version <n>`
+- `pnpm content:release --pack <id> --version <n>`
 - `pnpm content:verify`
 
-Generate byte-deterministic canonical JSON bundle/manifests, reject unmet gates, refuse release overwrite, isolate fixture artifacts from production classification, and detect tampering.
+Generate byte-deterministic canonical JSON bundle/manifests, reject unmet gates, refuse release overwrite, isolate fixture artifacts from production classification, and detect tampering. Retirement notices are part of the same artifact-only boundary as bundles/manifests. A consumer must check the retirement-notice path for the exact Pack ID/version in its current artifact snapshot before loading a released bundle, verify any notice against the bundle and release manifest, and reject a retired version. If the notice check cannot be completed or verified, loading fails closed. A consumer must refresh its artifact snapshot to learn about later retirements; Stage 2 does not select a distribution or refresh mechanism.
 
 ### S2-08 — Synthetic representative lifecycle
 
-Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the happy path through artifact release and separately exercise `changes-requested` and `retired` outcomes through repository commands. Retirement coverage must confirm that current status becomes `retired`, prior provenance/release history remains intact, and further release is refused. Commit the deterministic fixture artifact/manifests.
+Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the happy path through artifact release and separately exercise `changes-requested` and `retired` outcomes through repository commands. Retirement coverage must confirm that current status becomes `retired`, prior provenance/release history remains intact, a released version gains a deterministic retirement notice visible through the artifact boundary, artifact consumers reject that version, and further release is refused. Commit the deterministic fixture artifact/manifests and any retirement notice generated for a released fixture version.
 
 Synthetic evidence must never be described as real practitioner endorsement, production-quality content, or public-release readiness.
 
@@ -208,6 +208,7 @@ Every implementation issue must add proportionate automated coverage. Stage 2 cl
 - localization/accessibility/sponsorship gate tests
 - atomic-write and overwrite-refusal tests
 - deterministic release/manifest tests
+- retirement-notice determinism, binding, tamper, and artifact-consumer rejection tests
 - fixture-isolation tests
 - end-to-end synthetic lifecycle through repository commands
 - `pnpm test` using `node:test`, included in `pnpm verify:full`
@@ -274,6 +275,7 @@ YWAY-D003 remains PROPOSED until S2-01 review is complete.
 - 2026-09-21: The repository currently has no active ExecPlan and no runtime test script; Stage 2 closure explicitly requires adding `node:test`.
 - 2026-09-21: Architecture currently defers content authoring format, review granularity, materiality, versioning/workflow details, and minimum practitioner qualification to Stage 2. YWAY-D003 is therefore required before those choices become normative.
 - 2026-09-21: Issue #32 intentionally chooses an artifact-only boundary and synthetic fixture, while leaving future product/application delivery choices deferred.
+- 2026-09-21: A repository-only retirement event is invisible to artifact-only consumers after release; a committed retirement notice and mandatory artifact-side check close that gap without rewriting historical artifacts.
 
 ## Decision log
 
@@ -296,6 +298,7 @@ Stage 2 closes only when:
 - Burmese, content-accessibility, and applicable sponsorship gates block release when missing
 - the synthetic fixture passes the release path, exercises changes-requested and retirement paths through repository commands, and produces byte-deterministic committed artifacts
 - retired versions preserve prior provenance/release history and cannot be released again
+- retirement of a released version emits a deterministic artifact-boundary notice without rewriting its historical bundle/manifest, and consumers reject the retired version
 - fixture records cannot produce production-classified artifacts or imply real/public approval
 - source, audit-chain, manifest, and artifact tampering are detected
 - `pnpm test` uses `node:test` and runs under `pnpm verify:full`
