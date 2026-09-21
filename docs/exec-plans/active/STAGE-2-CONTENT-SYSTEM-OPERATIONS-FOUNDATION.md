@@ -144,6 +144,9 @@ Implement:
 - `pnpm content:new-version -- --pack <id> [--from <version>]`
 - `pnpm content:attest -- --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested>`
 - `pnpm content:status -- --pack <id> --version <n> [--json]`
+- `pnpm content:retire -- --pack <id> --version <n> --actor <id> --reason <reason>`
+
+`content:retire` appends a retirement event bound to the exact immutable version and digest; it does not rewrite source content, prior provenance, attestations, or release history. A retired version is no longer artifact-eligible and cannot be released again. Duplicate retirement must be refused.
 
 Use exit code 0 for success, 1 for validation/gate failure, and 2 for invalid invocation. Writes must be atomic and refuse overwrite.
 
@@ -164,7 +167,7 @@ Generate byte-deterministic canonical JSON bundle/manifests, reject unmet gates,
 
 ### S2-08 — Synthetic representative lifecycle
 
-Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the complete lifecycle through repository commands and commit the deterministic fixture artifact/manifests.
+Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the happy path through artifact release and separately exercise `changes-requested` and `retired` outcomes through repository commands. Retirement coverage must confirm that current status becomes `retired`, prior provenance/release history remains intact, and further release is refused. Commit the deterministic fixture artifact/manifests.
 
 Synthetic evidence must never be described as real practitioner endorsement, production-quality content, or public-release readiness.
 
@@ -200,7 +203,7 @@ Every implementation issue must add proportionate automated coverage. Stage 2 cl
 - schema rejection and generated-schema determinism tests
 - digest and canonicalization tests
 - audit-chain tamper tests
-- lifecycle transition and stale-approval tests
+- lifecycle transition, changes-requested, retirement, and stale-approval tests
 - practitioner eligibility/scope/expiry/self-author tests
 - localization/accessibility/sponsorship gate tests
 - atomic-write and overwrite-refusal tests
@@ -291,7 +294,8 @@ Stage 2 closes only when:
 - stale, ineligible, wrong-scope, expired, unverified, or self-authoring practitioner approval cannot satisfy the gate
 - every source/localization edit creates a fresh version-scoped review/release path without erasing history
 - Burmese, content-accessibility, and applicable sponsorship gates block release when missing
-- the synthetic fixture passes the complete lifecycle and produces byte-deterministic committed artifacts
+- the synthetic fixture passes the release path, exercises changes-requested and retirement paths through repository commands, and produces byte-deterministic committed artifacts
+- retired versions preserve prior provenance/release history and cannot be released again
 - fixture records cannot produce production-classified artifacts or imply real/public approval
 - source, audit-chain, manifest, and artifact tampering are detected
 - `pnpm test` uses `node:test` and runs under `pnpm verify:full`
