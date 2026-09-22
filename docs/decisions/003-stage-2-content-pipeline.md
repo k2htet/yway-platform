@@ -4,7 +4,7 @@
 
 - ID: YWAY-D003
 - Date: 2026-09-21
-- Status: PROPOSED
+- Status: ACCEPTED
 - Owners: Yway engineering / product owner
 - Related ExecPlan: docs/exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md
 - Related Product Contracts: YWAY-P002, YWAY-P005, YWAY-P019, YWAY-P020, YWAY-P023, YWAY-P024, YWAY-E005
@@ -82,7 +82,7 @@ This decision is intentionally limited to the Stage 2 repository content pipelin
 
 **Capability requirement:** Stage 2 must provide a strict, tamper-detectable, provenance-preserving, version-scoped content lifecycle that enforces founder review, independent qualified-practitioner review, localization/content-accessibility/sponsorship gates, fixture isolation, and deterministic release artifacts.
 
-**Implementation choice:** PROPOSED — use YAML content-as-code validated by strict runtime schemas (with generated JSON Schema); store versioned sources, attestations, eligibility records, provenance events, and release manifests as repository-local files; expose lifecycle operations through repository commands; bind records to canonical SHA-256 digests and chained prior-event digests; generate committed deterministic canonical JSON bundles/manifests and immutable retirement notices as the only Stage 2 release boundary. A post-release retirement emits a notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release, binding the content, release manifest, and retirement event digests while preserving the historical bundle and manifest.
+**Implementation choice:** ACCEPTED — use YAML content-as-code validated by strict runtime schemas (with generated JSON Schema); store versioned sources, attestations, eligibility records, provenance events, and release manifests as repository-local files; expose lifecycle operations through repository commands; bind records to canonical SHA-256 digests and chained prior-event digests; generate committed deterministic canonical JSON bundles/manifests and immutable retirement notices as the only Stage 2 release boundary. A post-release retirement emits a notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release, binding the content, release manifest, and retirement event digests while preserving the historical bundle and manifest.
 
 Each committed artifact snapshot also contains a deterministic canonical snapshot index that enumerates every consumable bundle, release manifest, and retirement notice by path and digest. Stage 2 uses the protected Git commit/tree containing that index as the trusted snapshot root; a consumer must establish that trust before interpreting either presence or absence in the index. Before loading a version, the consumer must verify the index and referenced files against that trusted tree, require the bundle and release manifest entries, inspect the exact retirement-notice entry, and reject the version when the notice is present or when the trusted-root, index, required-entry, digest, or absence check cannot be verified. Deleting a notice and rewriting the index cannot turn a retired version into a valid snapshot because the resulting tree no longer matches the trusted root. Distribution, trusted-commit acquisition, and snapshot refresh remain deferred.
 
@@ -106,13 +106,15 @@ Stage 2 practitioner eligibility is repository-governed and synthetic for the ex
 
 ## Validation
 
-Before ACCEPTED status:
+Acceptance evidence recorded on 2026-09-22:
 
-- product-integrity review confirms YWAY-P002, P005, P019, P020, P023, P024, and YWAY-E005 are preserved
-- architecture review confirms the scope does not select future app/service/database/auth/UI boundaries
-- security/privacy review confirms fixture data and qualification references do not introduce sensitive real identity material or false authentication claims
-- test review confirms the proposed digest/version/lifecycle/determinism choices are testable and failure modes are explicit
-- repository documentation verification passes
+- product-integrity review found no material finding and classified the decision as compatible with YWAY-P002, P005, P019, P020, P023, P024, YWAY-E005, and YWAY-E006
+- architecture review found no material finding and confirmed the scope does not select future app/service/database/auth/UI boundaries
+- security/privacy review found no material finding and confirmed fixture isolation and trusted-root-bound retirement checks are explicit
+- test review found no material finding and confirmed the digest/version/lifecycle/determinism requirements and negative cases are testable
+- local `verify:full` passed all currently implemented checks; its test phase correctly reported that no test script exists yet, which S2-02 through S2-10 must address
+- the required GitHub `Verify` check passed for PR #43
+- the product owner explicitly accepted the recommendation to adopt this decision for Stage 2 while retaining production artifact distribution and trusted-root acquisition as unresolved future architecture
 
 After acceptance, implementation validation must include:
 
@@ -144,15 +146,16 @@ Migration must preserve all historical provenance and review scope; no migration
 
 ## Follow-up
 
-- [ ] S2-01 (#33): complete review and change this ADR to ACCEPTED, REJECTED, or DEFERRED.
-- [ ] If accepted, reconcile the directly affected Content/Practitioner/Operations Architecture text and Stage 2 unresolved questions.
+- [x] S2-01 (#33): complete review and change this ADR to ACCEPTED, REJECTED, or DEFERRED.
+- [x] If accepted, reconcile the directly affected Content/Practitioner/Operations Architecture text and Stage 2 unresolved questions.
 - [ ] S2-02 through S2-09 implement and document the accepted semantics.
 - [ ] S2-10 validates the complete synthetic lifecycle and closes Stage 2 without activating Stage 3.
 
 ## Decision History
 
-| Date       | Change                                            | Reason                                                                                                                |
-| ---------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-21 | Initial record created as PROPOSED                | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative           |
-| 2026-09-21 | Clarified post-release retirement signaling       | Artifact-only consumers need a deterministic notice while historical release artifacts remain immutable               |
-| 2026-09-22 | Bound retirement state to a trusted snapshot root | Notice absence is meaningful only when a canonical snapshot index and its files verify against the protected Git tree |
+| Date       | Change                                            | Reason                                                                                                                                    |
+| ---------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-21 | Initial record created as PROPOSED                | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative                               |
+| 2026-09-21 | Clarified post-release retirement signaling       | Artifact-only consumers need a deterministic notice while historical release artifacts remain immutable                                   |
+| 2026-09-22 | Bound retirement state to a trusted snapshot root | Notice absence is meaningful only when a canonical snapshot index and its files verify against the protected Git tree                     |
+| 2026-09-22 | Accepted for Stage 2                              | Four-discipline review found no material issue, verification passed, and the product owner explicitly approved the bounded recommendation |
