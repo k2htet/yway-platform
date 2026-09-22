@@ -16,6 +16,13 @@ Audit files are advisory analysis unless they separately record an explicitly id
 owner-authorized product refinement; only that recorded direction is durable supporting authority
 where a Product Contract cites it. Do not infer product rules from audit recommendations.
 
+## Product learning / discovery
+
+For user research, experiments, hypotheses, and product-learning evidence, see
+`docs/discovery/README.md`. Discovery artifacts are non-authoritative and do not override Product
+Vision or Product Contracts. Evidence informs hypotheses; hypotheses inform decisions. Only
+approved decisions can change authoritative product documents.
+
 ## Current state and workflow
 
 - Compact stage/status: `docs/roadmap/STAGE-INDEX.md` (authority: `docs/roadmap/ROADMAP.md`).
