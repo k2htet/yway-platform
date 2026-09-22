@@ -108,7 +108,8 @@ Statuses reflect current repository evidence, not aspiration. See
 - **Status:** ACTIVE.
 - **Active ExecPlan:** `docs/exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`.
 - **Kickoff:** Issue #32 provides explicit owner activation authority and the bounded Stage 2 direction.
-- **Important unresolved questions:** YWAY-D003 is PROPOSED for the repository-native content pipeline and must be reviewed before its architecture choices become normative. Future CMS/database/auth/UI and Stage 3 delivery choices remain deferred.
+- **Accepted decision and next step:** YWAY-D003 governs the bounded repository-native Stage 2 content pipeline; S2-01 is complete and S2-02 is next.
+- **Important unresolved questions:** Production CMS/database/auth/UI, artifact distribution, trusted-root acquisition, and Stage 3 delivery choices remain deferred.
 
 ## Stage 3 — Youth Exploration
 
