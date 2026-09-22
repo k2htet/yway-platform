@@ -29,15 +29,14 @@ Structural invariant checks do not prove semantic, privacy, authorization, conse
 
 ## Where to start
 
-Read these sources in order before making changes:
-
-1. [`AGENTS.md`](AGENTS.md)
-2. [Product Vision](docs/product/PRODUCT_VISION.md)
-3. [Product Contracts](docs/product/PRODUCT_CONTRACTS.md)
-4. [Architecture](docs/architecture/ARCHITECTURE.md)
-5. [Completed Stage 0 ExecPlan](docs/exec-plans/completed/STAGE-0-AGENTIC-FOUNDATION.md)
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the working and review process.
+1. Read root [`AGENTS.md`](AGENTS.md).
+2. Check the [Stage Index](docs/roadmap/STAGE-INDEX.md) for current stage and status.
+3. Read only affected authority sections: [Product Vision](docs/product/PRODUCT_VISION.md) and
+   [Product Contracts](docs/product/PRODUCT_CONTRACTS.md) for product behavior changes;
+   [Architecture](docs/architecture/ARCHITECTURE.md) and applicable
+   [ADRs](docs/decisions/) for architecture decisions; the relevant
+   [active ExecPlan](docs/exec-plans/active/) for current complex work.
+4. Follow [`CONTRIBUTING.md`](CONTRIBUTING.md) for workflow and review rules.
 
 ## Codex and OpenCode support
 

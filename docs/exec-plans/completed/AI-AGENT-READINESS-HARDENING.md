@@ -2,9 +2,16 @@
 
 ## Status
 
-ACTIVE
+COMPLETE
 
 Activation date: 2026-09-22
+Completion date: 2026-09-22
+
+Completion result: Hardening checklist and completion criteria are satisfied. The README entry
+now routes agents to the root instructions, stage index, and only relevant authority sections.
+The final `pnpm agent:doctor`, `pnpm verify:fast`, `pnpm verify:invariants`, and
+`pnpm verify:full` checks passed on 2026-09-22. Stage 2 remains ACTIVE under its separate plan;
+Stage 3 remains PLANNED.
 
 ## Purpose and outcome
 
@@ -133,7 +140,7 @@ the verification-script change.
 - `scripts/check-doc-consistency.ts` (new)
 - `scripts/run-verification.ts`
 - `package.json`
-- `docs/exec-plans/active/AI-AGENT-READINESS-HARDENING.md` (this plan)
+- This ExecPlan (now under `docs/exec-plans/completed/`)
 
 Logical domains: none product-facing; repository governance/tooling only.
 
