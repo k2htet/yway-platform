@@ -31,9 +31,48 @@ try {
 
 const scripts = manifest.scripts ?? {};
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const fastModeScripts = ["lint", "typecheck"] as const;
+const fullModeInitialScripts = ["lint", "typecheck", "format:check"] as const;
+const fullModePostScripts = ["verify:invariants", "verify:docs"] as const;
+const fullModeRequiredScripts = [...fullModeInitialScripts, ...fullModePostScripts];
 
 function hasScript(name: string): boolean {
   return typeof scripts[name] === "string" && scripts[name].trim().length > 0;
+}
+
+function findMissingScripts(
+  requiredNames: readonly string[],
+  availableScripts: Record<string, unknown>,
+): string[] {
+  return requiredNames.filter(
+    (name) =>
+      typeof availableScripts[name] !== "string" ||
+      (availableScripts[name] as string).trim().length === 0,
+  );
+}
+
+function runVerificationRunnerSelfTest(): void {
+  const fixtureScripts = Object.fromEntries(
+    fullModeRequiredScripts.map((name) => [name, `fixture ${name}`]),
+  );
+  delete fixtureScripts["verify:docs"];
+  const missing = findMissingScripts(fullModeRequiredScripts, fixtureScripts);
+  const complete = findMissingScripts(fullModeRequiredScripts, {
+    ...fixtureScripts,
+    "verify:docs": "fixture verify:docs",
+  });
+
+  if (
+    !fullModeRequiredScripts.includes("verify:docs") ||
+    !fullModePostScripts.includes("verify:docs") ||
+    missing.length !== 1 ||
+    missing[0] !== "verify:docs" ||
+    complete.length !== 0
+  ) {
+    console.error("FAIL  verification runner self-test");
+    process.exit(1);
+  }
+  console.log("PASS  verification runner fail-closed self-test");
 }
 
 function runScript(name: string): void {
@@ -57,28 +96,30 @@ function runScript(name: string): void {
   console.log(`PASS  ${name}`);
 }
 
-const requiredScripts =
-  mode === "fast" ? ["lint", "typecheck"] : ["lint", "typecheck", "format:check"];
+const initialScripts = mode === "fast" ? fastModeScripts : fullModeInitialScripts;
+const requiredScripts = mode === "fast" ? fastModeScripts : fullModeRequiredScripts;
+const missingScripts = findMissingScripts(requiredScripts, scripts);
 
-for (const script of requiredScripts) {
-  if (!hasScript(script)) {
-    console.error(`FAIL  Required package script is missing: ${script}`);
-    process.exit(1);
-  }
+if (missingScripts.length > 0) {
+  console.error(`FAIL  Required package script is missing: ${missingScripts.join(", ")}`);
+  process.exit(1);
+}
+
+for (const script of initialScripts) {
   runScript(script);
 }
 
 if (mode === "full") {
+  runVerificationRunnerSelfTest();
+
   if (hasScript("test")) {
     runScript("test");
   } else {
     console.log("SKIP  tests — no test script configured yet");
   }
 
-  if (hasScript("verify:invariants")) {
-    runScript("verify:invariants");
-  } else {
-    console.log("SKIP  product invariants — pending Stage 0 F2");
+  for (const script of fullModePostScripts) {
+    runScript(script);
   }
 
   console.log("\nPASS  All verification currently implemented has passed");

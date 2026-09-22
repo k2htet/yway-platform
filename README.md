@@ -18,11 +18,12 @@ pnpm agent:doctor
 
 ## Verification
 
-| Command                  | Purpose                                 |
-| ------------------------ | --------------------------------------- |
-| `pnpm verify:fast`       | Run lint and type checking.             |
-| `pnpm verify:full`       | Run all currently implemented checks.   |
-| `pnpm verify:invariants` | Run structural product guardrails only. |
+| Command                  | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `pnpm verify:fast`       | Run lint and type checking.                  |
+| `pnpm verify:full`       | Run all currently implemented checks.        |
+| `pnpm verify:invariants` | Run structural product guardrails only.      |
+| `pnpm verify:docs`       | Run documentation/status consistency checks. |
 
 Structural invariant checks do not prove semantic, privacy, authorization, consent, offline, accessibility, or localization correctness.
 

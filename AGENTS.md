@@ -5,17 +5,41 @@ Yway is a youth-first career discovery and growth product for people in Myanmar,
 
 ## Sources of truth
 
-When sources conflict, use this order:
-
-1. `docs/product/PRODUCT_VISION.md`
-2. `docs/product/PRODUCT_CONTRACTS.md`
-3. `docs/architecture/ARCHITECTURE.md`
-4. `docs/decisions/` — only `ACCEPTED` decisions are binding
-5. `docs/exec-plans/`
-6. Platform Build Report — advisory only
+When sources conflict, use this order: `docs/product/PRODUCT_VISION.md` →
+`docs/product/PRODUCT_CONTRACTS.md` → `docs/architecture/ARCHITECTURE.md` → `docs/decisions/`
+(only `ACCEPTED` decisions bind) → `docs/exec-plans/` → Platform Build Report (advisory only).
 
 Chat is not durable product authority. Changing `PRODUCT_VISION.md` requires explicit owner
 instruction.
+
+Audit files are advisory analysis unless they separately record an explicitly identified
+owner-authorized product refinement; only that recorded direction is durable supporting authority
+where a Product Contract cites it. Do not infer product rules from audit recommendations.
+
+## Current state and workflow
+
+- Compact stage/status: `docs/roadmap/STAGE-INDEX.md` (authority: `docs/roadmap/ROADMAP.md`).
+- Authorized complex work: an active ExecPlan under `docs/exec-plans/active/`; the ACTIVE roadmap
+  stage's plan is cited in ROADMAP.md. Stage activation, advancement, and closure always require
+  explicit owner authority.
+- Branch, PR, review, and collaboration workflow: `CONTRIBUTING.md`.
+
+## Verification
+
+`pnpm agent:doctor` (environment), `pnpm verify:fast` (lint+typecheck), `pnpm verify:invariants`
+(structural product guardrails), `pnpm verify:full` (all checks incl. documentation/status).
+
+## Autonomy tiers
+
+- **Agent-autonomous:** Reversible implementation detail preserving existing authority: local
+  naming, small code/test organization, reversible refactors, contract-preserving bug fixes, and
+  formatting/docs corrections.
+- **ADR required:** Long-lived, cross-cutting, hard-to-reverse technical or architecture choices;
+  existing triggers govern application/framework, database/storage, authentication, physical
+  app/service/package boundaries, synchronization, and security architecture.
+- **Owner approval required:** Changes to product meaning or authority: Product Vision or Contract
+  meaning, target population, safeguarding, employer/youth access, scoring/ranking, stage
+  activation/closure, significant ADR acceptance, and public release authority.
 
 ## Product, privacy, and safety guardrails
 
@@ -46,12 +70,9 @@ Before changing product behavior, read the exact applicable contract sections. P
 
 ## Context boundaries
 
-- Start with named files and the applicable `AGENTS.md` chain; do not broadly scan or preload
-  context.
-- Load exact Product Vision/Contract sections only for affected product, privacy, sharing, consent,
-  evidence, safeguarding, or offline semantics.
-- Load relevant Architecture sections for affected domain, privacy, synchronization, or physical
-  boundaries.
+- Start with named files and the applicable `AGENTS.md` chain; do not broadly preload context.
+- Load exact Product Vision/Contract sections only for affected semantics, and Architecture sections
+  only for affected domain, privacy, synchronization, or physical boundaries.
 - For decision discovery, start from changed files and referenced decision IDs or filenames. Check
   status headers, then read only directly applicable `ACCEPTED` decisions. Do not enumerate or
   preload all decisions.
@@ -62,11 +83,17 @@ Before changing product behavior, read the exact applicable contract sections. P
 
 ## Working agreement
 
-- Make the smallest bounded change and preserve user work.
-- Multi-step work needs an ExecPlan; trivial edits do not.
-- Follow repository format/tool configuration for affected files.
+- Preserve user work, make the smallest bounded change, and use an ExecPlan for multi-step work.
+- Follow repository format/tool configuration for affected files; trivial edits need no ExecPlan.
 - Verify proportionately to the change and matching plan. Structural checks do not prove semantic,
   privacy, authorization, consent, offline, accessibility, or localization correctness.
 - Report actual results and skipped checks; never claim an unrun check or review passed.
+- Changes to governance control surfaces (`AGENTS.md` and `CONTRIBUTING.md` files, Product Vision,
+  Product Contracts, Architecture, ADR statuses, invariant/verification scripts, CI workflows)
+  require independent review; owner approval applies only where existing authority requires it.
+  See `CONTRIBUTING.md`.
+- Done means acceptance criteria are met, required verification actually ran, results are recorded
+  truthfully, unresolved questions stay explicit, and durable knowledge is written into repository
+  sources rather than left only in chat. Workflow detail: `CONTRIBUTING.md`.
 - After stabilization, use only risk-relevant product, architecture, security/privacy, and test
   reviews. Adapters do not replace canonical sources.
