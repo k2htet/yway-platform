@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "verify:fast": "node --import tsx scripts/run-verification.ts fast",
     "verify:full": "node --import tsx scripts/run-verification.ts full",
-    "verify:invariants": "node --import tsx scripts/check-product-invariants.ts"
+    "verify:invariants": "node --import tsx scripts/check-product-invariants.ts",
+    "verify:docs": "node --import tsx scripts/check-doc-consistency.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
