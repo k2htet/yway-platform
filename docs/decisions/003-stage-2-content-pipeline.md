@@ -82,7 +82,9 @@ This decision is intentionally limited to the Stage 2 repository content pipelin
 
 **Capability requirement:** Stage 2 must provide a strict, tamper-detectable, provenance-preserving, version-scoped content lifecycle that enforces founder review, independent qualified-practitioner review, localization/content-accessibility/sponsorship gates, fixture isolation, and deterministic release artifacts.
 
-**Implementation choice:** PROPOSED — use YAML content-as-code validated by strict runtime schemas (with generated JSON Schema); store versioned sources, attestations, eligibility records, provenance events, and release manifests as repository-local files; expose lifecycle operations through repository commands; bind records to canonical SHA-256 digests and chained prior-event digests; generate committed deterministic canonical JSON bundles/manifests and immutable retirement notices as the only Stage 2 release boundary. A post-release retirement emits a notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release, binding the content, release manifest, and retirement event digests while preserving the historical bundle and manifest. Artifact consumers must check that path in their current artifact snapshot before loading a version and reject a retired version or an unverifiable check. Distribution and snapshot refresh remain deferred.
+**Implementation choice:** PROPOSED — use YAML content-as-code validated by strict runtime schemas (with generated JSON Schema); store versioned sources, attestations, eligibility records, provenance events, and release manifests as repository-local files; expose lifecycle operations through repository commands; bind records to canonical SHA-256 digests and chained prior-event digests; generate committed deterministic canonical JSON bundles/manifests and immutable retirement notices as the only Stage 2 release boundary. A post-release retirement emits a notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release, binding the content, release manifest, and retirement event digests while preserving the historical bundle and manifest.
+
+Each committed artifact snapshot also contains a deterministic canonical snapshot index that enumerates every consumable bundle, release manifest, and retirement notice by path and digest. Stage 2 uses the protected Git commit/tree containing that index as the trusted snapshot root; a consumer must establish that trust before interpreting either presence or absence in the index. Before loading a version, the consumer must verify the index and referenced files against that trusted tree, require the bundle and release manifest entries, inspect the exact retirement-notice entry, and reject the version when the notice is present or when the trusted-root, index, required-entry, digest, or absence check cannot be verified. Deleting a notice and rewriting the index cannot turn a retired version into a valid snapshot because the resulting tree no longer matches the trusted root. Distribution, trusted-commit acquisition, and snapshot refresh remain deferred.
 
 The following remain explicitly UNRESOLVED and are not selected by this decision: CMS/workflow engine, production database, application framework, physical packages/services/apps, API protocol, authentication, authorization, production practitioner identity, hosting/deployment, Admin/preview/youth UI, and Stage 3 artifact consumption/storage architecture.
 
@@ -98,7 +100,7 @@ Stage 2 practitioner eligibility is repository-governed and synthetic for the ex
 - Every content/localization change requires a new version and fresh release gates, increasing review work but making stale-scope behavior unambiguous.
 - Fixture identities and attestations require explicit classification so they cannot be interpreted or emitted as production approval.
 - Canonicalization becomes security/integrity-sensitive code and requires focused tests.
-- Released-version retirement remains visible at the artifact boundary through an immutable notice; consumers must refresh their artifact snapshot to observe later notices.
+- Released-version retirement remains visible at the artifact boundary through an immutable notice and trusted-root-bound snapshot index; consumers must refresh to a later trusted snapshot to observe later notices.
 - Future CMS/database/identity systems may replace repository-local authoring/workflow while preserving the version/provenance/review/artifact semantics.
 - No physical product/application boundary follows from the repository directory layout created by Stage 2.
 
@@ -115,13 +117,15 @@ Before ACCEPTED status:
 After acceptance, implementation validation must include:
 
 - strict parser/schema rejection tests
+- YWAY-P002 semantic-gate tests that reject a six-field experiment whose next fork increases commitment before real-world exposure
 - canonical digest and deterministic JSON tests
 - chained provenance tamper tests
 - fresh-version-on-source/localization-change tests
 - stale approval and practitioner eligibility tests
 - fixture/production classification tests
 - release rebuild/manifest tamper tests
-- retirement-notice determinism, digest binding, tamper, and artifact-consumer rejection tests
+- snapshot-index determinism and trusted-tree binding tests
+- retirement-notice determinism, digest binding, tamper, deletion, and artifact-consumer rejection tests
 - complete synthetic lifecycle test
 
 **Success criteria:** all Stage 2 issue #32 acceptance criteria can be demonstrated without external CMS/database/auth/UI infrastructure and without weakening canonical Product Contracts.
@@ -147,7 +151,8 @@ Migration must preserve all historical provenance and review scope; no migration
 
 ## Decision History
 
-| Date       | Change                                      | Reason                                                                                                      |
-| ---------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 2026-09-21 | Initial record created as PROPOSED          | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative |
-| 2026-09-21 | Clarified post-release retirement signaling | Artifact-only consumers need a deterministic notice while historical release artifacts remain immutable     |
+| Date       | Change                                            | Reason                                                                                                                |
+| ---------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-21 | Initial record created as PROPOSED                | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative           |
+| 2026-09-21 | Clarified post-release retirement signaling       | Artifact-only consumers need a deterministic notice while historical release artifacts remain immutable               |
+| 2026-09-22 | Bound retirement state to a trusted snapshot root | Notice absence is meaningful only when a canonical snapshot index and its files verify against the protected Git tree |

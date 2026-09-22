@@ -121,7 +121,9 @@ Validation: product-integrity, architecture, security/privacy, and test perspect
 
 ### S2-02 — Strict content and governance schemas
 
-Define strict schemas for Pack sources, localization, practitioner eligibility, review attestations, provenance events, and release manifests. Reject unknown fields, unsafe identifiers, duplicate IDs, invalid versions, incomplete identified experiments, and prohibited score/rank concepts.
+Define strict schemas for Pack sources, localization, practitioner eligibility, review attestations, provenance events, release manifests, and the artifact snapshot index. Reject unknown fields, unsafe identifiers, duplicate IDs, invalid versions, incomplete identified experiments, and prohibited score/rank concepts.
+
+For each identified experiment, require content review to confirm both the six-part structure and that its next fork does not increase commitment before increasing real-world exposure. This semantic gate must block artifact eligibility and release; a structurally complete experiment with a commitment-first next fork is invalid under YWAY-P002.
 
 Generate deterministic JSON Schema from the canonical runtime schemas.
 
@@ -146,7 +148,7 @@ Implement:
 - `pnpm content:status --pack <id> --version <n> [--json]`
 - `pnpm content:retire --pack <id> --version <n> --actor <id> --reason <reason>`
 
-`content:retire` appends a retirement event bound to the exact immutable version and digest. If that version was released, it also commits an immutable canonical JSON retirement notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release. The notice binds the Pack ID, version, content digest, release-manifest digest, and retirement-event digest; it contains no private actor or reason details. The prior bundle, release manifest, source content, provenance, attestations, and release history remain intact. A retired version is no longer artifact-eligible and cannot be released again. Duplicate retirement and retirement-notice overwrite must be refused.
+`content:retire` appends a retirement event bound to the exact immutable version and digest. If that version was released, it also commits an immutable canonical JSON retirement notice at `retirements/<pack-id>/<version>.json` within the same artifact root as its release and deterministically updates the snapshot index. The notice binds the Pack ID, version, content digest, release-manifest digest, and retirement-event digest; it contains no private actor or reason details. The prior bundle, release manifest, source content, provenance, attestations, and release history remain intact. A retired version is no longer artifact-eligible and cannot be released again. Duplicate retirement and retirement-notice overwrite must be refused.
 
 Use exit code 0 for success, 1 for validation/gate failure, and 2 for invalid invocation. Writes must be atomic and refuse overwrite.
 
@@ -163,11 +165,13 @@ Implement:
 - `pnpm content:release --pack <id> --version <n>`
 - `pnpm content:verify`
 
-Generate byte-deterministic canonical JSON bundle/manifests, reject unmet gates, refuse release overwrite, isolate fixture artifacts from production classification, and detect tampering. Retirement notices are part of the same artifact-only boundary as bundles/manifests. A consumer must check the retirement-notice path for the exact Pack ID/version in its current artifact snapshot before loading a released bundle, verify any notice against the bundle and release manifest, and reject a retired version. If the notice check cannot be completed or verified, loading fails closed. A consumer must refresh its artifact snapshot to learn about later retirements; Stage 2 does not select a distribution or refresh mechanism.
+Generate byte-deterministic canonical JSON bundles/manifests and a canonical snapshot index enumerating every consumable bundle, release manifest, and retirement notice by path and digest. Reject unmet gates, refuse release overwrite, isolate fixture artifacts from production classification, and detect tampering. Retirement notices are part of the same artifact-only boundary as bundles/manifests.
+
+The protected Git commit/tree containing the index is the Stage 2 trusted snapshot root. Before loading a released bundle, a consumer must verify the snapshot index and referenced files against that trusted tree, require the bundle and release-manifest entries, and inspect the exact retirement-notice entry for the Pack ID/version. It must reject a retired version and fail closed if the trusted root, index, required entries, file digests, or notice absence cannot be verified. Tests must prove that deleting only a retirement notice, or deleting it and rewriting the index, is detected. A consumer must refresh to a later trusted snapshot to learn about later retirements; Stage 2 does not select a distribution, trusted-commit acquisition, or refresh mechanism.
 
 ### S2-08 — Synthetic representative lifecycle
 
-Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the happy path through artifact release and separately exercise `changes-requested` and `retired` outcomes through repository commands. Retirement coverage must confirm that current status becomes `retired`, prior provenance/release history remains intact, a released version gains a deterministic retirement notice visible through the artifact boundary, artifact consumers reject that version, and further release is refused. Commit the deterministic fixture artifact/manifests and any retirement notice generated for a released fixture version.
+Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the happy path through artifact release and separately exercise `changes-requested` and `retired` outcomes through repository commands. Add a negative experiment fixture that contains all six required fields but increases commitment before real-world exposure; review, artifact eligibility, and release must reject it. Retirement coverage must confirm that current status becomes `retired`, prior provenance/release history remains intact, a released version gains a deterministic retirement notice visible through the artifact boundary, artifact consumers reject that version, notice deletion is detected against the trusted snapshot root, and further release is refused. Commit the deterministic fixture artifact/manifests, snapshot index, and any retirement notice generated for a released fixture version.
 
 Synthetic evidence must never be described as real practitioner endorsement, production-quality content, or public-release readiness.
 
@@ -201,6 +205,7 @@ Expected repository areas after YWAY-D003 acceptance may include content source/
 Every implementation issue must add proportionate automated coverage. Stage 2 closure requires:
 
 - schema rejection and generated-schema determinism tests
+- YWAY-P002 semantic-gate tests, including a six-field experiment whose next fork increases commitment before exposure
 - digest and canonicalization tests
 - audit-chain tamper tests
 - lifecycle transition, changes-requested, retirement, and stale-approval tests
@@ -208,7 +213,8 @@ Every implementation issue must add proportionate automated coverage. Stage 2 cl
 - localization/accessibility/sponsorship gate tests
 - atomic-write and overwrite-refusal tests
 - deterministic release/manifest tests
-- retirement-notice determinism, binding, tamper, and artifact-consumer rejection tests
+- snapshot-index determinism and protected-Git-tree binding tests
+- retirement-notice determinism, binding, tamper, deletion, and artifact-consumer rejection tests
 - fixture-isolation tests
 - end-to-end synthetic lifecycle through repository commands
 - `pnpm test` using `node:test`, included in `pnpm verify:full`
@@ -244,6 +250,8 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 - Over-broad schema fields could introduce prohibited scoring semantics.
 - Review/lifecycle status could overwrite provenance history unless modeled separately.
 - Content-only localization/accessibility checks could be overclaimed as public-release readiness.
+- A structurally complete experiment could still violate YWAY-P002 if its next fork escalates commitment before real-world exposure.
+- A retirement notice could be deleted undetectably unless its presence or absence is evaluated within an index bound to a trusted snapshot root.
 
 ## Unresolved questions
 
@@ -276,6 +284,8 @@ YWAY-D003 remains PROPOSED until S2-01 review is complete.
 - 2026-09-21: Architecture currently defers content authoring format, review granularity, materiality, versioning/workflow details, and minimum practitioner qualification to Stage 2. YWAY-D003 is therefore required before those choices become normative.
 - 2026-09-21: Issue #32 intentionally chooses an artifact-only boundary and synthetic fixture, while leaving future product/application delivery choices deferred.
 - 2026-09-21: A repository-only retirement event is invisible to artifact-only consumers after release; a committed retirement notice and mandatory artifact-side check close that gap without rewriting historical artifacts.
+- 2026-09-22: Checking an optional retirement-notice path cannot authenticate absence; the snapshot needs a canonical inventory bound to the protected Git tree, plus deletion tests.
+- 2026-09-22: Six-field completeness alone does not enforce YWAY-P002; experiment review and release must reject a next fork that escalates commitment before real-world exposure.
 
 ## Decision log
 
@@ -284,6 +294,8 @@ YWAY-D003 remains PROPOSED until S2-01 review is complete.
 | 2026-09-21 | Activate Stage 2 under issue #32 and create S2-01 through S2-10 | Explicit owner execution direction |
 | 2026-09-21 | Draft YWAY-D003 for YAML content-as-code, repository-local lifecycle records, deterministic JSON artifacts, and explicit deferrals | PROPOSED architecture decision; not binding until accepted |
 | 2026-09-21 | Use a synthetic representative Pack for Stage 2 exit evidence and prevent fixture data from production classification | Explicit owner execution direction from #32; implementation shape subject to accepted architecture |
+| 2026-09-22 | Bind the canonical artifact snapshot index to its protected Git commit/tree and fail closed when absence of a retirement notice cannot be verified | Proposed YWAY-D003 integrity mechanism; resolves artifact-boundary deletion ambiguity without selecting distribution architecture |
+| 2026-09-22 | Make exposure-before-commitment a semantic review, eligibility, and release gate with a commitment-first negative fixture | Direct enforcement of YWAY-P002; no new product rule introduced |
 
 ## Completion criteria
 
@@ -291,6 +303,7 @@ Stage 2 closes only when:
 
 - YWAY-D003 or a replacement decision is ACCEPTED before its architecture choices are relied on normatively
 - strict source/governance schemas reject malformed, unknown, duplicate, unsafe, incomplete, and prohibited scoring content
+- every identified experiment passes both six-field completeness and exposure-before-commitment review, including rejection of a structurally complete commitment-first next fork
 - exact immutable version/digest binding and cumulative tamper-detectable provenance are enforced
 - founder and independent eligible practitioner approvals cover the exact released version/digest
 - stale, ineligible, wrong-scope, expired, unverified, or self-authoring practitioner approval cannot satisfy the gate
@@ -298,7 +311,8 @@ Stage 2 closes only when:
 - Burmese, content-accessibility, and applicable sponsorship gates block release when missing
 - the synthetic fixture passes the release path, exercises changes-requested and retirement paths through repository commands, and produces byte-deterministic committed artifacts
 - retired versions preserve prior provenance/release history and cannot be released again
-- retirement of a released version emits a deterministic artifact-boundary notice without rewriting its historical bundle/manifest, and consumers reject the retired version
+- retirement of a released version emits a deterministic artifact-boundary notice without rewriting its historical bundle/manifest, updates the canonical snapshot index, and consumers reject the retired version
+- artifact consumers verify the canonical snapshot index and referenced files against the protected Git tree, and detect deletion of a retirement notice even when the index is also rewritten
 - fixture records cannot produce production-classified artifacts or imply real/public approval
 - source, audit-chain, manifest, and artifact tampering are detected
 - `pnpm test` uses `node:test` and runs under `pnpm verify:full`
