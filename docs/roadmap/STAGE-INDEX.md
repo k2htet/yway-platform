@@ -8,7 +8,7 @@ product requirements.
 | ----: | -------------------------------------------------- | -------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 |     0 | Agentic Engineering Foundation                     | COMPLETE | Product Vision; established Stage 0 repository foundation | All Stage 0 ExecPlan completion criteria evidenced                                 |
 |     1 | Product Contracts + Domain Architecture Refinement | COMPLETE | Stage 0 governance and verification foundation            | Required refinements consistent; open decisions explicit                           |
-|     2 | Content System + Operations Foundation             | PLANNED  | Stage 1 boundaries and decision discipline                | Representative pack passes governed content lifecycle                              |
+|     2 | Content System + Operations Foundation             | ACTIVE   | Stage 1 boundaries and decision discipline                | Representative pack passes governed content lifecycle                              |
 |     3 | Youth Exploration                                  | PLANNED  | Stage 2 eligible content; accepted delivery approach      | Core exploration works end to end without login-before-value or prohibited scoring |
 |     4 | Practice + Evidence                                | PLANNED  | Stage 3 journey; refined Evidence domain                  | Evidence categories remain distinct, private, and provenance-preserving            |
 |     5 | Offline + Synchronization                          | PLANNED  | Stage 3–4 state semantics                                 | Supported local work survives offline and sync scenarios                           |

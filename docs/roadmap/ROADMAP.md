@@ -72,8 +72,7 @@ Statuses reflect current repository evidence, not aspiration. See
   evidenced, including enforced branch protection, onboarding documentation,
   and the fresh-session acceptance test.
 - **Status:** COMPLETE.
-- **Important unresolved questions:** Stage 0 and Stage 1 are complete. Stage 2 remains
-  PLANNED and requires separate activation authority.
+- **Important unresolved questions:** Stage 0 and Stage 1 are complete. Stage 2 is ACTIVE under issue #32; Stage 3 remains PLANNED.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 
@@ -91,9 +90,7 @@ Statuses reflect current repository evidence, not aspiration. See
   appropriately reviewed decision records.
 - **Status:** COMPLETE.
 - **Completed ExecPlan:** `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`.
-- **Important unresolved questions:** Deferred architecture questions remain open unless
-  separately decided; the first physical application boundary and future product
-  technology choices are not selected. Stage 2 remains PLANNED.
+- **Important unresolved questions:** Deferred architecture questions remain open unless separately decided; the first physical application boundary and future product technology choices are not selected. Stage 2 is ACTIVE under issue #32.
 
 ## Stage 2 — Content System + Operations Foundation
 
@@ -108,10 +105,10 @@ Statuses reflect current repository evidence, not aspiration. See
   YWAY-P024, and YWAY-E005.
 - **Exit gate:** A representative pack can pass the governed content lifecycle
   with its provenance and review eligibility demonstrably preserved.
-- **Status:** PLANNED.
-- **Important unresolved questions:** Content authoring format, physical workflow
-  design, practitioner qualification criteria, and operating roles remain to be
-  evaluated without preselecting a CMS or workflow technology.
+- **Status:** ACTIVE.
+- **Active ExecPlan:** `docs/exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`.
+- **Kickoff:** Issue #32 provides explicit owner activation authority and the bounded Stage 2 direction.
+- **Important unresolved questions:** YWAY-D003 is PROPOSED for the repository-native content pipeline and must be reviewed before its architecture choices become normative. Future CMS/database/auth/UI and Stage 3 delivery choices remain deferred.
 
 ## Stage 3 — Youth Exploration
 
