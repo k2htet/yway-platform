@@ -45,7 +45,7 @@ Primary contracts:
 - The repository has no active ExecPlan before this kickoff.
 - No CMS, workflow engine, database, authentication system, application framework, hosting platform, or UI implementation is selected.
 - Current repository verification has no runtime `test` script; Stage 2 must add `node:test` coverage and include it in `verify:full`.
-- YWAY-D003 is created by this kickoff as PROPOSED and must be reviewed before its architecture choices become normative.
+- YWAY-D003 was accepted on 2026-09-22 after four-discipline review, repository verification, and explicit product-owner approval. Its bounded Stage 2 architecture choices are normative; production distribution and trusted-root acquisition remain deferred.
 
 ## Target state
 
@@ -92,7 +92,7 @@ Do not:
 - `docs/architecture/ARCHITECTURE.md`
 - ACCEPTED decisions YWAY-D001 and YWAY-D002
 - protected `main` and required `Verify` check
-- YWAY-D003 review before the proposed repository-native content architecture becomes normative
+- ACCEPTED YWAY-D003 for the bounded repository-native Stage 2 content architecture
 
 ## GitHub issue map
 
@@ -113,9 +113,11 @@ Do not:
 
 ### S2-01 — Architecture decision review
 
+Completed 2026-09-22. YWAY-D003 is ACCEPTED, and the directly affected Content, Practitioner, Operations/Safeguarding, Content Provenance, invariant, and unresolved-question Architecture text is reconciled. Product-integrity, architecture, security/privacy, and test reviews found no material issue; local `verify:full` and the PR #43 GitHub `Verify` check passed. The local test phase reported no test script, as expected before the later Stage 2 implementation steps.
+
 Review YWAY-D003 against Product Contracts and Architecture. The decision evaluates YAML content-as-code, repository-local lifecycle records, deterministic JSON release artifacts, and the explicit deferral of CMS/database/auth/UI choices.
 
-Do not use the proposed choices as normative implementation authority until the ADR is ACCEPTED. If accepted, reconcile only the directly affected Architecture sections and unresolved-question register.
+The proposed choices were not normative implementation authority before acceptance. With YWAY-D003 now ACCEPTED, implementation may rely only on its bounded Stage 2 choices; the reconciled Architecture sections and unresolved-question register preserve all production deferrals.
 
 Validation: product-integrity, architecture, security/privacy, and test perspectives; repository verification appropriate to the documentation change.
 
@@ -257,7 +259,7 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 remains PROPOSED until S2-01 review is complete.
+YWAY-D003 is ACCEPTED. S2-02 is the next active plan step; Stage 2 remains ACTIVE, and Stage 3 remains PLANNED.
 
 ## Progress checklist
 
@@ -266,7 +268,7 @@ YWAY-D003 remains PROPOSED until S2-01 review is complete.
 - [x] Bounded S2 task issues #33–#42 created.
 - [x] YWAY-D003 drafted as PROPOSED.
 - [x] Roadmap and Stage Index activation change prepared.
-- [ ] S2-01 ADR reviewed and accepted/rejected/deferred.
+- [x] S2-01 ADR reviewed and accepted/rejected/deferred.
 - [ ] S2-02 strict schemas complete.
 - [ ] S2-03 immutable versions/digests/provenance complete.
 - [ ] S2-04 practitioner eligibility/review independence complete.
@@ -286,6 +288,7 @@ YWAY-D003 remains PROPOSED until S2-01 review is complete.
 - 2026-09-21: A repository-only retirement event is invisible to artifact-only consumers after release; a committed retirement notice and mandatory artifact-side check close that gap without rewriting historical artifacts.
 - 2026-09-22: Checking an optional retirement-notice path cannot authenticate absence; the snapshot needs a canonical inventory bound to the protected Git tree, plus deletion tests.
 - 2026-09-22: Six-field completeness alone does not enforce YWAY-P002; experiment review and release must reject a next fork that escalates commitment before real-world exposure.
+- 2026-09-22: Four-discipline review found no material issue in YWAY-D003, local and GitHub verification passed, and the product owner explicitly accepted the bounded Stage 2 recommendation. Production artifact distribution and trusted-root acquisition remain deferred.
 
 ## Decision log
 
@@ -296,6 +299,7 @@ YWAY-D003 remains PROPOSED until S2-01 review is complete.
 | 2026-09-21 | Use a synthetic representative Pack for Stage 2 exit evidence and prevent fixture data from production classification | Explicit owner execution direction from #32; implementation shape subject to accepted architecture |
 | 2026-09-22 | Bind the canonical artifact snapshot index to its protected Git commit/tree and fail closed when absence of a retirement notice cannot be verified | Proposed YWAY-D003 integrity mechanism; resolves artifact-boundary deletion ambiguity without selecting distribution architecture |
 | 2026-09-22 | Make exposure-before-commitment a semantic review, eligibility, and release gate with a commitment-first negative fixture | Direct enforcement of YWAY-P002; no new product rule introduced |
+| 2026-09-22 | Accept YWAY-D003 for Stage 2, reconcile Architecture, complete S2-01, and advance the active plan to S2-02 only | Explicit product-owner approval after four-discipline review and passing repository verification |
 
 ## Completion criteria
 
