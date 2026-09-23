@@ -125,6 +125,17 @@ test("provenance-only events do not change current status", () => {
   assert.equal(deriveVersionLifecycleStatus(log, 1).currentStatus, "founder-reviewed");
 });
 
+test("provenance-only events are rejected before the authored start", () => {
+  expectLifecycleFailure(
+    () =>
+      deriveCurrentStatus([
+        makeEvent({ sequence: 1, type: "localized" }),
+        makeEvent({ sequence: 2, type: "authored" }),
+      ]),
+    'must be "authored"',
+  );
+});
+
 test("current status derivation never mutates cumulative history", () => {
   const log = happyPathLog();
   const before = structuredClone(log);

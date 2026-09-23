@@ -95,10 +95,6 @@ export function assertLifecycleTransition(
 export function deriveCurrentStatus(events: readonly ProvenanceEvent[]): LifecycleStatus {
   let status: LifecycleStatus | undefined;
   for (const event of events) {
-    const next = statusAffectingEventType(event.type);
-    if (next === undefined) {
-      continue;
-    }
     status = assertLifecycleTransition(status, event.type, {
       packId: event.packId,
       packVersion: event.packVersion,
@@ -108,7 +104,7 @@ export function deriveCurrentStatus(events: readonly ProvenanceEvent[]): Lifecyc
     throw new StrictValidationError([
       {
         path: ["events"],
-        message: "no status-affecting provenance events found; current status cannot be derived",
+        message: "no provenance events found; current status cannot be derived",
       },
     ]);
   }

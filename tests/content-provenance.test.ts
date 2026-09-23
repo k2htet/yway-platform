@@ -294,6 +294,18 @@ test("expected source digests detect a fully resealed tampered source binding", 
   );
 });
 
+test("pinning the expected head detects tail truncation", () => {
+  const log = happyPathLog();
+  const head = log.events[log.events.length - 1]!.eventDigest;
+  const truncated: ProvenanceEventLog = { ...log, events: log.events.slice(0, -1) };
+  assert.doesNotThrow(() => verifyProvenanceLog(truncated));
+  expectProvenanceFailure(
+    () => verifyProvenanceLog(truncated, { expectedHeadEventDigest: head }),
+    "truncated or replaced",
+  );
+  assert.doesNotThrow(() => verifyProvenanceLog(log, { expectedHeadEventDigest: head }));
+});
+
 test("verification rejects a hand-crafted log with an illegal lifecycle order", () => {
   const authored = createGenesisProvenanceLog(draft()).events[0]!;
   const forgedFirst: ProvenanceEvent = { ...authored, type: "practitioner-reviewed" };

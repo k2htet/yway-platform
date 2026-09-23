@@ -161,24 +161,25 @@ deterministically at every depth, preserves array order, and fails closed on non
 values (non-finite numbers, `undefined`, sparse arrays, circular references, non-plain objects).
 SHA-256 digests (`content/digest.ts`) hash the canonical UTF-8 bytes, giving deterministic
 content digests that are sensitive to any field change. Append-only provenance
-(`content/provenance.ts`) seals each event's `eventDigest` over a fixed-field-order pre-image
-excluding `eventDigest`, chains `previousEventDigest` to the prior sealed event with `null` only
-at genesis, binds every event to the exact `packId`/`packVersion`/`contentDigest`, and refuses to
-extend tampered, pack-mismatched, digest-changed, or illegally transitioned logs. Verification
-detects altered fields, resealed middle events with broken links, reordered or removed events,
-non-contiguous sequences, conflicting digests within one immutable version, fully resealed
-source bindings when compared against source-derived `expectedContentDigests`, and resealed
-chains whose lifecycle order is illegal. Lifecycle semantics (`content/lifecycle.ts`) implement
+(`content/provenance.ts`) seals each event's `eventDigest` over the event's full field set
+excluding only `eventDigest` itself, chains `previousEventDigest` to the prior sealed event with
+`null` only at genesis, binds every event to the exact `packId`/`packVersion`/`contentDigest`, and
+refuses to extend tampered, pack-mismatched, digest-changed, or illegally transitioned logs.
+Verification detects altered fields, resealed middle events with broken links, reordered or
+removed events, non-contiguous sequences, conflicting digests within one immutable version,
+fully resealed source bindings when compared against source-derived `expectedContentDigests`,
+resealed chains whose lifecycle order is illegal, and tail truncation when the caller pins
+`expectedHeadEventDigest`. Lifecycle semantics (`content/lifecycle.ts`) implement
 `authored → founder-reviewed → practitioner-reviewed → artifact-eligible → artifact-released`
 plus `changes-requested` and `retired` as a projection derived from cumulative history: current
 status is computed per immutable version and never rewrites the event log; provenance-only
 events (localized, localization-reviewed, accessibility-reviewed, sponsorship-disclosed) do not
-change status; `retired` is terminal and `artifact-released` can only retire; provenance-only
-event batches require an `authored` start. Version-scoped gates reject stale-digest and
-stale-version records, and source/localization content changes at an existing version number are
-rejected, requiring a fresh immutable version with fresh gates while prior versions' history and
-status remain intact. Local `agent:doctor`, `verify:fast`, `verify:invariants`, and `verify:full`
-passed; `pnpm test` (`node:test`) grew from 74 to 128 tests.
+change status and are rejected before the `authored` start; `retired` is terminal and
+`artifact-released` can only retire. Version-scoped gates reject stale-digest and stale-version
+records, and source/localization content changes at an existing version number are rejected,
+requiring a fresh immutable version with fresh gates while prior versions' history and status
+remain intact. Local `agent:doctor`, `verify:fast`, `verify:invariants`, and `verify:full`
+passed; `pnpm test` (`node:test`) grew from 74 to 130 tests.
 
 Define canonical serialization and SHA-256 content digests. Bind append-only provenance events to the exact version/content digest and prior event digest. Keep cumulative provenance separate from current lifecycle status.
 
@@ -340,7 +341,7 @@ YWAY-D003 is ACCEPTED. S2-02 and S2-03 are complete; S2-04 (practitioner eligibi
 - 2026-09-22: Four-discipline review found no material issue in YWAY-D003, local and GitHub verification passed, and the product owner explicitly accepted the bounded Stage 2 recommendation. Production artifact distribution and trusted-root acquisition remain deferred.
 - 2026-09-23: S2-02 implemented with Zod strict objects, a recursive prohibited-key scan, alias-free strict YAML (`uniqueKeys`, `maxAliasCount: 0`), and draft-2022-12 JSON Schema generation under `content/schemas/` + `content/generated/`. `pnpm test` (`node:test`, 60 tests) was added and now runs inside `verify:full` without changing the verification runner. Generated schema files are excluded from Prettier so committed artifacts stay byte-identical to the deterministic renderer.
 - 2026-09-23: S2-02 review corrections: Pack sources now carry required occupation scope so S2-04 can compare practitioner eligibility against the Pack; source uniqueness is (pack ID, version) because immutable versions share a pack ID; generated JSON Schemas carry the expressible governance conditionals under `allOf` (not emitted by `z.toJSONSchema` from `superRefine`) plus a `$comment` limiting non-expressible rules to runtime validation, with AJV tests proving parity on the cited cases.
-- 2026-09-23: S2-03: event digests are sealed over a fixed explicit field-order pre-image (excluding `eventDigest`) so verification does not depend on object key order and a partially resealed chain still fails on link or lifecycle checks. Provenance verification runs lifecycle transition validation as part of chain verification, so a fully resealed log with an illegal status order is still rejected; hashes detect tampering but do not authenticate actor identity (identity/authorization remain deferred per YWAY-D003).
+- 2026-09-23: S2-03: event digests are sealed over the event's full field set excluding `eventDigest`, so verification recomputes from the stored fields directly and a partially resealed chain still fails on link or lifecycle checks. Provenance verification runs lifecycle transition validation as part of chain verification, so a fully resealed log with an illegal status order is still rejected; hashes detect tampering but do not authenticate actor identity (identity/authorization remain deferred per YWAY-D003). Tail truncation of an otherwise valid chain is undetectable from the log alone; `expectedHeadEventDigest` lets a caller pin the head, and post-release anchoring arrives with the S2-07 release manifest and snapshot index.
 
 ## Decision log
 

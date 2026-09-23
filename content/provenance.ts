@@ -31,6 +31,11 @@ export interface ProvenanceVerificationOptions {
    * A mismatch means a recorded source was tampered with after its events were sealed.
    */
   readonly expectedContentDigests?: ReadonlyMap<number, string> | Readonly<Record<number, string>>;
+  /**
+   * Exact sealed digest of the expected final event. When the caller pins the head,
+   * tail truncation of an otherwise internally valid chain is detected.
+   */
+  readonly expectedHeadEventDigest?: string;
 }
 
 function expectedDigestFor(
@@ -50,30 +55,14 @@ function expectedDigestFor(
     : undefined;
 }
 
-const provenanceEventFieldOrder = [
-  "schemaVersion",
-  "packId",
-  "packVersion",
-  "sequence",
-  "type",
-  "actorId",
-  "fixtureOnly",
-  "contentDigest",
-  "previousEventDigest",
-  "recordedAt",
-] as const;
-
 function eventPreImage(event: ProvenanceEvent | Omit<ProvenanceEvent, "eventDigest">): string {
-  const preImage: Record<string, unknown> = {};
-  const source = event as Record<string, unknown>;
-  for (const field of provenanceEventFieldOrder) {
-    preImage[field] = source[field];
-  }
+  const preImage: Record<string, unknown> = { ...(event as Record<string, unknown>) };
+  delete preImage["eventDigest"];
   return canonicalJson(preImage);
 }
 
 function sealEvent(fields: Omit<ProvenanceEvent, "eventDigest">): ProvenanceEvent {
-  const eventDigest = sha256Hex(canonicalJson(fields));
+  const eventDigest = sha256Hex(eventPreImage(fields));
   return { ...fields, eventDigest };
 }
 
@@ -203,6 +192,18 @@ export function collectProvenanceIssues(
       issues.push(...error.issues);
     } else {
       throw error;
+    }
+  }
+
+  const pinnedHead = options?.expectedHeadEventDigest;
+  if (pinnedHead !== undefined) {
+    const head = log.events[log.events.length - 1];
+    if (head === undefined || head.eventDigest !== pinnedHead) {
+      issues.push({
+        path: ["events"],
+        message:
+          "head eventDigest does not match the pinned expected head: the audit chain was truncated or replaced",
+      });
     }
   }
 
