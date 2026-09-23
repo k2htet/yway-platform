@@ -1,0 +1,92 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "actorId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "fixtureOnly": {
+      "type": "boolean"
+    },
+    "occupations": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 64,
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "manual"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "unverified"
+          ]
+        },
+        "verifiedOn": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        }
+      },
+      "required": [
+        "method",
+        "status",
+        "verifiedOn"
+      ],
+      "additionalProperties": false
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+    },
+    "validUntil": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+    },
+    "evidenceReferences": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[a-z0-9][a-z0-9:_-]*$"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "actorId",
+    "fixtureOnly",
+    "occupations",
+    "status",
+    "verification",
+    "validFrom",
+    "validUntil",
+    "evidenceReferences"
+  ],
+  "additionalProperties": false
+}
