@@ -1,4 +1,5 @@
 {
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -32,6 +33,15 @@
     "summary": {
       "type": "string",
       "minLength": 1
+    },
+    "occupations": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 64,
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      }
     },
     "preview": {
       "type": "object",
@@ -150,6 +160,7 @@
     "aiAssisted",
     "title",
     "summary",
+    "occupations",
     "preview",
     "limitations",
     "experiments",

@@ -1,4 +1,5 @@
 {
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -102,5 +103,26 @@
     "bundle",
     "gates"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "fixtureOnly"
+        ],
+        "properties": {
+          "fixtureOnly": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "classification": {
+            "const": "fixture"
+          }
+        }
+      }
+    }
+  ]
 }

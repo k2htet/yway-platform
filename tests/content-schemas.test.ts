@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { stringify } from "yaml";
 import {
   StrictValidationError,
-  assertUniquePackIds,
+  assertUniquePackVersions,
   localizedContentSchema,
   packSourceSchema,
   practitionerEligibilitySchema,
@@ -64,6 +64,7 @@ function validPack(overrides: Overrides = {}): Record<string, unknown> {
     aiAssisted: true,
     title: "Try being a local guide",
     summary: "A clearly synthetic pack for exercising the Stage 2 content pipeline.",
+    occupations: ["local-guide"],
     preview: {
       headline: "Try a short guide trial",
       description: "Talk to one local guide about a normal working day.",
@@ -357,12 +358,40 @@ test("accepts a valid pack round-tripped through strict YAML", () => {
   assert.equal(parsed.id, "fixture-local-guide");
 });
 
-test("rejects duplicate pack IDs across sources", () => {
+test("rejects duplicate pack ID and version pairs", () => {
   expectStrictFailure(
-    () => assertUniquePackIds([{ id: "fixture-local-guide" }, { id: "fixture-local-guide" }]),
-    "duplicate pack ID",
+    () =>
+      assertUniquePackVersions([
+        { id: "fixture-local-guide", version: 1 },
+        { id: "fixture-local-guide", version: 1 },
+      ]),
+    "duplicate pack version",
   );
-  assertUniquePackIds([{ id: "fixture-local-guide" }, { id: "fixture-other-pack" }]);
+  assertUniquePackVersions([
+    { id: "fixture-local-guide", version: 1 },
+    { id: "fixture-local-guide", version: 2 },
+    { id: "fixture-other-pack", version: 1 },
+  ]);
+});
+
+test("requires occupation scope on pack sources", () => {
+  const pack = validPack();
+  delete pack["occupations"];
+  expectStrictFailure(() => strictParse(packSourceSchema, pack), "occupations");
+});
+
+test("rejects duplicate pack occupations", () => {
+  expectStrictFailure(
+    () => strictParse(packSourceSchema, validPack({ occupations: ["local-guide", "local-guide"] })),
+    "duplicate occupation ID",
+  );
+});
+
+test("rejects unsafe pack occupation identifiers", () => {
+  expectStrictFailure(
+    () => strictParse(packSourceSchema, validPack({ occupations: ["Local Guide"] })),
+    "occupations",
+  );
 });
 
 test("accepts valid localized content", () => {

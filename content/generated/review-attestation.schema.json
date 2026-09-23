@@ -1,4 +1,5 @@
 {
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -87,5 +88,125 @@
     "fixtureOnly",
     "recordedAt"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "contentReview"
+        ],
+        "properties": {
+          "locale": false,
+          "contentReview": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sixPartStructureConfirmed",
+              "exposureBeforeCommitmentConfirmed"
+            ],
+            "properties": {
+              "sixPartStructureConfirmed": {
+                "type": "boolean"
+              },
+              "exposureBeforeCommitmentConfirmed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review"
+            ]
+          },
+          "outcome": {
+            "const": "approved"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "contentReview": {
+            "type": "object",
+            "required": [
+              "sixPartStructureConfirmed",
+              "exposureBeforeCommitmentConfirmed"
+            ],
+            "properties": {
+              "sixPartStructureConfirmed": {
+                "const": true
+              },
+              "exposureBeforeCommitmentConfirmed": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "const": "localization-review"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "locale"
+        ],
+        "properties": {
+          "contentReview": false
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "accessibility-review",
+              "sponsorship-disclosure"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "locale": false,
+          "contentReview": false
+        }
+      }
+    }
+  ]
 }

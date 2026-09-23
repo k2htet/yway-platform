@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { Ajv2020 } from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
+import type { ErrorObject, ValidateFunction } from "ajv";
 import { generatedSchemas } from "../content/schemas/index.js";
 import {
   renderAllGeneratedSchemas,
@@ -10,6 +13,19 @@ import {
 } from "../content/schemas/generate.js";
 
 const generatedDirectory = fileURLToPath(new URL("../content/generated/", import.meta.url));
+
+function compileGenerated(name: string): ValidateFunction<Record<string, unknown>> {
+  const rendered = renderAllGeneratedSchemas().get(schemaFileName(name));
+  assert.ok(rendered !== undefined, `generated schema ${name} must exist`);
+  const ajv = new Ajv2020({ strict: true });
+  addFormats.default(ajv);
+  return ajv.compile<Record<string, unknown>>(JSON.parse(rendered) as Record<string, unknown>);
+}
+
+function firstValidationError(validate: ValidateFunction<Record<string, unknown>>): string {
+  const first: ErrorObject | undefined = validate.errors?.[0];
+  return first === undefined ? "no validation error recorded" : (first.message ?? first.keyword);
+}
 
 test("JSON Schema rendering is byte-deterministic across runs", () => {
   const first = renderAllGeneratedSchemas();
@@ -23,12 +39,16 @@ test("JSON Schema rendering is byte-deterministic across runs", () => {
 
 test("every catalog schema renders to a stable JSON object document", () => {
   for (const entry of generatedSchemas) {
-    const rendered = renderGeneratedSchema(entry.schema);
+    const rendered = renderGeneratedSchema(entry.name, entry.schema);
     assert.ok(rendered.endsWith("\n"), `${entry.name} must end with a newline`);
     const parsed: unknown = JSON.parse(rendered);
     assert.equal(typeof parsed, "object");
     assert.ok(parsed !== null);
     assert.equal((parsed as { type?: string }).type, "object");
+    assert.ok(
+      typeof (parsed as { $comment?: string }).$comment === "string",
+      `${entry.name} must declare its runtime-only governance limits`,
+    );
   }
 });
 
@@ -92,4 +112,141 @@ test("generated pack source schema requires every six-part experiment field", ()
       `generated schema must declare experiment field ${field}`,
     );
   }
+});
+
+const generatedDigest = "a".repeat(64);
+
+function validGeneratedAttestation(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    packId: "fixture-local-guide",
+    packVersion: 1,
+    contentDigest: generatedDigest,
+    kind: "founder-review",
+    outcome: "approved",
+    actorId: "fixture-founder-one",
+    fixtureOnly: true,
+    recordedAt: "2026-09-23T01:00:00Z",
+    contentReview: {
+      sixPartStructureConfirmed: true,
+      exposureBeforeCommitmentConfirmed: true,
+    },
+    ...overrides,
+  };
+}
+
+function validGeneratedManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    packId: "fixture-local-guide",
+    packVersion: 1,
+    contentDigest: generatedDigest,
+    fixtureOnly: true,
+    classification: "fixture",
+    releasedAt: "2026-09-23T02:00:00Z",
+    bundle: {
+      path: "bundles/fixture-local-guide/1/bundle.json",
+      digest: generatedDigest,
+    },
+    gates: {
+      founderApproved: true,
+      practitionerApproved: true,
+      localizationApproved: true,
+      accessibilityApproved: true,
+      sponsorship: "not-applicable",
+    },
+    ...overrides,
+  };
+}
+
+test("generated attestation schema enforces founder/practitioner content review conditionals", () => {
+  const validate = compileGenerated("review-attestation");
+
+  assert.equal(validate(validGeneratedAttestation()), true, firstValidationError(validate));
+
+  const missingContentReview = validGeneratedAttestation();
+  delete missingContentReview["contentReview"];
+  assert.equal(validate(missingContentReview), false, "approved attestation needs contentReview");
+  assert.ok(
+    (validate.errors ?? []).some((error) => error.keyword === "required"),
+    firstValidationError(validate),
+  );
+
+  const falseFlags = validGeneratedAttestation({
+    contentReview: {
+      sixPartStructureConfirmed: false,
+      exposureBeforeCommitmentConfirmed: true,
+    },
+  });
+  assert.equal(validate(falseFlags), false, "approved attestation cannot confirm false flags");
+
+  const withLocale = validGeneratedAttestation({ locale: "my" });
+  assert.equal(validate(withLocale), false, "founder attestations must not carry a locale");
+});
+
+test("generated attestation schema enforces localization-review locale conditionals", () => {
+  const validate = compileGenerated("review-attestation");
+
+  const withoutLocale = validGeneratedAttestation({
+    kind: "localization-review",
+    actorId: "fixture-fluent-reviewer-one",
+    contentReview: undefined,
+  });
+  delete withoutLocale["contentReview"];
+  assert.equal(validate(withoutLocale), false, "localization-review requires locale");
+
+  const withLocale = validGeneratedAttestation({
+    kind: "localization-review",
+    actorId: "fixture-fluent-reviewer-one",
+    locale: "my",
+  });
+  delete withLocale["contentReview"];
+  assert.equal(validate(withLocale), true, firstValidationError(validate));
+});
+
+test("generated manifest schema rejects production classification for fixture records", () => {
+  const validate = compileGenerated("release-manifest");
+
+  assert.equal(validate(validGeneratedManifest()), true, firstValidationError(validate));
+  assert.equal(
+    validate(validGeneratedManifest({ classification: "production" })),
+    false,
+    "fixtureOnly manifest cannot be production-classified",
+  );
+});
+
+test("generated pack source schema accepts a runtime-valid pack fixture", () => {
+  const validate = compileGenerated("pack-source");
+  const pack = {
+    schemaVersion: 1,
+    id: "fixture-local-guide",
+    version: 1,
+    fixtureOnly: true,
+    canonicalLanguage: "en-simple",
+    aiAssisted: true,
+    title: "Try being a local guide",
+    summary: "A clearly synthetic pack for exercising the Stage 2 content pipeline.",
+    occupations: ["local-guide"],
+    preview: {
+      headline: "Try a short guide trial",
+      description: "Talk to one local guide about a normal working day.",
+    },
+    limitations: ["This synthetic pack does not replace real workplace experience."],
+    experiments: [
+      {
+        id: "exp-talk-to-worker",
+        title: "Talk to a local worker",
+        question: "What is it really like?",
+        action: "Interview one person.",
+        timebox: "45 minutes this week",
+        whatToNotice: "What felt energizing or draining.",
+        reflection: "Write three sentences.",
+        nextFork: "Shadow the role for half a day before any commitment.",
+      },
+    ],
+    authoredAt: "2026-09-23T00:00:00Z",
+  };
+  assert.equal(validate(pack), true, firstValidationError(validate));
 });

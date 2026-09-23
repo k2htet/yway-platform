@@ -1,10 +1,12 @@
 import { z } from "zod";
 import {
   StrictValidationError,
+  type StrictValidationIssue,
   dateTimeSchema,
   experimentIdSchema,
   fixtureOnlySchema,
   nonBlankStringSchema,
+  occupationIdSchema,
   packIdSchema,
   requireUniqueStringField,
   schemaVersionLiteral,
@@ -49,6 +51,7 @@ export const packSourceSchema = z
     aiAssisted: z.boolean(),
     title: nonBlankStringSchema,
     summary: nonBlankStringSchema,
+    occupations: z.array(occupationIdSchema).min(1),
     preview: previewMetadataSchema,
     limitations: z.array(nonBlankStringSchema).min(1),
     experiments: z.array(experimentSchema).min(1),
@@ -64,28 +67,36 @@ export const packSourceSchema = z
     )) {
       context.addIssue({ code: "custom", path: [...issue.path], message: issue.message });
     }
+    for (const issue of requireUniqueStringField(
+      value.occupations,
+      ["occupations"],
+      "occupation ID",
+    )) {
+      context.addIssue({ code: "custom", path: [...issue.path], message: issue.message });
+    }
   });
 
 export type PackSource = z.infer<typeof packSourceSchema>;
 
-export function assertUniquePackIds(sources: readonly { readonly id: string }[]): void {
+export function assertUniquePackVersions(
+  sources: readonly { readonly id: string; readonly version: number }[],
+): void {
   const seen = new Set<string>();
-  const issues = sources.flatMap((source, index) => {
-    if (seen.has(source.id)) {
-      return [
-        {
-          path: [index, "id"] as const,
-          message: `duplicate pack ID "${source.id}"`,
-        },
-      ];
+  const issues: StrictValidationIssue[] = [];
+
+  sources.forEach((source, index) => {
+    const key = `${source.id}:${source.version}`;
+    if (seen.has(key)) {
+      issues.push({
+        path: [index],
+        message: `duplicate pack version: "${source.id}" version ${source.version}`,
+      });
+      return;
     }
-    seen.add(source.id);
-    return [];
+    seen.add(key);
   });
 
   if (issues.length > 0) {
-    throw new StrictValidationError(
-      issues.map((issue) => ({ path: [...issue.path], message: issue.message })),
-    );
+    throw new StrictValidationError(issues);
   }
 }
