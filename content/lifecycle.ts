@@ -65,6 +65,14 @@ export function assertLifecycleTransition(
         },
       ]);
     }
+    if (currentStatus === "retired" || currentStatus === "artifact-released") {
+      throw new StrictValidationError([
+        {
+          path: ["type"],
+          message: `provenance-only event "${nextType}" is not allowed after "${currentStatus}" for ${context.packId} version ${context.packVersion}: retired is terminal and artifact-released can only transition to retired`,
+        },
+      ]);
+    }
     return currentStatus;
   }
 

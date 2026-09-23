@@ -335,6 +335,30 @@ test("pinning the expected head detects tail truncation", () => {
   assert.doesNotThrow(() => verifyProvenanceLog(log, { expectedHeadEventDigest: head }));
 });
 
+test("verification rejects provenance-only events after release or retirement", () => {
+  const released = happyPathLog();
+  const retired = appendProvenanceEvent(
+    released,
+    draft({ type: "retired", actorId: "fixture-operator-one" }),
+  );
+  for (const base of [released, retired]) {
+    const head = base.events[base.events.length - 1]!;
+    const forged: ProvenanceEvent = {
+      ...head,
+      sequence: head.sequence + 1,
+      type: "localized",
+      previousEventDigest: head.eventDigest,
+      eventDigest: "0".repeat(64),
+    };
+    const sealed: ProvenanceEvent = {
+      ...forged,
+      eventDigest: computeProvenanceEventDigest(forged),
+    };
+    const resealed: ProvenanceEventLog = { ...base, events: [...base.events, sealed] };
+    expectProvenanceFailure(() => verifyProvenanceLog(resealed), "not allowed after");
+  }
+});
+
 test("verification rejects a hand-crafted log with an illegal lifecycle order", () => {
   const authored = createGenesisProvenanceLog(draft()).events[0]!;
   const forgedFirst: ProvenanceEvent = { ...authored, type: "practitioner-reviewed" };

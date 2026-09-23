@@ -176,12 +176,12 @@ resealed chains whose lifecycle order is illegal, and tail truncation when the c
 plus `changes-requested` and `retired` as a projection derived from cumulative history: current
 status is computed per immutable version and never rewrites the event log; provenance-only
 events (localized, localization-reviewed, accessibility-reviewed, sponsorship-disclosed) do not
-change status and are rejected before the `authored` start; `retired` is terminal and
-`artifact-released` can only retire. Version-scoped gates reject stale-digest and stale-version
+change status and are rejected before the `authored` start and after `artifact-released`/
+`retired`; `retired` is terminal and `artifact-released` can only retire. Version-scoped gates reject stale-digest and stale-version
 records, and source/localization content changes at an existing version number are rejected,
 requiring a fresh immutable version with fresh gates while prior versions' history and status
 remain intact. Local `agent:doctor`, `verify:fast`, `verify:invariants`, and `verify:full`
-passed; `pnpm test` (`node:test`) grew from 74 to 133 tests.
+passed; `pnpm test` (`node:test`) grew from 74 to 135 tests.
 
 Define canonical serialization and SHA-256 content digests. Bind append-only provenance events to the exact version/content digest and prior event digest. Keep cumulative provenance separate from current lifecycle status.
 

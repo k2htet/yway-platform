@@ -205,6 +205,28 @@ test("released versions can only retire afterwards", () => {
   assert.equal(retired.events.length, 6);
 });
 
+test("append rejects provenance-only events after release or retirement", () => {
+  const released = happyPathLog();
+  const retired = appendProvenanceEvent(
+    released,
+    draft({ type: "retired", actorId: "fixture-operator-one" }),
+  );
+  const provenanceOnlyTypes = [
+    "localized",
+    "localization-reviewed",
+    "accessibility-reviewed",
+    "sponsorship-disclosed",
+  ] as const;
+  for (const log of [released, retired]) {
+    for (const type of provenanceOnlyTypes) {
+      expectLifecycleFailure(
+        () => appendProvenanceEvent(log, draft({ type })),
+        "not allowed after",
+      );
+    }
+  }
+});
+
 test("illegal hand-crafted transitions are rejected when deriving status", () => {
   expectLifecycleFailure(
     () => deriveCurrentStatus([makeEvent({ sequence: 1, type: "practitioner-reviewed" })]),
