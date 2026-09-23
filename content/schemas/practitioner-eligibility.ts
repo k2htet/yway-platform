@@ -51,6 +51,26 @@ export const practitionerEligibilitySchema = z
         message: "validUntil must not be earlier than validFrom",
       });
     }
+    if (value.fixtureOnly) {
+      if (!value.actorId.startsWith("fixture-")) {
+        context.addIssue({
+          code: "custom",
+          path: ["actorId"],
+          message:
+            "fixtureOnly practitioner eligibility actorId must be a fixture- identity (synthetic practitioner identities only)",
+        });
+      }
+      value.evidenceReferences.forEach((reference, index) => {
+        if (!reference.startsWith("fixture:")) {
+          context.addIssue({
+            code: "custom",
+            path: ["evidenceReferences", index],
+            message:
+              "fixtureOnly qualification evidence must use fixture: references (no real identity or credential material)",
+          });
+        }
+      });
+    }
   });
 
 export type PractitionerEligibility = z.infer<typeof practitionerEligibilitySchema>;

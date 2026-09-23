@@ -39,6 +39,7 @@ export const reviewAttestationSchema = z
     actorId: actorIdSchema,
     fixtureOnly: fixtureOnlySchema,
     recordedAt: dateTimeSchema,
+    reviewEventSequence: z.number().int().positive().optional(),
     locale: localeSchema.optional(),
     contentReview: contentReviewConfirmationSchema.optional(),
     note: nonBlankStringSchema.optional(),
@@ -47,6 +48,8 @@ export const reviewAttestationSchema = z
   .superRefine((value, context) => {
     const requiresLocale = value.kind === "localization-review";
     const requiresContentReview =
+      value.kind === "founder-review" || value.kind === "practitioner-review";
+    const requiresReviewEventSequence =
       value.kind === "founder-review" || value.kind === "practitioner-review";
 
     if (requiresLocale && value.locale === undefined) {
@@ -61,6 +64,20 @@ export const reviewAttestationSchema = z
         code: "custom",
         path: ["locale"],
         message: `locale is not allowed for ${value.kind} attestations`,
+      });
+    }
+    if (requiresReviewEventSequence && value.reviewEventSequence === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["reviewEventSequence"],
+        message: `${value.kind} attestations require reviewEventSequence binding the attestation to its provenance review event`,
+      });
+    }
+    if (!requiresReviewEventSequence && value.reviewEventSequence !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["reviewEventSequence"],
+        message: `reviewEventSequence is not allowed for ${value.kind} attestations`,
       });
     }
     if (requiresContentReview && value.contentReview === undefined) {
@@ -89,6 +106,14 @@ export const reviewAttestationSchema = z
         path: ["contentReview"],
         message:
           "approved founder/practitioner attestations must confirm both six-part structure and exposure before commitment",
+      });
+    }
+    if (value.fixtureOnly && !value.actorId.startsWith("fixture-")) {
+      context.addIssue({
+        code: "custom",
+        path: ["actorId"],
+        message:
+          "fixtureOnly attestation actorId must be a fixture- identity (synthetic actor identities only)",
       });
     }
   });

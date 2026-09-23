@@ -134,6 +134,7 @@ function validAttestation(overrides: Overrides = {}): Record<string, unknown> {
     actorId: "fixture-founder-one",
     fixtureOnly: true,
     recordedAt: "2026-09-23T01:00:00Z",
+    reviewEventSequence: 2,
     contentReview: {
       sixPartStructureConfirmed: true,
       exposureBeforeCommitmentConfirmed: true,
@@ -479,9 +480,147 @@ test("rejects duplicate occupation scopes", () => {
   );
 });
 
+test("rejects fixture-only eligibility with a non-fixture actor identity", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(practitionerEligibilitySchema, validEligibility({ actorId: "practitioner-one" })),
+    "fixture- identity",
+  );
+});
+
+test("rejects fixture-only eligibility with non-fixture evidence references", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        practitionerEligibilitySchema,
+        validEligibility({ evidenceReferences: ["manual-verification-2026-001"] }),
+      ),
+    "fixture: references",
+  );
+});
+
+test("allows production-classified eligibility to use non-fixture identifiers", () => {
+  const parsed = strictParse(
+    practitionerEligibilitySchema,
+    validEligibility({
+      fixtureOnly: false,
+      actorId: "practitioner-one",
+      evidenceReferences: ["manual-verification-2026-001"],
+    }),
+  );
+  assert.equal(parsed.fixtureOnly, false);
+  assert.equal(parsed.actorId, "practitioner-one");
+});
+
+test("rejects eligibility that is not manually verified", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        practitionerEligibilitySchema,
+        validEligibility({
+          verification: { method: "automated", status: "verified", verifiedOn: "2026-09-01" },
+        }),
+      ),
+    "manual",
+  );
+});
+
+test("rejects fixture-only practitioner attestations with a non-fixture actor identity", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "practitioner-review",
+          actorId: "practitioner-one",
+          reviewEventSequence: undefined,
+        }),
+      ),
+    "fixture- identity",
+  );
+});
+
+test("rejects fixture-only attestations of any kind with a non-fixture actor identity", () => {
+  expectStrictFailure(
+    () => strictParse(reviewAttestationSchema, validAttestation({ actorId: "founder-one" })),
+    "fixture- identity",
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "localization-review",
+          actorId: "fluent-reviewer-one",
+          locale: "my",
+          contentReview: undefined,
+        }),
+      ),
+    "fixture- identity",
+  );
+});
+
 test("accepts a founder approval attestation", () => {
   const parsed = strictParse(reviewAttestationSchema, validAttestation());
   assert.equal(parsed.kind, "founder-review");
+  assert.equal(parsed.reviewEventSequence, 2);
+});
+
+test("rejects a founder attestation without a review event sequence binding", () => {
+  const attestation = validAttestation();
+  delete attestation["reviewEventSequence"];
+  expectStrictFailure(
+    () => strictParse(reviewAttestationSchema, attestation),
+    "reviewEventSequence",
+  );
+});
+
+test("requires a review event sequence binding on practitioner attestations", () => {
+  const attestation = validAttestation({
+    kind: "practitioner-review",
+    actorId: "fixture-practitioner-one",
+  });
+  delete attestation["reviewEventSequence"];
+  expectStrictFailure(
+    () => strictParse(reviewAttestationSchema, attestation),
+    "reviewEventSequence",
+  );
+  const parsed = strictParse(
+    reviewAttestationSchema,
+    validAttestation({
+      kind: "practitioner-review",
+      actorId: "fixture-practitioner-one",
+      reviewEventSequence: 3,
+    }),
+  );
+  assert.equal(parsed.reviewEventSequence, 3);
+});
+
+test("rejects review event sequence bindings on non-review-gate attestations", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "localization-review",
+          actorId: "fixture-fluent-reviewer-one",
+          locale: "my",
+          contentReview: undefined,
+        }),
+      ),
+    "reviewEventSequence is not allowed",
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "accessibility-review",
+          reviewEventSequence: 3,
+        }),
+      ),
+    "reviewEventSequence is not allowed",
+  );
 });
 
 test("rejects a founder attestation without content review confirmation", () => {
@@ -507,6 +646,7 @@ test("rejects a practitioner attestation without content review confirmation", (
   const attestation = validAttestation({
     kind: "practitioner-review",
     actorId: "fixture-practitioner-one",
+    reviewEventSequence: undefined,
   });
   delete attestation["contentReview"];
   expectStrictFailure(() => strictParse(reviewAttestationSchema, attestation), "contentReview");
@@ -533,6 +673,7 @@ test("rejects an approved attestation whose content review confirmations are fal
         validAttestation({
           kind: "practitioner-review",
           actorId: "fixture-practitioner-one",
+          reviewEventSequence: undefined,
           contentReview: {
             sixPartStructureConfirmed: true,
             exposureBeforeCommitmentConfirmed: false,
@@ -565,6 +706,7 @@ test("accepts a localization-review attestation with locale", () => {
       actorId: "fixture-fluent-reviewer-one",
       locale: "my",
       contentReview: undefined,
+      reviewEventSequence: undefined,
     }),
   );
   assert.equal(parsed.locale, "my");
@@ -574,6 +716,7 @@ test("rejects a localization-review attestation without locale", () => {
   const attestation = validAttestation({
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
+    reviewEventSequence: undefined,
   });
   delete attestation["contentReview"];
   expectStrictFailure(() => strictParse(reviewAttestationSchema, attestation), "locale");
@@ -581,7 +724,14 @@ test("rejects a localization-review attestation without locale", () => {
 
 test("rejects content review confirmation on gate-only attestations", () => {
   expectStrictFailure(
-    () => strictParse(reviewAttestationSchema, validAttestation({ kind: "accessibility-review" })),
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "accessibility-review",
+          reviewEventSequence: undefined,
+        }),
+      ),
     "contentReview is not allowed",
   );
 });

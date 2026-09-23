@@ -17,7 +17,21 @@ function governanceAllOfClauses(name: string): JsonObject[] {
     case "pack-source":
       return [{ properties: { occupations: { type: "array", uniqueItems: true } } }];
     case "practitioner-eligibility":
-      return [{ properties: { occupations: { type: "array", uniqueItems: true } } }];
+      return [
+        { properties: { occupations: { type: "array", uniqueItems: true } } },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
+          then: {
+            properties: {
+              actorId: { type: "string", pattern: "^fixture-" },
+              evidenceReferences: {
+                type: "array",
+                items: { type: "string", pattern: "^fixture:" },
+              },
+            },
+          },
+        },
+      ];
     case "review-attestation":
       return [
         {
@@ -40,6 +54,29 @@ function governanceAllOfClauses(name: string): JsonObject[] {
               },
             },
           },
+        },
+        {
+          if: {
+            required: ["kind"],
+            properties: { kind: { enum: ["founder-review", "practitioner-review"] } },
+          },
+          then: {
+            required: ["reviewEventSequence"],
+            properties: {
+              reviewEventSequence: { type: "integer", exclusiveMinimum: 0 },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind"],
+            properties: {
+              kind: {
+                enum: ["localization-review", "accessibility-review", "sponsorship-disclosure"],
+              },
+            },
+          },
+          then: { properties: { reviewEventSequence: false } },
         },
         {
           if: {
@@ -75,6 +112,12 @@ function governanceAllOfClauses(name: string): JsonObject[] {
             properties: { kind: { enum: ["accessibility-review", "sponsorship-disclosure"] } },
           },
           then: { properties: { locale: false, contentReview: false } },
+        },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
+          then: {
+            properties: { actorId: { type: "string", pattern: "^fixture-" } },
+          },
         },
       ];
     case "release-manifest":
