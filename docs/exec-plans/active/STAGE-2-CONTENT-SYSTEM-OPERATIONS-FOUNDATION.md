@@ -209,7 +209,7 @@ gate additionally requires `founder-reviewed` as the standing status; the record
 a standing `practitioner-reviewed`/`artifact-eligible`/`artifact-released` status, so
 changes-requested or retired cycles cannot satisfy it. Attestation and eligibility must name the
 same actor; eligibility must be manual (schema-enforced), active, verified, cover every Pack
-occupation, and be valid at both review time and the explicit `evaluateAt` time on inclusive
+occupation, have `verifiedOn` no later than the approval review date, and be valid at both review time and the explicit `evaluateAt` time on inclusive
 windows evaluated against the UTC calendar date of each record's instant, and `evaluateAt` must not
 precede the practitioner approval `recordedAt` (equal instants allowed). The authored-event
 actor of that exact version cannot be the approver (self-authorship). Stale versions/digests are
@@ -243,6 +243,10 @@ in the Discoveries log.
 Follow-up verification on 2026-09-23 after aligning proposed founder timestamps: `pnpm
 verify:full` passed lint, typecheck, format, test, invariants, and docs; its Node test runner
 reported six passing test files. `pnpm content:schemas:check` also passed.
+
+Pre-PR security review on 2026-09-23 found that `verification.verifiedOn` could postdate the
+practitioner approval. The gate now rejects that case and accepts verification on the approval's
+UTC review date. Verification results for this focused correction are recorded in Discoveries.
 
 Require founder review before practitioner approval. Practitioner eligibility must be manually verified, current, active, and occupation-scoped. Reject stale-digest, wrong-scope, expired, inactive, unverified, or self-authoring practitioner approvals.
 
@@ -374,8 +378,7 @@ matrix remains S2-09; a consistent `fixtureOnly: false` relabeling of pack, gove
 and provenance together passes cross-record consistency (flag-based classification cannot
 authenticate intent while identity/authorization remain deferred under YWAY-D003) — an inverse
 `fixture-`-identity ⇒ `fixtureOnly` rule and qualification-policy wording are deferred to S2-09;
-`verification.verifiedOn` is not window-checked against review/evaluation time (not required by
-issue #36); the attestation `note` field remains unbounded free text for S2-09 privacy guidance.
+the attestation `note` field remains unbounded free text for S2-09 privacy guidance.
 
 ## Progress checklist
 
@@ -409,11 +412,12 @@ issue #36); the attestation `note` field remains unbounded free text for S2-09 p
 - 2026-09-23: S2-02 review corrections: Pack sources now carry required occupation scope so S2-04 can compare practitioner eligibility against the Pack; source uniqueness is (pack ID, version) because immutable versions share a pack ID; generated JSON Schemas carry the expressible governance conditionals under `allOf` (not emitted by `z.toJSONSchema` from `superRefine`) plus a `$comment` limiting non-expressible rules to runtime validation, with AJV tests proving parity on the cited cases.
 - 2026-09-23: S2-03: event digests are sealed over the event's full field set excluding `eventDigest`, so verification recomputes from the stored fields directly and a partially resealed chain still fails on link or lifecycle checks. Provenance verification runs lifecycle transition validation as part of chain verification, so a fully resealed log with an illegal status order is still rejected; hashes detect tampering but do not authenticate actor identity (identity/authorization remain deferred per YWAY-D003). Tail truncation of an otherwise valid chain is undetectable from the log alone; `expectedHeadEventDigest` lets a caller pin the head, and post-release anchoring arrives with the S2-07 release manifest and snapshot index.
 - 2026-09-23: S2-04: eligibility validity windows are evaluated against the UTC calendar date of each record's instant (`Date.parse` basis), so offset-crafted wall-clock dates cannot move an approval outside its window, and equal founder/practitioner attestation timestamps are accepted because provenance event sequence and standing status carry the authoritative ordering. Eligibility stays occupation/time-scoped with no embedded pack coordinates (matching YWAY-D003's eligibility definition); its binding to the source-derived scope is through same-actor attestation linkage, fixture classification consistency, and Pack occupation coverage rather than version fields on the eligibility record itself.
-- 2026-09-23: S2-04 reviews surfaced rather than decided: founder/practitioner role overlap is not gate-enforced (non-author independence only; matrix is S2-09); a fully consistent `fixtureOnly: false` relabeling across pack, records, and provenance passes cross-record checks because flag-based classification cannot authenticate intent while identity remains deferred — an inverse fixture-identity rule and qualification-policy wording are recommended for S2-09; the recorded gate validates the latest practitioner event actor with superseded cycle events governed by standing-status semantics; `verifiedOn` is not window-checked and attestation `note` is unbounded free text (both for S2-09 guidance).
+- 2026-09-23: S2-04 reviews surfaced rather than decided: founder/practitioner role overlap is not gate-enforced (non-author independence only; matrix is S2-09); a fully consistent `fixtureOnly: false` relabeling across pack, records, and provenance passes cross-record checks because flag-based classification cannot authenticate intent while identity remains deferred — an inverse fixture-identity rule and qualification-policy wording are recommended for S2-09; the recorded gate validates the latest practitioner event actor with superseded cycle events governed by standing-status semantics; attestation `note` is unbounded free text for S2-09 privacy guidance.
 - 2026-09-23: S2-04 follow-up code review found the recorded gate binding attestations to events only by actor, not time — a practitioner-reviewed event could be satisfied by an attestation recorded after it, and a founder attestation from before a `changes-requested` cycle could be reused against a new same-actor founder event — and both gates could evaluate at a time preceding the approval while both dates still sat inside the eligibility window. Fixes: recorded mode now requires attestation `recordedAt` instants to equal the corresponding event `recordedAt` instants (instant comparison, so offset-equivalent timestamps match), and both modes reject `evaluateAt` earlier than the practitioner approval `recordedAt` (equal allowed). The inclusive-window boundary test now uses a same-window-open approval because an earlier evaluation is correctly refused. Suite grew 176 → 182 tests.
 - 2026-09-23: A second S2-04 follow-up found two remaining founder-attestation reuse paths that timestamp matching alone cannot close: (1) after `changes-requested`, the proposed gate accepted a prior-cycle founder attestation against a new same-actor founder event because it only checked actor and ordering, and (2) the recorded gate's actor+timestamp match could be satisfied when a new founder event reused the prior cycle's `recordedAt`. Fix: founder-review attestations now require `reviewEventSequence` (schema-required, forbidden on non-gate kinds, expressible under generated JSON Schema `allOf`), and both gates require it to equal the checkpoint founder-reviewed event's `sequence`. Sequence is unique and immutable in the chain, so an old attestation cannot bind a new cycle's event even when actor and timestamp match.
 - 2026-09-23: A third S2-04 follow-up closed the parallel practitioner-attestation reuse path: practitioner attestations could not carry `reviewEventSequence`, so the recorded gate matched them only by actor and timestamp, and a new practitioner event could reuse the prior cycle's `recordedAt` (provenance does not require increasing timestamps). Practitioner attestations now also require `reviewEventSequence`; the recorded gate requires it to equal the practitioner-reviewed event's `sequence`, and the proposed gate requires it to equal the next sequence that will record the approval. Suite grew 182 → 192 tests.
 - 2026-09-23: A later S2-04 review found proposed mode accepted a bound founder attestation whose `recordedAt` differed from its founder event, although recorded mode rejected the same pair. Proposed mode now checks instant correspondence too; the co-timestamped founder/practitioner approval test uses a founder event at the same instant, and a regression test rejects mismatched founder times. The latest `verify:full` and `content:schemas:check` runs passed.
+- 2026-09-23: Pre-PR security review found a future `verification.verifiedOn` could retroactively satisfy a practitioner approval made before manual verification. Both gate modes now require the verification date to be no later than the approval's UTC review date. Negative and same-date boundary tests were added; `pnpm test`, `pnpm verify:full`, and `pnpm content:schemas:check` passed after the correction.
 
 ## Decision log
 
@@ -433,6 +437,7 @@ issue #36); the attestation `note` field remains unbounded free text for S2-09 p
 | 2026-09-23 | Bind founder-review attestations to the checkpoint founder event by required `reviewEventSequence` in both gate modes so prior-cycle attestations cannot satisfy a new cycle even when actor and timestamp match | Bounded S2-04 follow-up correction under ACCEPTED YWAY-D003; closes residual founder-attestation reuse without introducing a new product rule |
 | 2026-09-23 | Bind practitioner attestations to their review events by required `reviewEventSequence` (recorded event sequence, or next sequence when proposed) | Bounded S2-04 follow-up correction under ACCEPTED YWAY-D003; closes residual practitioner-attestation reuse without introducing a new product rule |
 | 2026-09-23 | Require proposed-mode founder attestation and bound founder event to share the same `recordedAt` instant | Bounded S2-04 review correction; proposed approval must not pass a founder checkpoint that recorded verification rejects |
+| 2026-09-23 | Reject practitioner approvals recorded before `verification.verifiedOn` | Bounded S2-04 review correction enforcing manually verified qualification at approval time under YWAY-P019/YWAY-E005 |
 
 ## Completion criteria
 

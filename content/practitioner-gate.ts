@@ -319,6 +319,13 @@ function assertEligibility(
 
   const reviewDate = calendarDate(practitionerAttestation.recordedAt);
   const evaluationDate = calendarDate(evaluateAt);
+  if (eligibility.verification.verifiedOn > reviewDate) {
+    pushIssue(
+      issues,
+      ["eligibility", "verification", "verifiedOn"],
+      `practitioner manual verification on ${eligibility.verification.verifiedOn} occurred after the approval review date ${reviewDate}`,
+    );
+  }
   for (const [when, date] of [
     ["review time", reviewDate],
     ["gate evaluation time", evaluationDate],

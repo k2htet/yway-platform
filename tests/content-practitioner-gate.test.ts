@@ -424,6 +424,35 @@ test("refuses unverified eligibility", () => {
   );
 });
 
+test("refuses approval before the practitioner's manual verification date", () => {
+  const eligibility = eligibilityFixture({
+    verification: { method: "manual", status: "verified", verifiedOn: "2026-09-24" },
+  });
+  for (const run of [
+    () => validateProposedPractitionerApproval(proposedInput({ eligibility })),
+    () => verifyRecordedPractitionerApproval(recordedInput({ eligibility })),
+  ]) {
+    expectGateFailure(
+      run,
+      "manual verification on 2026-09-24 occurred after the approval review date 2026-09-23",
+    );
+  }
+});
+
+test("accepts manual verification on the approval review date", () => {
+  const eligibility = eligibilityFixture({
+    verification: { method: "manual", status: "verified", verifiedOn: "2026-09-23" },
+  });
+  assert.equal(
+    validateProposedPractitionerApproval(proposedInput({ eligibility })).practitionerActorId,
+    "fixture-practitioner-one",
+  );
+  assert.equal(
+    verifyRecordedPractitionerApproval(recordedInput({ eligibility })).practitionerActorId,
+    "fixture-practitioner-one",
+  );
+});
+
 test("refuses eligibility that is not manually verified", () => {
   const notManual = {
     schemaVersion: 1,
