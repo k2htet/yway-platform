@@ -156,6 +156,33 @@ Generate deterministic JSON Schema from the canonical runtime schemas.
 
 ### S2-03 — Immutable versions, digests, provenance, and lifecycle
 
+Completed 2026-09-23. Canonical JSON serialization (`content/canonical.ts`) sorts object keys
+deterministically at every depth, preserves array order, and fails closed on non-canonicalizable
+values (non-finite numbers, `undefined`, sparse arrays, circular references, non-plain objects).
+SHA-256 digests (`content/digest.ts`) hash the canonical UTF-8 bytes, giving deterministic
+content digests that are sensitive to any field change. Append-only provenance
+(`content/provenance.ts`) seals each event's `eventDigest` over the event's full field set
+excluding only `eventDigest` itself, chains `previousEventDigest` to the prior sealed event with
+`null` only at genesis, binds every event to the exact `packId`/`packVersion`/`contentDigest`,
+requires a consistent `fixtureOnly` classification across a version's events (genesis creation
+runs full lifecycle verification before returning), and refuses to extend tampered,
+pack-mismatched, digest-changed, mixed-classification, or illegally transitioned logs.
+Verification detects altered fields, resealed middle events with broken links, reordered or
+removed events, non-contiguous sequences, conflicting digests within one immutable version,
+fully resealed source bindings when compared against source-derived `expectedContentDigests`,
+resealed chains whose lifecycle order is illegal, and tail truncation when the caller pins
+`expectedHeadEventDigest`. Lifecycle semantics (`content/lifecycle.ts`) implement
+`authored → founder-reviewed → practitioner-reviewed → artifact-eligible → artifact-released`
+plus `changes-requested` and `retired` as a projection derived from cumulative history: current
+status is computed per immutable version and never rewrites the event log; provenance-only
+events (localized, localization-reviewed, accessibility-reviewed, sponsorship-disclosed) do not
+change status and are rejected before the `authored` start and after `artifact-released`/
+`retired`; `retired` is terminal and `artifact-released` can only retire. Version-scoped gates reject stale-digest and stale-version
+records, and source/localization content changes at an existing version number are rejected,
+requiring a fresh immutable version with fresh gates while prior versions' history and status
+remain intact. Local `agent:doctor`, `verify:fast`, `verify:invariants`, and `verify:full`
+passed; `pnpm test` (`node:test`) grew from 74 to 135 tests.
+
 Define canonical serialization and SHA-256 content digests. Bind append-only provenance events to the exact version/content digest and prior event digest. Keep cumulative provenance separate from current lifecycle status.
 
 Every source or localization change creates a new positive immutable version and fresh version-scoped gates; prior history remains intact.
@@ -284,7 +311,7 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 is ACCEPTED. S2-02 is complete; S2-03 (immutable versions, digests, provenance, and lifecycle) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains PLANNED.
+YWAY-D003 is ACCEPTED. S2-02 and S2-03 are complete; S2-04 (practitioner eligibility and review independence) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains PLANNED.
 
 ## Progress checklist
 
@@ -295,7 +322,7 @@ YWAY-D003 is ACCEPTED. S2-02 is complete; S2-03 (immutable versions, digests, pr
 - [x] Roadmap and Stage Index activation change prepared.
 - [x] S2-01 ADR reviewed and accepted/rejected/deferred.
 - [x] S2-02 strict schemas complete.
-- [ ] S2-03 immutable versions/digests/provenance complete.
+- [x] S2-03 immutable versions/digests/provenance complete.
 - [ ] S2-04 practitioner eligibility/review independence complete.
 - [ ] S2-05 authoring/review CLI complete.
 - [ ] S2-06 localization/accessibility/sponsorship gates complete.
@@ -316,6 +343,7 @@ YWAY-D003 is ACCEPTED. S2-02 is complete; S2-03 (immutable versions, digests, pr
 - 2026-09-22: Four-discipline review found no material issue in YWAY-D003, local and GitHub verification passed, and the product owner explicitly accepted the bounded Stage 2 recommendation. Production artifact distribution and trusted-root acquisition remain deferred.
 - 2026-09-23: S2-02 implemented with Zod strict objects, a recursive prohibited-key scan, alias-free strict YAML (`uniqueKeys`, `maxAliasCount: 0`), and draft-2022-12 JSON Schema generation under `content/schemas/` + `content/generated/`. `pnpm test` (`node:test`, 60 tests) was added and now runs inside `verify:full` without changing the verification runner. Generated schema files are excluded from Prettier so committed artifacts stay byte-identical to the deterministic renderer.
 - 2026-09-23: S2-02 review corrections: Pack sources now carry required occupation scope so S2-04 can compare practitioner eligibility against the Pack; source uniqueness is (pack ID, version) because immutable versions share a pack ID; generated JSON Schemas carry the expressible governance conditionals under `allOf` (not emitted by `z.toJSONSchema` from `superRefine`) plus a `$comment` limiting non-expressible rules to runtime validation, with AJV tests proving parity on the cited cases.
+- 2026-09-23: S2-03: event digests are sealed over the event's full field set excluding `eventDigest`, so verification recomputes from the stored fields directly and a partially resealed chain still fails on link or lifecycle checks. Provenance verification runs lifecycle transition validation as part of chain verification, so a fully resealed log with an illegal status order is still rejected; hashes detect tampering but do not authenticate actor identity (identity/authorization remain deferred per YWAY-D003). Tail truncation of an otherwise valid chain is undetectable from the log alone; `expectedHeadEventDigest` lets a caller pin the head, and post-release anchoring arrives with the S2-07 release manifest and snapshot index.
 
 ## Decision log
 
@@ -329,6 +357,7 @@ YWAY-D003 is ACCEPTED. S2-02 is complete; S2-03 (immutable versions, digests, pr
 | 2026-09-22 | Accept YWAY-D003 for Stage 2, reconcile Architecture, complete S2-01, and advance the active plan to S2-02 only | Explicit product-owner approval after four-discipline review and passing repository verification |
 | 2026-09-23 | Implement S2-02 strict schemas with Zod runtime validation, alias-free strict YAML parsing, and deterministic generated JSON Schema; add `pnpm test` via `node:test` | Bounded implementation detail under ACCEPTED YWAY-D003; no new product or deferred architecture choice |
 | 2026-09-23 | Add Pack occupation scope, (pack ID, version) source uniqueness, and expressible governance conditionals in generated JSON Schemas per S2-02 review | Bounded S2-02 review correction under ACCEPTED YWAY-D003; enables the S2-04 wrong-scope gate without deciding gate semantics |
+| 2026-09-23 | Implement S2-03 canonical JSON/SHA-256 digests, chained append-only provenance with source-binding verification, derived per-version lifecycle status, and version-scoped gate/immutability checks under `content/` | Bounded implementation detail under ACCEPTED YWAY-D003; no new product rule or deferred architecture choice |
 
 ## Completion criteria
 
