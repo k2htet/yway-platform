@@ -89,5 +89,15 @@
     "validUntil",
     "evidenceReferences"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "properties": {
+        "occupations": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    }
+  ]
 }

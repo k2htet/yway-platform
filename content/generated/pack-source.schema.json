@@ -166,5 +166,15 @@
     "experiments",
     "authoredAt"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "properties": {
+        "occupations": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    }
+  ]
 }

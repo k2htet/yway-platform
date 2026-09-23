@@ -249,4 +249,32 @@ test("generated pack source schema accepts a runtime-valid pack fixture", () => 
     authoredAt: "2026-09-23T00:00:00Z",
   };
   assert.equal(validate(pack), true, firstValidationError(validate));
+
+  const duplicateOccupations = { ...pack, occupations: ["local-guide", "local-guide"] };
+  assert.equal(validate(duplicateOccupations), false, "duplicate occupations must be rejected");
+  assert.ok(
+    (validate.errors ?? []).some((error) => error.keyword === "uniqueItems"),
+    firstValidationError(validate),
+  );
+});
+
+test("generated eligibility schema rejects duplicate occupation scopes", () => {
+  const validate = compileGenerated("practitioner-eligibility");
+  const base = {
+    schemaVersion: 1,
+    actorId: "fixture-practitioner-one",
+    fixtureOnly: true,
+    occupations: ["local-guide"],
+    status: "active",
+    verification: { method: "manual", status: "verified", verifiedOn: "2026-09-01" },
+    validFrom: "2026-09-01",
+    validUntil: "2027-09-01",
+    evidenceReferences: ["fixture:eligibility-reference-001"],
+  };
+  assert.equal(validate(base), true, firstValidationError(validate));
+  assert.equal(
+    validate({ ...base, occupations: ["local-guide", "local-guide"] }),
+    false,
+    "duplicate occupations must be rejected",
+  );
 });

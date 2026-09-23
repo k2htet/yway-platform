@@ -14,6 +14,10 @@ export function schemaFileName(name: string): string {
 
 function governanceAllOfClauses(name: string): JsonObject[] {
   switch (name) {
+    case "pack-source":
+      return [{ properties: { occupations: { type: "array", uniqueItems: true } } }];
+    case "practitioner-eligibility":
+      return [{ properties: { occupations: { type: "array", uniqueItems: true } } }];
     case "review-attestation":
       return [
         {

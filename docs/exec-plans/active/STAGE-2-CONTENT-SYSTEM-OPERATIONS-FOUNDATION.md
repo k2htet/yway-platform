@@ -139,7 +139,9 @@ Pack `occupations` scope (required input for the S2-04 wrong-scope gate), source
 content-review/locale rules, fixture classification) in the generated JSON Schemas under `allOf`,
 and a `$comment` on every generated file declaring that cross-array uniqueness, cross-field
 equality, and date-window rules remain runtime-enforced; AJV parity tests verify the generated
-schemas reject the same cited cases the runtime rejects (suite now 70 tests).
+schemas reject the same cited cases the runtime rejects (suite now 70 tests). Generated
+`occupations` arrays also carry `uniqueItems`, matching the runtime uniqueness rule exactly for
+string scopes (review follow-up; suite now 71 tests).
 
 Define strict schemas for Pack sources, localization, practitioner eligibility, review attestations, provenance events, release manifests, and the artifact snapshot index. Reject unknown fields, unsafe identifiers, duplicate IDs, invalid versions, incomplete identified experiments, and prohibited score/rank concepts.
 
