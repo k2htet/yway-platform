@@ -77,6 +77,20 @@ export const reviewAttestationSchema = z
         message: `contentReview is not allowed for ${value.kind} attestations`,
       });
     }
+    if (
+      requiresContentReview &&
+      value.outcome === "approved" &&
+      value.contentReview !== undefined &&
+      (!value.contentReview.sixPartStructureConfirmed ||
+        !value.contentReview.exposureBeforeCommitmentConfirmed)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["contentReview"],
+        message:
+          "approved founder/practitioner attestations must confirm both six-part structure and exposure before commitment",
+      });
+    }
   });
 
 export type ReviewAttestation = z.infer<typeof reviewAttestationSchema>;

@@ -60,3 +60,36 @@ test("generated pack source schema rejects unknown properties", () => {
   const parsed = JSON.parse(rendered) as { additionalProperties?: boolean };
   assert.equal(parsed.additionalProperties, false);
 });
+
+test("generated pack source schema requires every six-part experiment field", () => {
+  const rendered = renderAllGeneratedSchemas().get("pack-source.schema.json");
+  assert.ok(rendered !== undefined);
+  const parsed = JSON.parse(rendered) as {
+    properties?: {
+      experiments?: {
+        items?: {
+          type?: string;
+          required?: string[];
+          additionalProperties?: boolean;
+          properties?: Record<string, unknown>;
+        };
+      };
+    };
+  };
+  const experimentItems = parsed.properties?.experiments?.items;
+  assert.ok(experimentItems !== undefined);
+  assert.equal(experimentItems.type, "object");
+  assert.equal(experimentItems.additionalProperties, false);
+
+  const requiredFields = experimentItems.required ?? [];
+  for (const field of ["question", "action", "timebox", "whatToNotice", "reflection", "nextFork"]) {
+    assert.ok(
+      requiredFields.includes(field),
+      `generated schema must require experiment field ${field}`,
+    );
+    assert.ok(
+      experimentItems.properties?.[field] !== undefined,
+      `generated schema must declare experiment field ${field}`,
+    );
+  }
+});

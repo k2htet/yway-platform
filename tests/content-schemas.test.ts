@@ -306,12 +306,15 @@ test("rejects unsafe pack identifiers", () => {
 
 test("rejects invalid pack versions", () => {
   for (const version of [0, -1, 1.5, "1", true]) {
-    expectStrictFailure(() => strictParse(packSourceSchema, validPack({ version })));
+    expectStrictFailure(() => strictParse(packSourceSchema, validPack({ version })), "version");
   }
 });
 
 test("rejects an empty experiments array", () => {
-  expectStrictFailure(() => strictParse(packSourceSchema, validPack({ experiments: [] })));
+  expectStrictFailure(
+    () => strictParse(packSourceSchema, validPack({ experiments: [] })),
+    "experiments",
+  );
 });
 
 test("rejects a missing limitations list", () => {
@@ -467,6 +470,51 @@ test("rejects a practitioner attestation without content review confirmation", (
   expectStrictFailure(() => strictParse(reviewAttestationSchema, attestation), "contentReview");
 });
 
+test("rejects an approved attestation whose content review confirmations are false", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          contentReview: {
+            sixPartStructureConfirmed: false,
+            exposureBeforeCommitmentConfirmed: true,
+          },
+        }),
+      ),
+    "must confirm both six-part structure",
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "practitioner-review",
+          actorId: "fixture-practitioner-one",
+          contentReview: {
+            sixPartStructureConfirmed: true,
+            exposureBeforeCommitmentConfirmed: false,
+          },
+        }),
+      ),
+    "must confirm both six-part structure",
+  );
+});
+
+test("accepts a changes-requested attestation with unconfirmed content review flags", () => {
+  const parsed = strictParse(
+    reviewAttestationSchema,
+    validAttestation({
+      outcome: "changes-requested",
+      contentReview: {
+        sixPartStructureConfirmed: true,
+        exposureBeforeCommitmentConfirmed: false,
+      },
+    }),
+  );
+  assert.equal(parsed.outcome, "changes-requested");
+});
+
 test("accepts a localization-review attestation with locale", () => {
   const parsed = strictParse(
     reviewAttestationSchema,
@@ -521,7 +569,10 @@ test("accepts a genesis provenance event", () => {
 
 test("rejects non-positive provenance sequence numbers", () => {
   for (const sequence of [0, -1, 1.5]) {
-    expectStrictFailure(() => strictParse(provenanceEventSchema, validEvent({ sequence })));
+    expectStrictFailure(
+      () => strictParse(provenanceEventSchema, validEvent({ sequence })),
+      "sequence",
+    );
   }
 });
 
