@@ -141,7 +141,12 @@ and a `$comment` on every generated file declaring that cross-array uniqueness, 
 equality, and date-window rules remain runtime-enforced; AJV parity tests verify the generated
 schemas reject the same cited cases the runtime rejects (suite now 70 tests). Generated
 `occupations` arrays also carry `uniqueItems`, matching the runtime uniqueness rule exactly for
-string scopes (review follow-up; suite now 71 tests).
+string scopes (review follow-up; suite now 71 tests). A second review round asked for the
+nonblank-string rule to be expressible in generated schemas and for the duplicated Pack/Localized
+experiment shapes to stop drifting: `nonBlankStringSchema` now uses `.regex(/\S/)` (identical
+runtime semantics to the previous trim-based refine) so `z.toJSONSchema` emits `pattern: \S`,
+and the six-part experiment shape lives once in `common.ts` with `localizedExperimentSchema` as a
+shared reference plus a reference-equality test (suite now 74 tests).
 
 Define strict schemas for Pack sources, localization, practitioner eligibility, review attestations, provenance events, release manifests, and the artifact snapshot index. Reject unknown fields, unsafe identifiers, duplicate IDs, invalid versions, incomplete identified experiments, and prohibited score/rank concepts.
 

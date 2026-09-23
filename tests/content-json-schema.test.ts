@@ -217,9 +217,8 @@ test("generated manifest schema rejects production classification for fixture re
   );
 });
 
-test("generated pack source schema accepts a runtime-valid pack fixture", () => {
-  const validate = compileGenerated("pack-source");
-  const pack = {
+function runtimeValidPackFixture(): Record<string, unknown> {
+  return {
     schemaVersion: 1,
     id: "fixture-local-guide",
     version: 1,
@@ -248,6 +247,36 @@ test("generated pack source schema accepts a runtime-valid pack fixture", () => 
     ],
     authoredAt: "2026-09-23T00:00:00Z",
   };
+}
+
+function runtimeValidLocalizedFixture(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    packId: "fixture-local-guide",
+    packVersion: 1,
+    locale: "my",
+    fixtureOnly: true,
+    title: "Try being a local guide (Myanmar)",
+    summary: "A localized synthetic pack exercising the Stage 2 content pipeline.",
+    limitations: ["This synthetic pack does not replace real workplace experience."],
+    experiments: [
+      {
+        id: "exp-talk-to-worker",
+        title: "Talk to a local worker (Myanmar)",
+        question: "What is it really like?",
+        action: "Interview one person.",
+        timebox: "45 minutes this week",
+        whatToNotice: "What felt energizing or draining.",
+        reflection: "Write three sentences.",
+        nextFork: "Shadow the role for half a day before any commitment.",
+      },
+    ],
+  };
+}
+
+test("generated pack source schema accepts a runtime-valid pack fixture", () => {
+  const validate = compileGenerated("pack-source");
+  const pack = runtimeValidPackFixture();
   assert.equal(validate(pack), true, firstValidationError(validate));
 
   const duplicateOccupations = { ...pack, occupations: ["local-guide", "local-guide"] };
@@ -255,6 +284,28 @@ test("generated pack source schema accepts a runtime-valid pack fixture", () => 
   assert.ok(
     (validate.errors ?? []).some((error) => error.keyword === "uniqueItems"),
     firstValidationError(validate),
+  );
+});
+
+test("generated schemas reject whitespace-only nonblank fields", () => {
+  const packValidate = compileGenerated("pack-source");
+  const whitespaceTitle = { ...runtimeValidPackFixture(), title: "   " };
+  assert.equal(packValidate(whitespaceTitle), false, "whitespace-only pack title must be rejected");
+  assert.ok(
+    (packValidate.errors ?? []).some((error) => error.keyword === "pattern"),
+    firstValidationError(packValidate),
+  );
+
+  const localizedValidate = compileGenerated("localized-content");
+  const whitespaceSummary = { ...runtimeValidLocalizedFixture(), summary: "   " };
+  assert.equal(
+    localizedValidate(whitespaceSummary),
+    false,
+    "whitespace-only localized summary must be rejected",
+  );
+  assert.ok(
+    (localizedValidate.errors ?? []).some((error) => error.keyword === "pattern"),
+    firstValidationError(localizedValidate),
   );
 });
 

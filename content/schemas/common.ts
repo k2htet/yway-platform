@@ -108,10 +108,20 @@ export const dateSchema = z.iso.date();
 
 export const localeSchema = z.enum(["my"]);
 
-export const nonBlankStringSchema = z
-  .string()
-  .min(1)
-  .refine((value) => value.trim().length > 0, { message: "must not be blank" });
+export const nonBlankStringSchema = z.string().min(1).regex(/\S/, "must not be blank");
+
+export const experimentSchema = z
+  .object({
+    id: experimentIdSchema,
+    title: nonBlankStringSchema,
+    question: nonBlankStringSchema,
+    action: nonBlankStringSchema,
+    timebox: nonBlankStringSchema,
+    whatToNotice: nonBlankStringSchema,
+    reflection: nonBlankStringSchema,
+    nextFork: nonBlankStringSchema,
+  })
+  .strict();
 
 export const relativeArtifactPathSchema = z
   .string()

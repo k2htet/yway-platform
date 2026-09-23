@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  experimentIdSchema,
+  experimentSchema,
   fixtureOnlySchema,
   localeSchema,
   nonBlankStringSchema,
@@ -10,18 +10,7 @@ import {
   versionSchema,
 } from "./common.js";
 
-export const localizedExperimentSchema = z
-  .object({
-    id: experimentIdSchema,
-    title: nonBlankStringSchema,
-    question: nonBlankStringSchema,
-    action: nonBlankStringSchema,
-    timebox: nonBlankStringSchema,
-    whatToNotice: nonBlankStringSchema,
-    reflection: nonBlankStringSchema,
-    nextFork: nonBlankStringSchema,
-  })
-  .strict();
+export const localizedExperimentSchema = experimentSchema;
 
 export const localizedContentSchema = z
   .object({

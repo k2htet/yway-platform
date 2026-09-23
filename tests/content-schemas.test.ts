@@ -4,7 +4,9 @@ import { stringify } from "yaml";
 import {
   StrictValidationError,
   assertUniquePackVersions,
+  experimentSchema,
   localizedContentSchema,
+  localizedExperimentSchema,
   packSourceSchema,
   practitionerEligibilitySchema,
   provenanceEventLogSchema,
@@ -286,6 +288,17 @@ test("rejects a blank six-part experiment field", () => {
       ),
     "must not be blank",
   );
+});
+
+test("rejects a whitespace-only pack title", () => {
+  expectStrictFailure(
+    () => strictParse(packSourceSchema, validPack({ title: "   " })),
+    "must not be blank",
+  );
+});
+
+test("localized experiments share the single experiment shape", () => {
+  assert.equal(localizedExperimentSchema, experimentSchema);
 });
 
 test("rejects duplicate experiment IDs inside a pack", () => {

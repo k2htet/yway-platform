@@ -3,7 +3,7 @@ import {
   StrictValidationError,
   type StrictValidationIssue,
   dateTimeSchema,
-  experimentIdSchema,
+  experimentSchema,
   fixtureOnlySchema,
   nonBlankStringSchema,
   occupationIdSchema,
@@ -12,19 +12,6 @@ import {
   schemaVersionLiteral,
   versionSchema,
 } from "./common.js";
-
-export const experimentSchema = z
-  .object({
-    id: experimentIdSchema,
-    title: nonBlankStringSchema,
-    question: nonBlankStringSchema,
-    action: nonBlankStringSchema,
-    timebox: nonBlankStringSchema,
-    whatToNotice: nonBlankStringSchema,
-    reflection: nonBlankStringSchema,
-    nextFork: nonBlankStringSchema,
-  })
-  .strict();
 
 export const previewMetadataSchema = z
   .object({
