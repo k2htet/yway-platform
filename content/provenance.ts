@@ -89,19 +89,7 @@ export function createGenesisProvenanceEvent(draft: ProvenanceEventDraft): Prove
 
 export function createGenesisProvenanceLog(draft: ProvenanceEventDraft): ProvenanceEventLog {
   const event = createGenesisProvenanceEvent(draft);
-  const log = { schemaVersion: 1 as const, packId: draft.packId, events: [event] };
-  const result = provenanceEventLogSchema.safeParse(log);
-  if (!result.success) {
-    throw new StrictValidationError(
-      result.error.issues.map((issue) => ({
-        path: issue.path.map((segment) =>
-          typeof segment === "symbol" ? String(segment) : segment,
-        ),
-        message: issue.message,
-      })),
-    );
-  }
-  return result.data;
+  return verifyProvenanceLog({ schemaVersion: 1, packId: draft.packId, events: [event] });
 }
 
 export function collectProvenanceIssues(
@@ -157,12 +145,13 @@ export function collectProvenanceIssues(
     }
   }
 
-  const digestByVersion = new Map<number, { digest: string; sequence: number }>();
+  const versionMeta = new Map<number, { digest: string; fixtureOnly: boolean; sequence: number }>();
   for (const [index, event] of log.events.entries()) {
-    const known = digestByVersion.get(event.packVersion);
+    const known = versionMeta.get(event.packVersion);
     if (known === undefined) {
-      digestByVersion.set(event.packVersion, {
+      versionMeta.set(event.packVersion, {
         digest: event.contentDigest,
+        fixtureOnly: event.fixtureOnly,
         sequence: event.sequence,
       });
       continue;
@@ -173,11 +162,17 @@ export function collectProvenanceIssues(
         message: `pack version ${event.packVersion} has conflicting content digests (sequence ${known.sequence} vs ${event.sequence}): immutable versions cannot change content`,
       });
     }
+    if (known.fixtureOnly !== event.fixtureOnly) {
+      issues.push({
+        path: ["events", index, "fixtureOnly"],
+        message: `pack version ${event.packVersion} mixes fixtureOnly ${known.fixtureOnly} and ${event.fixtureOnly} events (sequence ${known.sequence} vs ${event.sequence}): fixture classification must be consistent across a version's provenance (YWAY-D003 fixture isolation)`,
+      });
+    }
   }
 
-  for (const [packVersion, digest] of digestByVersion) {
+  for (const [packVersion, meta] of versionMeta) {
     const expected = expectedDigestFor(options, packVersion);
-    if (expected !== undefined && expected !== digest.digest) {
+    if (expected !== undefined && expected !== meta.digest) {
       issues.push({
         path: ["events"],
         message: `recorded contentDigest for pack version ${packVersion} does not match the source-derived digest: source was tampered with or events bind stale content`,
@@ -269,6 +264,15 @@ export function appendProvenanceEvent(
       {
         path: ["contentDigest"],
         message: `pack version ${draft.packVersion} is immutable: events must bind the original contentDigest`,
+      },
+    ]);
+  }
+
+  if (last !== undefined && draft.fixtureOnly !== last.fixtureOnly) {
+    throw new StrictValidationError([
+      {
+        path: ["fixtureOnly"],
+        message: `pack version ${draft.packVersion} already has fixtureOnly ${last.fixtureOnly} events: fixture classification must be consistent across a version's provenance (YWAY-D003 fixture isolation)`,
       },
     ]);
   }

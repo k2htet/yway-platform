@@ -163,8 +163,10 @@ SHA-256 digests (`content/digest.ts`) hash the canonical UTF-8 bytes, giving det
 content digests that are sensitive to any field change. Append-only provenance
 (`content/provenance.ts`) seals each event's `eventDigest` over the event's full field set
 excluding only `eventDigest` itself, chains `previousEventDigest` to the prior sealed event with
-`null` only at genesis, binds every event to the exact `packId`/`packVersion`/`contentDigest`, and
-refuses to extend tampered, pack-mismatched, digest-changed, or illegally transitioned logs.
+`null` only at genesis, binds every event to the exact `packId`/`packVersion`/`contentDigest`,
+requires a consistent `fixtureOnly` classification across a version's events (genesis creation
+runs full lifecycle verification before returning), and refuses to extend tampered,
+pack-mismatched, digest-changed, mixed-classification, or illegally transitioned logs.
 Verification detects altered fields, resealed middle events with broken links, reordered or
 removed events, non-contiguous sequences, conflicting digests within one immutable version,
 fully resealed source bindings when compared against source-derived `expectedContentDigests`,
@@ -179,7 +181,7 @@ change status and are rejected before the `authored` start; `retired` is termina
 records, and source/localization content changes at an existing version number are rejected,
 requiring a fresh immutable version with fresh gates while prior versions' history and status
 remain intact. Local `agent:doctor`, `verify:fast`, `verify:invariants`, and `verify:full`
-passed; `pnpm test` (`node:test`) grew from 74 to 130 tests.
+passed; `pnpm test` (`node:test`) grew from 74 to 133 tests.
 
 Define canonical serialization and SHA-256 content digests. Bind append-only provenance events to the exact version/content digest and prior event digest. Keep cumulative provenance separate from current lifecycle status.
 

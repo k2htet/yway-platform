@@ -148,6 +148,35 @@ test("append refuses a packId mismatch", () => {
   );
 });
 
+test("append refuses a mixed fixture classification on the same version", () => {
+  const log = buildLog();
+  expectProvenanceFailure(
+    () => appendProvenanceEvent(log, draft({ type: "founder-reviewed", fixtureOnly: false })),
+    "fixture classification must be consistent",
+  );
+});
+
+test("verification detects a mixed fixture classification chain", () => {
+  const log = happyPathLog();
+  const mixed: ProvenanceEventLog = {
+    ...log,
+    events: log.events.map((event, index) => {
+      if (index !== 4) {
+        return event;
+      }
+      const forged: ProvenanceEvent = { ...event, fixtureOnly: false };
+      return { ...forged, eventDigest: computeProvenanceEventDigest(forged) };
+    }),
+  };
+  expectProvenanceFailure(() => verifyProvenanceLog(mixed), "mixes fixtureOnly");
+});
+
+test("genesis log creation rejects a non-authored first event", () => {
+  for (const type of ["founder-reviewed", "localized"] as const) {
+    expectProvenanceFailure(() => createGenesisProvenanceLog(draft({ type })), "authored");
+  }
+});
+
 test("append refuses an illegal lifecycle transition", () => {
   const log = buildLog();
   expectProvenanceFailure(
