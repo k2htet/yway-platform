@@ -1,0 +1,213 @@
+{
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "packId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "packVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "contentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "founder-review",
+        "practitioner-review",
+        "localization-review",
+        "accessibility-review",
+        "sponsorship-disclosure"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "changes-requested"
+      ]
+    },
+    "actorId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "fixtureOnly": {
+      "type": "boolean"
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "locale": {
+      "type": "string",
+      "enum": [
+        "my"
+      ]
+    },
+    "contentReview": {
+      "type": "object",
+      "properties": {
+        "sixPartStructureConfirmed": {
+          "type": "boolean"
+        },
+        "exposureBeforeCommitmentConfirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sixPartStructureConfirmed",
+        "exposureBeforeCommitmentConfirmed"
+      ],
+      "additionalProperties": false
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "packId",
+    "packVersion",
+    "contentDigest",
+    "kind",
+    "outcome",
+    "actorId",
+    "fixtureOnly",
+    "recordedAt"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "contentReview"
+        ],
+        "properties": {
+          "locale": false,
+          "contentReview": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sixPartStructureConfirmed",
+              "exposureBeforeCommitmentConfirmed"
+            ],
+            "properties": {
+              "sixPartStructureConfirmed": {
+                "type": "boolean"
+              },
+              "exposureBeforeCommitmentConfirmed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review"
+            ]
+          },
+          "outcome": {
+            "const": "approved"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "contentReview": {
+            "type": "object",
+            "required": [
+              "sixPartStructureConfirmed",
+              "exposureBeforeCommitmentConfirmed"
+            ],
+            "properties": {
+              "sixPartStructureConfirmed": {
+                "const": true
+              },
+              "exposureBeforeCommitmentConfirmed": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "const": "localization-review"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "locale"
+        ],
+        "properties": {
+          "contentReview": false
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "accessibility-review",
+              "sponsorship-disclosure"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "locale": false,
+          "contentReview": false
+        }
+      }
+    }
+  ]
+}

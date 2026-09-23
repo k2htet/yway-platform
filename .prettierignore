@@ -5,6 +5,7 @@ docs/decisions/000-TEMPLATE.md
 .opencode/agents/
 .codex/
 .agents/
+content/generated/
 pnpm-lock.yaml
 node_modules/
 dist/
