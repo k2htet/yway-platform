@@ -254,6 +254,92 @@ Stage 2 stores only synthetic actor identities and non-sensitive qualification e
 
 ### S2-05 — Repository authoring/review CLI
 
+Completed 2026-09-24. The four repository commands are implemented as dependency-injected runners
+in `content/commands/` (thin `scripts/content-*.ts` wrappers, wired as `pnpm content:new-version`,
+`content:attest`, `content:status`, and `content:retire`) over a shared repository store
+(`content/store.ts`). The on-disk layout chosen as a bounded YWAY-D003 implementation detail is:
+author-written immutable sources at `content/packs/<pack-id>/<version>.yaml`, a per-pack append-only
+`provenance.json`, version-scoped attestations at
+`content/packs/<pack-id>/attestations/<version>/<sequence>-<kind>.json` (one file per provenance
+sequence, so review cycles after `changes-requested` coexist without collision), source-side
+retirement records at `content/packs/<pack-id>/retirements/<version>.json`, practitioner
+eligibility at `content/eligibility/<actor-id>.json`, and an artifact root at `artifacts/` holding
+`bundles/`, `manifests/`, `retirements/`, and `snapshot-index.json` (paths S2-07 must adopt).
+`content:new-version` uses a registration model: the author hand-authors the next source file
+(content-as-code), and the command validates it, computes the canonical digest, and seals the
+genesis `authored` event, refusing already-registered targets, unregistered `--from` versions, any
+tampered prior source (fail-closed on source-derived digest mismatch), and any non-fixture source
+or non-`fixture-` actor (Stage 2 fixture-isolation gate). It requires `--actor`
+beyond the issue's listed flags because the genesis event must record its author. `content:attest`
+writes its provenance event first and the attestation file second inside a single transaction
+(exclusive-create plus temp-and-rename replace with in-process best-effort rollback; a process
+interruption after the event leaves `content:status` failing on the missing attestation, which is
+detectable rather than silently accepted), binds both to the same `recordedAt` instant and the
+exact source digest, sets `reviewEventSequence` to the event's sequence for founder/practitioner
+kinds, maps `approved` to the kind's status or provenance-only event and `changes-requested` to the
+`changes-requested` event for every kind, and runs `validateProposedPractitionerApproval`
+(eligibility file, founder checkpoint, independence) before appending a practitioner approval;
+schema-required attestation fields without issue-listed flags became explicit invocation flags
+(`--six-part-confirmed`, `--exposure-before-commitment-confirmed`, `--locale my`).
+`content:status` verifies the log against source-derived digests, version-scopes attestations and
+any retirement record, requires every review event to have an exactly bound attestation file
+(actor, recordedAt, kind/outcome, and reviewEventSequence where applicable) and vice versa,
+requires a retirement record to match the sealed `retired` event (sequence, digest, actor, instant)
+or be absent when no such event exists, and for a previously released version requires the
+retirement notice to exist and bind the retired event, the release manifest, and a matching
+snapshot-index entry — mismatches exit 1 instead of reporting review state — then
+prints human or `--json` output. `content:retire` appends the digest-bound `retired` event first,
+persists actor and reason in the source-side retirement record
+(the artifact notice intentionally excludes both, and events carry no reason field), refuses
+duplicate retirement (terminal lifecycle plus overwrite refusal), and for a previously
+`artifact-released` version fail-closed (before any write) requires the release manifest
+(pack/version/digest binding and fixture classification matching the source), the snapshot index
+entries for that version's bundle and release manifest with digests matching the manifest and the
+on-disk bundle file, then commits the canonical notice at
+`artifacts/retirements/<pack-id>/<version>.json` binding the content, release-manifest, and
+retirement-event digests and appends the notice's index entry inside the same in-process
+transaction (provenance log first so no derived file can outlive its event on interruption),
+leaving the bundle, manifest, prior provenance, and attestations byte-identical. A write
+`fixture-identity` gate applies to all three mutating commands. Exit codes are
+0/1/2 with invalid invocation (missing/unknown/malformed flags, unsafe identifiers, bad enums)
+returning 2 and repository, schema, or gate failures returning 1. `pnpm test` grew from 195 to 251
+tests covering invalid invocation for every command (including positional, duplicate, missing/
+empty value, inline `--flag=value`, and boolean forms), overwrite refusal for
+versions/attestations/retirement records/notices, the practitioner gate through the CLI (with
+gate-specific error assertions), changes-requested cycles, tamper detection, released and
+unreleased retirement, fail-closed missing-manifest/index and missing-or-stale-index-entry and
+classification-mismatch behavior, status binding failures for deleted or detached attestations,
+retirement records, released-retirement notices, and snapshot-index notice entries,
+mid-transaction rollback via an injected write failure, and fixture-isolation
+refusals; local `agent:doctor`, `verify:fast`, `verify:invariants`, `verify:full`, and
+`content:schemas:check` all passed.
+
+Round 2 (same four Codex roles, focused on their round-1 findings): product-integrity,
+security/privacy, and test reported PASS with all findings addressed and no new material issues;
+architecture reported the index/classification and record-binding findings addressed but kept its
+atomicity finding partially open because an interrupted released retirement (record present,
+notice or index entry missing) still passed `content:status`, and two ExecPlan claims remained too
+broad. Round 2 follow-up extended `content:status` to require, for a released-and-retired version,
+a retirement notice binding the retired event and release manifest plus a matching snapshot-index
+entry (with tests for both gaps), narrowed the ExecPlan's zero-partial-state wording to validation
+failures with interruption gaps detectable by `content:status` and journal recovery deferred, and
+updated the count to 251 tests. Round 3 (architecture only) then reported PASS with no new issues.
+Security/privacy explicitly judged the deferred crash-recovery risk acceptable for Stage 2
+fixture-only repository operations.
+
+Four-role review round 1 (Codex `exec` adapters, after the OpenCode subagent adapters failed with a
+provider error, recorded per the PR-review skill's fallback rule) found no blockers but four
+review-relevant gaps, all addressed in round 1 follow-up before this record: released retirement
+now verifies snapshot-index bundle/manifest entries and bundle bytes plus manifest/source fixture
+classification agreement (product, architecture, security/privacy); multi-write commands commit
+the provenance log before derived files with rollback and a partial-exclusive-write cleanup, and
+the completion wording above now states the real interruption guarantee (architecture,
+security/privacy); `content:status` enforces attestation-event and retirement-record-event binding
+(product, architecture); fixture-only source and `fixture-` actor gates were added to the mutating
+commands (product, security/privacy); and tests gained mid-transaction rollback injection, bundle
+byte-identity, missing/stale-index fail-closed cases, parser-branch cases, fixture-gate cases, and
+gate-specific error assertions (test).
+
 Implement:
 
 - `pnpm content:new-version --pack <id> [--from <version>]`
@@ -370,7 +456,9 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 is ACCEPTED. S2-02, S2-03, and S2-04 are complete; S2-05 (authoring/review CLI) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains PLANNED.
+YWAY-D003 is ACCEPTED. S2-02 through S2-05 are complete; S2-06 (localization/accessibility/
+sponsorship gates) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains
+PLANNED.
 
 Surfaced follow-ups from S2-04 reviews (not decided in that step): founder/practitioner role
 overlap is not gate-enforced — independence in S2-04 means non-author only, and the role-overlap
@@ -391,7 +479,7 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 - [x] S2-02 strict schemas complete.
 - [x] S2-03 immutable versions/digests/provenance complete.
 - [x] S2-04 practitioner eligibility/review independence complete.
-- [ ] S2-05 authoring/review CLI complete.
+- [x] S2-05 authoring/review CLI complete.
 - [ ] S2-06 localization/accessibility/sponsorship gates complete.
 - [ ] S2-07 deterministic release/verification complete.
 - [ ] S2-08 synthetic lifecycle fixture complete.
@@ -418,6 +506,66 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 - 2026-09-23: A third S2-04 follow-up closed the parallel practitioner-attestation reuse path: practitioner attestations could not carry `reviewEventSequence`, so the recorded gate matched them only by actor and timestamp, and a new practitioner event could reuse the prior cycle's `recordedAt` (provenance does not require increasing timestamps). Practitioner attestations now also require `reviewEventSequence`; the recorded gate requires it to equal the practitioner-reviewed event's `sequence`, and the proposed gate requires it to equal the next sequence that will record the approval. Suite grew 182 → 192 tests.
 - 2026-09-23: A later S2-04 review found proposed mode accepted a bound founder attestation whose `recordedAt` differed from its founder event, although recorded mode rejected the same pair. Proposed mode now checks instant correspondence too; the co-timestamped founder/practitioner approval test uses a founder event at the same instant, and a regression test rejects mismatched founder times. The latest `verify:full` and `content:schemas:check` runs passed.
 - 2026-09-23: Pre-PR security review found a future `verification.verifiedOn` could retroactively satisfy a practitioner approval made before manual verification. Both gate modes now require the verification date to be no later than the approval's UTC review date. Negative and same-date boundary tests were added; `pnpm test`, `pnpm verify:full`, and `pnpm content:schemas:check` passed after the correction.
+- 2026-09-24: S2-05 uses a registration model for `content:new-version`: the author hand-authors
+  the next `content/packs/<id>/<version>.yaml` (content-as-code), and the command seals the
+  genesis `authored` event, so content is always final before its digest is bound. A copy-then-edit
+  model was rejected because sealing a copy freezes identical content and editing after sealing is
+  detected as tampering. `--actor` was added beyond the issue's listed flags because the genesis
+  event schema requires an author; `content:attest` similarly gained the schema-required
+  `--six-part-confirmed`/`--exposure-before-commitment-confirmed` (founder/practitioner) and
+  `--locale my` (localization) flags rather than defaulting reviewer confirmations silently.
+- 2026-09-24: S2-05 defined the previously open artifact-root layout as `artifacts/` at the
+  repository root with `snapshot-index.json` as the canonical index and
+  `retirements/<pack-id>/<version>.json` relative paths inside it, per YWAY-D003's fixed notice
+  path. `content:retire` implements the notice and index update now (tested against fixture
+  manifests) so S2-07 only needs to produce releases and the verifier; S2-07 must reuse these
+  exact paths. A released-version retirement fails closed before any write when the manifest,
+  index, or required index entries are missing or stale, so validation failures leave zero partial
+  state; because writes are event-first with in-process rollback, a process interruption can only
+  leave derived files (record, notice, index entry) missing after their event — a gap
+  `content:status` detects, with crash-journal recovery deferred beyond this step.
+- 2026-09-24: S2-05 persists retirement actor and reason in a source-side record
+  (`content/packs/<id>/retirements/<version>.json`, new `retirement-record` schema) because the
+  provenance event schema has no reason field and the artifact notice must exclude actor/reason;
+  the artifact-side `retirement-notice` schema was also added to the generated catalog so S2-07's
+  verifier validates one canonical shape. Multi-file command writes use exclusive-create plus
+  temp-and-rename replace inside a rollback transaction; attestation files are keyed by
+  provenance sequence so review cycles cannot collide, and exit code 2 covers all command-line
+  shape errors (including unsafe identifiers used in paths) while exit code 1 covers repository,
+  schema, and gate failures.
+- 2026-09-24: S2-05 maps `outcome: changes-requested` to the `changes-requested` provenance event
+  for every attestation kind (there is no per-kind changes-requested event type), and `approved`
+  maps to the kind's status-affecting or provenance-only event; attestations and their events
+  share one `recordedAt` instant because the S2-04 recorded gate requires instant equality.
+- 2026-09-24: S2-05 review round 1 (four Codex reviewer roles; OpenCode subagent adapters failed
+  with a free-tier provider error and were not used) surfaced and drove these corrections before
+  PR: released retirement now fail-closed verifies snapshot-index entries for the version's
+  bundle and release manifest (paths and digests against the manifest and the on-disk bundle) and
+  requires manifest/source fixture classification agreement, closing a gap where an empty but
+  schema-valid index or a production-classified manifest would have been accepted; multi-write
+  commands now write the provenance log before derived files so an interruption can never leave a
+  notice, record, or attestation without its event, `createExclusive` cleans up partial writes,
+  and the ExecPlan's atomicity wording was corrected to the actual guarantee (in-process
+  transactional writes with best-effort rollback; interruption state is detectable by
+  `content:status`, and crash-journal recovery remains outside this step); `content:status` now
+  binds every review event to exactly one attestation file (actor, recordedAt, kind/outcome,
+  reviewEventSequence for founder/practitioner) and vice versa, and binds a retirement record to
+  the sealed `retired` event, so deleting or detaching an attestation or record exits 1 instead of
+  reporting review state; and the mutating commands refuse non-fixture sources and non-`fixture-`
+  actors under the Stage 2 fixture-isolation boundary (removing that gate becomes a deliberate,
+  visible later-stage change). The expired-eligibility CLI test previously passed on a schema
+  error (validUntil before validFrom) rather than the gate window; its fixture was corrected to a
+  schema-valid expired window so it now asserts the gate's own message.
+- 2026-09-24: S2-05 review round 1 confirmed the four CLI design choices (registration model with
+  required `--actor`, explicit content-review/locale attest flags, `artifacts/` layout, and
+  source-side retirement record) are bounded implementation details under YWAY-D003 with no
+  silent product-meaning decision, and that no command path bypasses the `retired` terminal state.
+- 2026-09-24: Follow-up review found that `content:status` accepted a resealed provenance event
+  whose fixture flag or actor identity disagreed with its fixture-only source, and a retirement
+  record whose fixture flag disagreed with the source. `loadPackState` now checks every event
+  against its source; status checks the retirement record against its source. Regression tests
+  cover all three mismatches. `pnpm test` passed 253/253 tests, and `pnpm verify:full` passed lint,
+  typecheck, format, tests, invariants, and docs after the correction.
 
 ## Decision log
 
@@ -438,6 +586,11 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 | 2026-09-23 | Bind practitioner attestations to their review events by required `reviewEventSequence` (recorded event sequence, or next sequence when proposed) | Bounded S2-04 follow-up correction under ACCEPTED YWAY-D003; closes residual practitioner-attestation reuse without introducing a new product rule |
 | 2026-09-23 | Require proposed-mode founder attestation and bound founder event to share the same `recordedAt` instant | Bounded S2-04 review correction; proposed approval must not pass a founder checkpoint that recorded verification rejects |
 | 2026-09-23 | Reject practitioner approvals recorded before `verification.verifiedOn` | Bounded S2-04 review correction enforcing manually verified qualification at approval time under YWAY-P019/YWAY-E005 |
+| 2026-09-24 | Implement S2-05 as registration-model commands over a repository store: author-written YAML sources sealed by `content:new-version`, sequence-keyed attestation files, shared recorded-at attest/event writes, and an `artifacts/` root with `snapshot-index.json` | Bounded implementation detail under ACCEPTED YWAY-D003; no new product rule or deferred architecture choice |
+| 2026-09-24 | Require `--actor` on `content:new-version` and explicit content-review/locale flags on `content:attest` because governance schemas require fields the issue's flag listing omitted | Bounded S2-05 completion of the issue's command surface; reviewer confirmations and authorship must be explicit, never defaulted |
+| 2026-09-24 | Persist retirement actor/reason in a source-side `retirement-record` and add `retirement-record`/`retirement-notice` schemas to the generated catalog; `content:retire` emits the artifact notice and index entry for released versions fail-closed | Bounded S2-05 detail under YWAY-D003's retirement-notice requirement; S2-07 must reuse the `artifacts/` paths |
+| 2026-09-24 | Mutating content commands refuse non-fixture sources and non-`fixture-` actors; released retirement fail-closed verifies snapshot-index bundle/manifest entries, bundle bytes, and manifest/source classification agreement; commands commit the provenance log before derived files with in-process rollback; `content:status` enforces attestation-event and retirement-record-event binding | Review-driven corrections under ACCEPTED YWAY-D003 fixture isolation and provenance rules; no new product rule, and crash-journal recovery stays deferred with the interruption guarantee documented |
+| 2026-09-24 | Compare provenance fixture classification and synthetic actor identity with each event's source, and retirement-record fixture classification with its source, before status succeeds | Bounded review correction under ACCEPTED YWAY-D003 fixture isolation; no new product rule or architecture choice |
 
 ## Completion criteria
 

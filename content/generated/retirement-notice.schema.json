@@ -1,0 +1,41 @@
+{
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "packId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "packVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "contentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "releaseManifestDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "retirementEventDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "packId",
+    "packVersion",
+    "contentDigest",
+    "releaseManifestDigest",
+    "retirementEventDigest"
+  ],
+  "additionalProperties": false
+}
