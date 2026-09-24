@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  computeProvenanceEventDigest,
   contentDigest,
   runAttestCommand,
   runNewVersionCommand,
@@ -28,6 +29,7 @@ import {
   snapshotIndexPath,
   writePackSource,
   writeReleaseArtifacts,
+  writeProvenanceLog,
 } from "./content-cli-fixtures.js";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -496,6 +498,40 @@ test("content:status fails when the retirement record is missing or detached fro
   const detached = runStatusCommand(["--pack", pack.id, "--version", "1"], options(root));
   expectExit(detached, 1);
   expectFailureMessage(detached, "does not match the sealed retired event");
+});
+
+test("content:status rejects resealed provenance with fixture metadata that disagrees with the source", () => {
+  const root = makeRoot();
+  const pack = setupRegisteredPack(root);
+  const original = readProvenanceLog(root, pack.id);
+
+  for (const changed of [{ fixtureOnly: false }, { actorId: "external-author" }]) {
+    const event = { ...original.events[0]!, ...changed };
+    const sealed = { ...event, eventDigest: computeProvenanceEventDigest(event) };
+    writeProvenanceLog(root, pack.id, { ...original, events: [sealed] });
+
+    const result = runStatusCommand(["--pack", pack.id, "--version", "1"], options(root));
+    expectExit(result, 1);
+    expectFailureMessage(
+      result,
+      "fixtureOnly" in changed ? "source declares fixtureOnly true" : "fixture- actor identity",
+    );
+  }
+});
+
+test("content:status rejects a retirement record with fixture classification that disagrees with the source", () => {
+  const root = makeRoot();
+  const pack = setupRegisteredPack(root);
+  expectExit(runRetireCommand(retireArgs(root), options(root)), 0);
+
+  const recordPath = retirementRecordPath(root, pack.id, 1);
+  const record = JSON.parse(readFileSync(recordPath, "utf8")) as Record<string, unknown>;
+  record["fixtureOnly"] = false;
+  writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+
+  const result = runStatusCommand(["--pack", pack.id, "--version", "1"], options(root));
+  expectExit(result, 1);
+  expectFailureMessage(result, "source declares fixtureOnly true");
 });
 
 test("content:attest rolls back the provenance log when the attestation write fails", () => {

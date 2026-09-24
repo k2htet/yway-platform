@@ -560,6 +560,12 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
   required `--actor`, explicit content-review/locale attest flags, `artifacts/` layout, and
   source-side retirement record) are bounded implementation details under YWAY-D003 with no
   silent product-meaning decision, and that no command path bypasses the `retired` terminal state.
+- 2026-09-24: Follow-up review found that `content:status` accepted a resealed provenance event
+  whose fixture flag or actor identity disagreed with its fixture-only source, and a retirement
+  record whose fixture flag disagreed with the source. `loadPackState` now checks every event
+  against its source; status checks the retirement record against its source. Regression tests
+  cover all three mismatches. `pnpm test` passed 253/253 tests, and `pnpm verify:full` passed lint,
+  typecheck, format, tests, invariants, and docs after the correction.
 
 ## Decision log
 
@@ -584,6 +590,7 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 | 2026-09-24 | Require `--actor` on `content:new-version` and explicit content-review/locale flags on `content:attest` because governance schemas require fields the issue's flag listing omitted | Bounded S2-05 completion of the issue's command surface; reviewer confirmations and authorship must be explicit, never defaulted |
 | 2026-09-24 | Persist retirement actor/reason in a source-side `retirement-record` and add `retirement-record`/`retirement-notice` schemas to the generated catalog; `content:retire` emits the artifact notice and index entry for released versions fail-closed | Bounded S2-05 detail under YWAY-D003's retirement-notice requirement; S2-07 must reuse the `artifacts/` paths |
 | 2026-09-24 | Mutating content commands refuse non-fixture sources and non-`fixture-` actors; released retirement fail-closed verifies snapshot-index bundle/manifest entries, bundle bytes, and manifest/source classification agreement; commands commit the provenance log before derived files with in-process rollback; `content:status` enforces attestation-event and retirement-record-event binding | Review-driven corrections under ACCEPTED YWAY-D003 fixture isolation and provenance rules; no new product rule, and crash-journal recovery stays deferred with the interruption guarantee documented |
+| 2026-09-24 | Compare provenance fixture classification and synthetic actor identity with each event's source, and retirement-record fixture classification with its source, before status succeeds | Bounded review correction under ACCEPTED YWAY-D003 fixture isolation; no new product rule or architecture choice |
 
 ## Completion criteria
 

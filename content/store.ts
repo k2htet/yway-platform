@@ -317,13 +317,29 @@ export function loadPackState(repositoryRoot: string, packId: string): PackState
     provenanceLog = verifyProvenanceLog(readJsonFile(logPath, "provenance log"), {
       expectedContentDigests,
     });
-    const loggedVersions = new Set(provenanceLog.events.map((event) => event.packVersion));
-    for (const version of loggedVersions) {
-      if (!sourceByVersion.has(version)) {
+    for (const [index, event] of provenanceLog.events.entries()) {
+      const source = sourceByVersion.get(event.packVersion);
+      if (source === undefined) {
         throw new StrictValidationError([
           {
             path: ["events"],
-            message: `provenance log for pack "${packId}" references version ${version}, but ${displayPath(repositoryRoot, packSourcePath(repositoryRoot, packId, version))} is missing`,
+            message: `provenance log for pack "${packId}" references version ${event.packVersion}, but ${displayPath(repositoryRoot, packSourcePath(repositoryRoot, packId, event.packVersion))} is missing`,
+          },
+        ]);
+      }
+      if (event.fixtureOnly !== source.fixtureOnly) {
+        throw new StrictValidationError([
+          {
+            path: ["events", index, "fixtureOnly"],
+            message: `provenance event at sequence ${event.sequence} declares fixtureOnly ${event.fixtureOnly} but the source declares fixtureOnly ${source.fixtureOnly}`,
+          },
+        ]);
+      }
+      if (source.fixtureOnly && !event.actorId.startsWith("fixture-")) {
+        throw new StrictValidationError([
+          {
+            path: ["events", index, "actorId"],
+            message: `provenance event at sequence ${event.sequence} for fixture-only pack "${packId}" must use a fixture- actor identity`,
           },
         ]);
       }

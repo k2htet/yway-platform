@@ -151,6 +151,14 @@ export function runStatusCommand(
         readJsonFile(recordPath, "retirement record"),
       );
       assertVersionScoped(retirement, scope, "retirement record");
+      if (retirement.fixtureOnly !== source.fixtureOnly) {
+        throw new StrictValidationError([
+          {
+            path: ["retirement", "fixtureOnly"],
+            message: `retirement record for ${packId} version ${version} declares fixtureOnly ${retirement.fixtureOnly} but the source declares fixtureOnly ${source.fixtureOnly}`,
+          },
+        ]);
+      }
     }
 
     const retiredEvent = status.history.find((event) => event.type === "retired");
