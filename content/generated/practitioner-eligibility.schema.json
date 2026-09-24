@@ -98,6 +98,33 @@
           "uniqueItems": true
         }
       }
+    },
+    {
+      "if": {
+        "required": [
+          "fixtureOnly"
+        ],
+        "properties": {
+          "fixtureOnly": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "actorId": {
+            "type": "string",
+            "pattern": "^fixture-"
+          },
+          "evidenceReferences": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^fixture:"
+            }
+          }
+        }
+      }
     }
   ]
 }

@@ -129,6 +129,7 @@ function validGeneratedAttestation(
     actorId: "fixture-founder-one",
     fixtureOnly: true,
     recordedAt: "2026-09-23T01:00:00Z",
+    reviewEventSequence: 2,
     contentReview: {
       sixPartStructureConfirmed: true,
       exposureBeforeCommitmentConfirmed: true,
@@ -184,6 +185,39 @@ test("generated attestation schema enforces founder/practitioner content review 
 
   const withLocale = validGeneratedAttestation({ locale: "my" });
   assert.equal(validate(withLocale), false, "founder attestations must not carry a locale");
+
+  const missingSequence = validGeneratedAttestation();
+  delete missingSequence["reviewEventSequence"];
+  assert.equal(validate(missingSequence), false, "founder attestations need reviewEventSequence");
+
+  const practitionerWithSequence = validGeneratedAttestation({
+    kind: "practitioner-review",
+    actorId: "fixture-practitioner-one",
+  });
+  assert.equal(validate(practitionerWithSequence), true, firstValidationError(validate));
+
+  const practitionerMissingSequence = validGeneratedAttestation({
+    kind: "practitioner-review",
+    actorId: "fixture-practitioner-one",
+  });
+  delete practitionerMissingSequence["reviewEventSequence"];
+  assert.equal(
+    validate(practitionerMissingSequence),
+    false,
+    "practitioner attestations need reviewEventSequence",
+  );
+
+  const localizationWithSequence = validGeneratedAttestation({
+    kind: "localization-review",
+    actorId: "fixture-fluent-reviewer-one",
+    locale: "my",
+  });
+  delete localizationWithSequence["contentReview"];
+  assert.equal(
+    validate(localizationWithSequence),
+    false,
+    "non-gate attestations must not carry reviewEventSequence",
+  );
 });
 
 test("generated attestation schema enforces localization-review locale conditionals", () => {
@@ -193,6 +227,7 @@ test("generated attestation schema enforces localization-review locale condition
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
     contentReview: undefined,
+    reviewEventSequence: undefined,
   });
   delete withoutLocale["contentReview"];
   assert.equal(validate(withoutLocale), false, "localization-review requires locale");
@@ -201,6 +236,7 @@ test("generated attestation schema enforces localization-review locale condition
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
     locale: "my",
+    reviewEventSequence: undefined,
   });
   delete withLocale["contentReview"];
   assert.equal(validate(withLocale), true, firstValidationError(validate));
@@ -327,5 +363,70 @@ test("generated eligibility schema rejects duplicate occupation scopes", () => {
     validate({ ...base, occupations: ["local-guide", "local-guide"] }),
     false,
     "duplicate occupations must be rejected",
+  );
+});
+
+test("generated eligibility schema enforces fixture identity and evidence prefixes", () => {
+  const validate = compileGenerated("practitioner-eligibility");
+  const base = {
+    schemaVersion: 1,
+    actorId: "fixture-practitioner-one",
+    fixtureOnly: true,
+    occupations: ["local-guide"],
+    status: "active",
+    verification: { method: "manual", status: "verified", verifiedOn: "2026-09-01" },
+    validFrom: "2026-09-01",
+    validUntil: "2027-09-01",
+    evidenceReferences: ["fixture:eligibility-reference-001"],
+  };
+  assert.equal(validate(base), true, firstValidationError(validate));
+  assert.equal(
+    validate({ ...base, actorId: "practitioner-one" }),
+    false,
+    "fixtureOnly eligibility actorId must use a fixture- identity",
+  );
+  assert.equal(
+    validate({ ...base, evidenceReferences: ["manual-verification-2026-001"] }),
+    false,
+    "fixtureOnly evidence references must use fixture:",
+  );
+  assert.equal(
+    validate({
+      ...base,
+      fixtureOnly: false,
+      actorId: "practitioner-one",
+      evidenceReferences: ["manual-verification-2026-001"],
+    }),
+    true,
+    firstValidationError(validate),
+  );
+});
+
+test("generated attestation schema enforces fixture actor identity for every kind", () => {
+  const validate = compileGenerated("review-attestation");
+  const base = validGeneratedAttestation({
+    kind: "practitioner-review",
+    actorId: "fixture-practitioner-one",
+  });
+  assert.equal(validate(base), true, firstValidationError(validate));
+  assert.equal(
+    validate({ ...base, actorId: "practitioner-one" }),
+    false,
+    "fixtureOnly practitioner-review actorId must use a fixture- identity",
+  );
+  assert.equal(
+    validate(validGeneratedAttestation({ actorId: "founder-one" })),
+    false,
+    "fixtureOnly founder-review actorId must use a fixture- identity",
+  );
+  assert.equal(
+    validate({ ...base, fixtureOnly: false, actorId: "practitioner-one" }),
+    true,
+    firstValidationError(validate),
+  );
+  assert.equal(
+    validate(validGeneratedAttestation({ fixtureOnly: false, actorId: "founder-one" })),
+    true,
+    firstValidationError(validate),
   );
 });
