@@ -5,7 +5,13 @@ import { test } from "node:test";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import type { ErrorObject, ValidateFunction } from "ajv";
-import { generatedSchemas } from "../content/schemas/index.js";
+import {
+  generatedSchemas,
+  retirementNoticeSchema,
+  retirementRecordSchema,
+  strictParse,
+  StrictValidationError,
+} from "../content/schemas/index.js";
 import {
   renderAllGeneratedSchemas,
   renderGeneratedSchema,
@@ -428,5 +434,80 @@ test("generated attestation schema enforces fixture actor identity for every kin
     validate(validGeneratedAttestation({ fixtureOnly: false, actorId: "founder-one" })),
     true,
     firstValidationError(validate),
+  );
+});
+
+function validGeneratedRetirementRecord(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    packId: "fixture-local-guide",
+    packVersion: 1,
+    contentDigest: "a".repeat(64),
+    actorId: "fixture-operator-one",
+    fixtureOnly: true,
+    reason: "synthetic lifecycle exercise",
+    recordedAt: "2026-09-24T00:00:00Z",
+    retirementEventSequence: 3,
+    retirementEventDigest: "b".repeat(64),
+  };
+}
+
+function validGeneratedRetirementNotice(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    packId: "fixture-local-guide",
+    packVersion: 1,
+    contentDigest: "a".repeat(64),
+    releaseManifestDigest: "c".repeat(64),
+    retirementEventDigest: "b".repeat(64),
+  };
+}
+
+test("generated retirement-record schema matches runtime rejection of blank reasons", () => {
+  const validate = compileGenerated("retirement-record");
+  const record = validGeneratedRetirementRecord();
+  assert.equal(validate(record), true, firstValidationError(validate));
+  assert.equal(
+    validate({ ...record, reason: "   " }),
+    false,
+    "whitespace-only retirement reason must be rejected",
+  );
+  assert.ok(
+    (validate.errors ?? []).some((error) => error.keyword === "pattern"),
+    firstValidationError(validate),
+  );
+
+  assert.throws(
+    () => strictParse(retirementRecordSchema, { ...record, reason: "   " }),
+    StrictValidationError,
+    "runtime must reject a blank retirement reason too",
+  );
+  assert.equal(
+    strictParse(retirementRecordSchema, record)["reason"],
+    "synthetic lifecycle exercise",
+  );
+});
+
+test("generated retirement-notice schema matches runtime binding requirements", () => {
+  const validate = compileGenerated("retirement-notice");
+  const notice = validGeneratedRetirementNotice();
+  assert.equal(validate(notice), true, firstValidationError(validate));
+  assert.equal(
+    validate({ ...notice, releaseManifestDigest: undefined }),
+    false,
+    "notice must bind the release manifest digest",
+  );
+  assert.equal(
+    validate({ ...notice, retirementEventDigest: undefined }),
+    false,
+    "notice must bind the retirement event digest",
+  );
+
+  const missingManifest = { ...notice };
+  delete missingManifest["releaseManifestDigest"];
+  assert.throws(
+    () => strictParse(retirementNoticeSchema, missingManifest),
+    StrictValidationError,
+    "runtime must require the release manifest digest too",
   );
 });
