@@ -1,0 +1,619 @@
+{
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "packId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "packVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "contentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "localizedContentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "fixtureOnly": {
+      "type": "boolean",
+      "const": true
+    },
+    "classification": {
+      "type": "string",
+      "const": "fixture"
+    },
+    "releasedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "pack": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "fixtureOnly": {
+          "type": "boolean"
+        },
+        "canonicalLanguage": {
+          "type": "string",
+          "const": "en-simple"
+        },
+        "aiAssisted": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "occupations": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          }
+        },
+        "preview": {
+          "type": "object",
+          "properties": {
+            "headline": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "headline",
+            "description"
+          ],
+          "additionalProperties": false
+        },
+        "limitations": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "experiments": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "question": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "timebox": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "whatToNotice": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "reflection": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "nextFork": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "question",
+              "action",
+              "timebox",
+              "whatToNotice",
+              "reflection",
+              "nextFork"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "type": "string",
+              "const": "content"
+            },
+            "readingOrder": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              }
+            },
+            "media": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "alternativeText": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "transcript": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "id",
+                  "reference",
+                  "alternativeText",
+                  "transcript"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "scope",
+            "readingOrder"
+          ],
+          "additionalProperties": false
+        },
+        "sponsorship": {
+          "type": "object",
+          "properties": {
+            "sponsorName": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "disclosure": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "editorialIndependence": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "editorialControl": {
+              "type": "string",
+              "const": "independent"
+            },
+            "orderingInfluence": {
+              "type": "string",
+              "const": "none"
+            }
+          },
+          "required": [
+            "sponsorName",
+            "disclosure",
+            "editorialIndependence",
+            "editorialControl",
+            "orderingInfluence"
+          ],
+          "additionalProperties": false
+        },
+        "authoredAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "id",
+        "version",
+        "fixtureOnly",
+        "canonicalLanguage",
+        "aiAssisted",
+        "title",
+        "summary",
+        "occupations",
+        "preview",
+        "limitations",
+        "experiments",
+        "authoredAt"
+      ],
+      "additionalProperties": false
+    },
+    "localizedContent": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "packId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "packVersion": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "my"
+          ]
+        },
+        "fixtureOnly": {
+          "type": "boolean"
+        },
+        "preview": {
+          "type": "object",
+          "properties": {
+            "headline": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "headline",
+            "description"
+          ],
+          "additionalProperties": false
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "limitations": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "experiments": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "question": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "timebox": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "whatToNotice": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "reflection": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "nextFork": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "question",
+              "action",
+              "timebox",
+              "whatToNotice",
+              "reflection",
+              "nextFork"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "type": "string",
+              "const": "content"
+            },
+            "readingOrder": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              }
+            },
+            "media": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "alternativeText": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "transcript": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "id",
+                  "reference",
+                  "alternativeText",
+                  "transcript"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "scope",
+            "readingOrder"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "packId",
+        "packVersion",
+        "locale",
+        "fixtureOnly",
+        "preview",
+        "title",
+        "summary",
+        "limitations",
+        "experiments"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "packId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "events": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "type": "number",
+                "const": 1
+              },
+              "packId": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              },
+              "packVersion": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "sequence": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "authored",
+                  "localized",
+                  "founder-reviewed",
+                  "practitioner-reviewed",
+                  "localization-reviewed",
+                  "accessibility-reviewed",
+                  "sponsorship-disclosed",
+                  "changes-requested",
+                  "artifact-eligible",
+                  "artifact-released",
+                  "retired"
+                ]
+              },
+              "actorId": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              },
+              "fixtureOnly": {
+                "type": "boolean"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "localizedContentDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "previousEventDigest": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "eventDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "recordedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "packId",
+              "packVersion",
+              "sequence",
+              "type",
+              "actorId",
+              "fixtureOnly",
+              "contentDigest",
+              "previousEventDigest",
+              "eventDigest",
+              "recordedAt"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "packId",
+        "events"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "packId",
+    "packVersion",
+    "contentDigest",
+    "localizedContentDigest",
+    "fixtureOnly",
+    "classification",
+    "releasedAt",
+    "pack",
+    "localizedContent",
+    "provenance"
+  ],
+  "additionalProperties": false
+}

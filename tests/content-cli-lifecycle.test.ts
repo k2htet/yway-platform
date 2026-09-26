@@ -12,11 +12,11 @@ import {
   runRetireCommand,
   runStatusCommand,
   sha256Hex,
+  snapshotIndexBytes,
   StrictValidationError,
 } from "../content/index.js";
 import {
   commandClock,
-  driveToReleased,
   expectExit,
   expectFailureMessage,
   makeLocalizedContent,
@@ -24,13 +24,13 @@ import {
   makeRoot,
   provenancePath,
   readProvenanceLog,
+  releaseFixturePack,
   releaseManifestPath,
   retirementNoticePath,
   retirementRecordPath,
   snapshotIndexPath,
   writeLocalizedContent,
   writePackSource,
-  writeReleaseArtifacts,
   writeProvenanceLog,
 } from "./content-cli-fixtures.js";
 
@@ -237,9 +237,8 @@ test("a retired version rejects further attestations and stays retired", () => {
 
 test("content:retire of a released version writes a bound notice and updates the snapshot index", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  const artifacts = writeReleaseArtifacts(root, pack);
+  const artifacts = releaseFixturePack(root);
+  const pack = artifacts.pack;
 
   const logBefore = readFileSync(provenancePath(root, pack.id), "utf8");
   const manifestBefore = readFileSync(releaseManifestPath(root, pack.id, 1), "utf8");
@@ -291,14 +290,9 @@ test("content:retire of a released version writes a bound notice and updates the
 
 test("content:retire of a released version fails closed when the release manifest is missing", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  mkdirSync(join(root, "artifacts"), { recursive: true });
-  writeFileSync(
-    snapshotIndexPath(root),
-    `${JSON.stringify({ schemaVersion: 1, entries: [] }, null, 2)}\n`,
-    "utf8",
-  );
+  const pack = releaseFixturePack(root).pack;
+  unlinkSync(releaseManifestPath(root, pack.id, 1));
+  writeFileSync(snapshotIndexPath(root), snapshotIndexBytes([]), "utf8");
 
   const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
   const beforeIndex = readFileSync(snapshotIndexPath(root), "utf8");
@@ -313,9 +307,8 @@ test("content:retire of a released version fails closed when the release manifes
 
 test("content:retire refuses to overwrite an existing retirement notice", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const artifacts = releaseFixturePack(root);
+  const pack = artifacts.pack;
 
   const noticePath = retirementNoticePath(root, pack.id, 1);
   mkdirSync(join(noticePath, ".."), { recursive: true });
@@ -329,11 +322,9 @@ test("content:retire refuses to overwrite an existing retirement notice", () => 
   assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
 });
 
-test("content:retire refuses when the snapshot index already lists a notice for the version", () => {
+test("content:retire refuses an index that already lists a notice for the version", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const pack = releaseFixturePack(root).pack;
 
   const indexPath = snapshotIndexPath(root);
   const index = JSON.parse(readFileSync(indexPath, "utf8")) as {
@@ -347,15 +338,19 @@ test("content:retire refuses when the snapshot index already lists a notice for 
     path: `retirements/${pack.id}/1.json`,
     digest: "0".repeat(64),
   });
-  const beforeIndex = `${JSON.stringify(index, null, 2)}\n`;
+  const beforeIndex = snapshotIndexBytes(index.entries as never);
   writeFileSync(indexPath, beforeIndex, "utf8");
   const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
 
+  // The artifact root is inconsistent with its own index, so retirement refuses
+  // before it can act on the conflicting entry.
   const result = runRetireCommand(retireArgs(root), options(root));
   expectExit(result, 1);
-  expectFailureMessage(result, "already contains an entry");
+  expectFailureMessage(result, "has no artifact file");
   assert.equal(readFileSync(indexPath, "utf8"), beforeIndex);
   assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
+  assert.equal(existsSync(retirementNoticePath(root, pack.id, 1)), false);
+  assert.equal(existsSync(retirementRecordPath(root, pack.id, 1)), false);
 });
 
 test("the status script exits 2 on invalid invocation when run as a process", () => {
@@ -375,6 +370,37 @@ test("the retire script refuses path-traversal pack ids with exit 2", () => {
   );
   expectExit(result, 2);
   expectFailureMessage(result, "lowercase kebab-case identifier");
+});
+
+test("the release and verify scripts exit 2 on invalid invocation when run as a process", () => {
+  for (const [script, args, usage] of [
+    ["scripts/content-release.ts", [], /Usage: pnpm content:release/],
+    ["scripts/content-verify.ts", ["--unknown"], /Usage: pnpm content:verify/],
+  ] as const) {
+    const result = spawnSync(process.execPath, ["--import", "tsx", script, ...args], {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 2, `${script} should exit 2`);
+    assert.match(result.stderr, usage);
+  }
+});
+
+test("the verify script passes on this repository and refuses a non-commit pin", () => {
+  const passing = spawnSync(process.execPath, ["--import", "tsx", "scripts/content-verify.ts"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  assert.equal(passing.status, 0, passing.stderr);
+  assert.match(passing.stdout, /"mode": "repository"/);
+
+  const refused = spawnSync(
+    process.execPath,
+    ["--import", "tsx", "scripts/content-verify.ts", "--trusted-commit", "HEAD"],
+    { cwd: repositoryRoot, encoding: "utf8" },
+  );
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /must be a full immutable commit SHA/);
 });
 
 test("content:retire refuses a non-fixture actor for a fixture-only pack", () => {
@@ -399,9 +425,7 @@ test("content:retire refuses a non-fixture actor for a fixture-only pack", () =>
 
 test("content:retire of a released version preserves prior bundle bytes", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const pack = releaseFixturePack(root).pack;
   const bundlePath = join(root, "artifacts", "bundles", pack.id, "1", "bundle.json");
   const bundleBefore = readFileSync(bundlePath);
 
@@ -411,9 +435,7 @@ test("content:retire of a released version preserves prior bundle bytes", () => 
 
 test("content:retire of a released version fails closed when the snapshot index is missing", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const pack = releaseFixturePack(root).pack;
   unlinkSync(snapshotIndexPath(root));
 
   const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
@@ -427,16 +449,11 @@ test("content:retire of a released version fails closed when the snapshot index 
 
 test("content:retire of a released version fails closed when index entries are missing or stale", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const released = releaseFixturePack(root);
+  const pack = released.pack;
 
   const emptyIndexPath = snapshotIndexPath(root);
-  writeFileSync(
-    emptyIndexPath,
-    `${JSON.stringify({ schemaVersion: 1, entries: [] }, null, 2)}\n`,
-    "utf8",
-  );
+  writeFileSync(emptyIndexPath, snapshotIndexBytes([]), "utf8");
   const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
   const beforeIndex = readFileSync(emptyIndexPath, "utf8");
   const emptyIndexResult = runRetireCommand(retireArgs(root), options(root));
@@ -446,20 +463,19 @@ test("content:retire of a released version fails closed when index entries are m
   assert.equal(readFileSync(emptyIndexPath, "utf8"), beforeIndex);
   assert.equal(existsSync(retirementNoticePath(root, pack.id, 1)), false);
 
-  unlinkSync(emptyIndexPath);
-  writeReleaseArtifacts(root, pack);
-  const staleIndex = JSON.parse(readFileSync(emptyIndexPath, "utf8")) as {
+  writeFileSync(emptyIndexPath, released.indexBytes, "utf8");
+  const staleIndex = JSON.parse(released.indexBytes) as {
     schemaVersion: number;
     entries: Record<string, unknown>[];
   };
   staleIndex.entries = staleIndex.entries.map((entry) =>
     entry["kind"] === "release-manifest" ? { ...entry, digest: "0".repeat(64) } : entry,
   );
-  const staleBytes = `${JSON.stringify(staleIndex, null, 2)}\n`;
+  const staleBytes = snapshotIndexBytes(staleIndex.entries as never);
   writeFileSync(emptyIndexPath, staleBytes, "utf8");
   const staleResult = runRetireCommand(retireArgs(root), options(root));
   expectExit(staleResult, 1);
-  expectFailureMessage(staleResult, "must contain the release-manifest entry");
+  expectFailureMessage(staleResult, "but the file digest is");
   assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
   assert.equal(readFileSync(emptyIndexPath, "utf8"), staleBytes);
   assert.equal(existsSync(retirementNoticePath(root, pack.id, 1)), false);
@@ -468,9 +484,7 @@ test("content:retire of a released version fails closed when index entries are m
 
 test("content:retire of a released version refuses a manifest whose classification disagrees with the source", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const pack = releaseFixturePack(root).pack;
 
   const manifestPath = releaseManifestPath(root, pack.id, 1);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
@@ -590,9 +604,7 @@ test("content:attest rolls back the provenance log when the attestation write fa
 
 test("content:retire rolls back every write when a later transaction step fails", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const pack = releaseFixturePack(root).pack;
 
   const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
   const beforeIndex = readFileSync(snapshotIndexPath(root), "utf8");
@@ -614,9 +626,7 @@ test("content:retire rolls back every write when a later transaction step fails"
 
 test("content:status fails when a released retirement is missing its notice or index entry", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
-  driveToReleased(root, pack);
-  writeReleaseArtifacts(root, pack);
+  const pack = releaseFixturePack(root).pack;
   expectExit(runRetireCommand(retireArgs(root), options(root)), 0);
 
   const noticePath = retirementNoticePath(root, pack.id, 1);

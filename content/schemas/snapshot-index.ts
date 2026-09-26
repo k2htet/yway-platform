@@ -53,3 +53,4 @@ export const snapshotIndexSchema = z
 
 export type SnapshotIndex = z.infer<typeof snapshotIndexSchema>;
 export type SnapshotIndexEntry = z.infer<typeof snapshotIndexEntrySchema>;
+export type SnapshotEntryKind = z.infer<typeof snapshotEntryKindSchema>;
