@@ -80,6 +80,18 @@
             "disclosed",
             "not-applicable"
           ]
+        },
+        "localizedContentDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "runtimeAccessibilityDeferred": {
+          "type": "boolean",
+          "const": true
+        },
+        "targetUserComprehensionDeferred": {
+          "type": "boolean",
+          "const": true
         }
       },
       "required": [

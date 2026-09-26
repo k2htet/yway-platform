@@ -7,10 +7,13 @@ import {
   appendProvenanceEvent,
   contentDigest,
   formatRecord,
+  localizedContentSchema,
+  localizedContentPath as repositoryLocalizedContentPath,
   packSourceSchema,
   strictParse,
   sha256Hex,
   type CommandResult,
+  type LocalizedContent,
   type PackSource,
   type ProvenanceEventLog,
 } from "../content/index.js";
@@ -41,6 +44,11 @@ export function packSourceObject(overrides: Record<string, unknown> = {}): Recor
       description: "Talk to one local guide about a normal working day.",
     },
     limitations: ["This synthetic pack does not replace real workplace experience."],
+    accessibility: {
+      scope: "content",
+      readingOrder: ["summary", "preview", "limitations", "exp-talk-to-worker"],
+      media: [],
+    },
     experiments: [
       {
         id: "exp-talk-to-worker",
@@ -66,6 +74,54 @@ export function writePackSource(repositoryRoot: string, pack: PackSource): void 
   const directory = join(repositoryRoot, "content", "packs", pack.id);
   mkdirSync(directory, { recursive: true });
   writeFileSync(join(directory, `${pack.version}.yaml`), stringify(pack), "utf8");
+}
+
+export function localizedContentObject(
+  pack: PackSource,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    packId: pack.id,
+    packVersion: pack.version,
+    locale: "my",
+    fixtureOnly: pack.fixtureOnly,
+    preview: {
+      headline: "Synthetic Burmese preview headline",
+      description: "Synthetic Burmese preview description.",
+    },
+    title: "Synthetic Burmese title",
+    summary: "Synthetic Burmese summary for the fixture pack.",
+    limitations: ["Synthetic Burmese limitation line."],
+    experiments: pack.experiments,
+    ...(pack.accessibility === undefined ? {} : { accessibility: pack.accessibility }),
+    ...overrides,
+  };
+}
+
+export function makeLocalizedContent(
+  pack: PackSource,
+  overrides: Record<string, unknown> = {},
+): LocalizedContent {
+  return strictParse(localizedContentSchema, localizedContentObject(pack, overrides));
+}
+
+export function writeLocalizedContent(repositoryRoot: string, localized: LocalizedContent): void {
+  const path = repositoryLocalizedContentPath(
+    repositoryRoot,
+    localized.packId,
+    localized.packVersion,
+  );
+  mkdirSync(join(path, ".."), { recursive: true });
+  writeFileSync(path, stringify(localized), "utf8");
+}
+
+export function localizedContentPath(
+  repositoryRoot: string,
+  packId: string,
+  version: number,
+): string {
+  return repositoryLocalizedContentPath(repositoryRoot, packId, version);
 }
 
 export function packSourcePath(repositoryRoot: string, packId: string, version: number): string {

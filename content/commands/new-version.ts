@@ -91,10 +91,23 @@ export function runNewVersionCommand(
       contentDigest: contentDigest(source),
       recordedAt,
     };
-    const nextLog =
+    let nextLog =
       state.provenanceLog === undefined
         ? createGenesisProvenanceLog(draft)
         : appendProvenanceEvent(state.provenanceLog, draft);
+    const localized = state.localizedContentByVersion.get(target);
+    if (localized !== undefined) {
+      nextLog = appendProvenanceEvent(nextLog, {
+        packId,
+        packVersion: target,
+        type: "localized",
+        actorId,
+        fixtureOnly: source.fixtureOnly,
+        contentDigest: contentDigest(source),
+        localizedContentDigest: contentDigest(localized),
+        recordedAt,
+      });
+    }
 
     const logPath = provenanceLogPath(repositoryRoot, packId);
     commitWrites(

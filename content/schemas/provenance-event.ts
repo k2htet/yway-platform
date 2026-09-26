@@ -34,6 +34,7 @@ export const provenanceEventSchema = z
     actorId: actorIdSchema,
     fixtureOnly: fixtureOnlySchema,
     contentDigest: sha256DigestSchema,
+    localizedContentDigest: sha256DigestSchema.optional(),
     previousEventDigest: sha256DigestSchema.nullable(),
     eventDigest: sha256DigestSchema,
     recordedAt: dateTimeSchema,

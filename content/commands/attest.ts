@@ -43,7 +43,7 @@ import {
 } from "./args.js";
 
 const usage =
-  "Usage: pnpm content:attest -- --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested> [--note <text>] [--locale my] [--six-part-confirmed <true|false>] [--exposure-before-commitment-confirmed <true|false>]";
+  "Usage: pnpm content:attest -- --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested> [--note <text>] [--locale my] [--fluent-burmese-confirmed <true|false>] [--fluent-review-evidence <text>] [--reading-order-confirmed <true|false>] [--media-alternatives-confirmed <true|false>] [--runtime-validation-deferred] [--disclosure-confirmed <true|false>] [--editorial-control-preserved <true|false>] [--ordering-influence none] [--six-part-confirmed <true|false>] [--exposure-before-commitment-confirmed <true|false>]";
 
 function requireKind(raw: string): AttestationKind {
   const parsed = attestationKindSchema.safeParse(raw);
@@ -97,6 +97,14 @@ export function runAttestCommand(
       outcome: { type: "string" },
       note: { type: "string" },
       locale: { type: "string" },
+      "fluent-burmese-confirmed": { type: "string" },
+      "fluent-review-evidence": { type: "string" },
+      "reading-order-confirmed": { type: "string" },
+      "media-alternatives-confirmed": { type: "string" },
+      "runtime-validation-deferred": { type: "boolean" },
+      "disclosure-confirmed": { type: "string" },
+      "editorial-control-preserved": { type: "string" },
+      "ordering-influence": { type: "string" },
       "six-part-confirmed": { type: "string" },
       "exposure-before-commitment-confirmed": { type: "string" },
     });
@@ -150,6 +158,135 @@ export function runAttestCommand(
       throw new UsageError(`--locale is only allowed with --kind localization-review`);
     }
 
+    let localizationReview:
+      { fluentBurmeseConfirmed: boolean; fluentReviewEvidence: string } | undefined;
+    const fluentRaw = optionalFlagString(values, "fluent-burmese-confirmed");
+    const fluentEvidence = optionalFlagString(values, "fluent-review-evidence");
+    if (kind === "localization-review") {
+      if (outcome === "approved" && (fluentRaw === undefined || fluentEvidence === undefined)) {
+        throw new UsageError(
+          `approved --kind "localization-review" requires --fluent-burmese-confirmed <true|false> and --fluent-review-evidence <text>`,
+        );
+      }
+      if ((fluentRaw === undefined) !== (fluentEvidence === undefined)) {
+        throw new UsageError(
+          `--fluent-burmese-confirmed and --fluent-review-evidence must be provided together`,
+        );
+      }
+      if (fluentRaw !== undefined && fluentEvidence !== undefined) {
+        localizationReview = {
+          fluentBurmeseConfirmed: parseBooleanString(fluentRaw, "fluent-burmese-confirmed"),
+          fluentReviewEvidence: fluentEvidence,
+        };
+      }
+    } else if (fluentRaw !== undefined || fluentEvidence !== undefined) {
+      throw new UsageError(
+        `--fluent-burmese-confirmed and --fluent-review-evidence are only allowed with --kind localization-review`,
+      );
+    }
+
+    let accessibilityReview:
+      | {
+          readingOrderConfirmed: boolean;
+          referencedMediaAlternativesConfirmed: boolean;
+          runtimeValidationDeferred: boolean;
+        }
+      | undefined;
+    const readingOrderRaw = optionalFlagString(values, "reading-order-confirmed");
+    const mediaAlternativesRaw = optionalFlagString(values, "media-alternatives-confirmed");
+    const runtimeDeferred = values["runtime-validation-deferred"];
+    const hasAccessibilityFlags =
+      readingOrderRaw !== undefined ||
+      mediaAlternativesRaw !== undefined ||
+      runtimeDeferred !== undefined;
+    if (kind === "accessibility-review") {
+      if (
+        outcome === "approved" &&
+        (readingOrderRaw === undefined ||
+          mediaAlternativesRaw === undefined ||
+          runtimeDeferred !== true)
+      ) {
+        throw new UsageError(
+          `approved --kind "accessibility-review" requires --reading-order-confirmed <true|false>, --media-alternatives-confirmed <true|false>, and --runtime-validation-deferred`,
+        );
+      }
+      if (
+        (readingOrderRaw === undefined) !== (mediaAlternativesRaw === undefined) ||
+        (readingOrderRaw !== undefined && runtimeDeferred === undefined) ||
+        (mediaAlternativesRaw !== undefined && runtimeDeferred === undefined)
+      ) {
+        throw new UsageError(
+          `--reading-order-confirmed, --media-alternatives-confirmed, and --runtime-validation-deferred must be provided together`,
+        );
+      }
+      if (readingOrderRaw !== undefined && mediaAlternativesRaw !== undefined) {
+        accessibilityReview = {
+          readingOrderConfirmed: parseBooleanString(readingOrderRaw, "reading-order-confirmed"),
+          referencedMediaAlternativesConfirmed: parseBooleanString(
+            mediaAlternativesRaw,
+            "media-alternatives-confirmed",
+          ),
+          runtimeValidationDeferred: runtimeDeferred as boolean,
+        };
+      }
+    } else if (hasAccessibilityFlags) {
+      throw new UsageError(
+        `--reading-order-confirmed, --media-alternatives-confirmed, and --runtime-validation-deferred are only allowed with --kind accessibility-review`,
+      );
+    }
+
+    let sponsorshipReview:
+      | {
+          disclosureConfirmed: boolean;
+          editorialControlPreserved: boolean;
+          orderingInfluence: "none";
+        }
+      | undefined;
+    const disclosureRaw = optionalFlagString(values, "disclosure-confirmed");
+    const editorialControlRaw = optionalFlagString(values, "editorial-control-preserved");
+    const orderingInfluenceRaw = optionalFlagString(values, "ordering-influence");
+    const hasSponsorshipFlags =
+      disclosureRaw !== undefined ||
+      editorialControlRaw !== undefined ||
+      orderingInfluenceRaw !== undefined;
+    if (kind === "sponsorship-disclosure") {
+      if (
+        outcome === "approved" &&
+        (disclosureRaw === undefined ||
+          editorialControlRaw === undefined ||
+          orderingInfluenceRaw === undefined)
+      ) {
+        throw new UsageError(
+          `approved --kind "sponsorship-disclosure" requires --disclosure-confirmed <true|false>, --editorial-control-preserved <true|false>, and --ordering-influence none`,
+        );
+      }
+      if (
+        (disclosureRaw === undefined) !== (editorialControlRaw === undefined) ||
+        (disclosureRaw !== undefined) !== (orderingInfluenceRaw !== undefined)
+      ) {
+        throw new UsageError(
+          `--disclosure-confirmed, --editorial-control-preserved, and --ordering-influence must be provided together`,
+        );
+      }
+      if (orderingInfluenceRaw !== undefined && orderingInfluenceRaw !== "none") {
+        throw new UsageError(`option "--ordering-influence" must be "none"`);
+      }
+      if (disclosureRaw !== undefined && editorialControlRaw !== undefined) {
+        sponsorshipReview = {
+          disclosureConfirmed: parseBooleanString(disclosureRaw, "disclosure-confirmed"),
+          editorialControlPreserved: parseBooleanString(
+            editorialControlRaw,
+            "editorial-control-preserved",
+          ),
+          orderingInfluence: "none",
+        };
+      }
+    } else if (hasSponsorshipFlags) {
+      throw new UsageError(
+        `--disclosure-confirmed, --editorial-control-preserved, and --ordering-influence are only allowed with --kind sponsorship-disclosure`,
+      );
+    }
+
     const repositoryRoot = resolveRepositoryRoot(options.repositoryRoot);
     const recordedAt = (options.now ?? (() => new Date().toISOString()))();
     const state = loadPackState(repositoryRoot, packId);
@@ -157,6 +294,46 @@ export function runAttestCommand(
     requireFixtureIsolation(source);
     const log = requireProvenanceLog(state, packId);
     const contentDigestHex = contentDigest(source);
+    const localized = state.localizedContentByVersion.get(version);
+    const localizedContentDigestHex =
+      localized === undefined ? undefined : contentDigest(localized);
+    if (
+      localized === undefined &&
+      (kind === "localization-review" ||
+        (outcome === "approved" &&
+          (kind === "accessibility-review" || kind === "sponsorship-disclosure")))
+    ) {
+      throw new StrictValidationError([
+        {
+          path: ["localizedContent"],
+          message: `Burmese localization is required before recording ${kind} for ${packId} version ${version}`,
+        },
+      ]);
+    }
+    if (
+      kind === "accessibility-review" &&
+      outcome === "approved" &&
+      source.accessibility === undefined
+    ) {
+      throw new StrictValidationError([
+        {
+          path: ["accessibility"],
+          message: `authored content accessibility metadata is required before accessibility approval for ${packId} version ${version}`,
+        },
+      ]);
+    }
+    if (
+      kind === "sponsorship-disclosure" &&
+      outcome === "approved" &&
+      source.sponsorship === undefined
+    ) {
+      throw new StrictValidationError([
+        {
+          path: ["sponsorship"],
+          message: `sponsorship disclosure review is only applicable to a sponsored pack (${packId} version ${version} has no sponsorship)`,
+        },
+      ]);
+    }
 
     const versionEvents = log.events.filter((event) => event.packVersion === version);
     if (versionEvents.length === 0) {
@@ -190,8 +367,15 @@ export function runAttestCommand(
       actorId,
       fixtureOnly: source.fixtureOnly,
       recordedAt,
-      ...(requiresContentReview ? { reviewEventSequence: nextSequence, contentReview } : {}),
+      reviewEventSequence: nextSequence,
+      ...(requiresContentReview ? { contentReview } : {}),
       ...(locale !== undefined ? { locale } : {}),
+      ...(localizedContentDigestHex === undefined
+        ? {}
+        : { localizedContentDigest: localizedContentDigestHex }),
+      ...(localizationReview !== undefined ? { localizationReview } : {}),
+      ...(accessibilityReview !== undefined ? { accessibilityReview } : {}),
+      ...(sponsorshipReview !== undefined ? { sponsorshipReview } : {}),
       ...(note !== undefined ? { note } : {}),
     });
 
@@ -241,6 +425,9 @@ export function runAttestCommand(
       actorId,
       fixtureOnly: source.fixtureOnly,
       contentDigest: contentDigestHex,
+      ...(localizedContentDigestHex === undefined
+        ? {}
+        : { localizedContentDigest: localizedContentDigestHex }),
       recordedAt,
     });
 

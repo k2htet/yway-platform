@@ -12,6 +12,7 @@ import {
   schemaVersionLiteral,
   versionSchema,
 } from "./common.js";
+import { contentAccessibilitySchema } from "./accessibility.js";
 
 export const previewMetadataSchema = z
   .object({
@@ -25,6 +26,8 @@ export const sponsorshipSchema = z
     sponsorName: nonBlankStringSchema,
     disclosure: nonBlankStringSchema,
     editorialIndependence: nonBlankStringSchema,
+    editorialControl: z.literal("independent"),
+    orderingInfluence: z.literal("none"),
   })
   .strict();
 
@@ -42,6 +45,7 @@ export const packSourceSchema = z
     preview: previewMetadataSchema,
     limitations: z.array(nonBlankStringSchema).min(1),
     experiments: z.array(experimentSchema).min(1),
+    accessibility: contentAccessibilitySchema.optional(),
     sponsorship: sponsorshipSchema.optional(),
     authoredAt: dateTimeSchema,
   })

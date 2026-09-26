@@ -1,0 +1,105 @@
+{
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "packId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "packVersion": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "contentDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "packId",
+        "packVersion",
+        "contentDigest"
+      ],
+      "additionalProperties": false
+    },
+    "packId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "packVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "contentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "localizedContentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "fixtureOnly": {
+      "type": "boolean",
+      "const": true
+    },
+    "founderApproved": {
+      "type": "boolean",
+      "const": true
+    },
+    "practitionerApproved": {
+      "type": "boolean",
+      "const": true
+    },
+    "localizationApproved": {
+      "type": "boolean",
+      "const": true
+    },
+    "accessibilityApproved": {
+      "type": "boolean",
+      "const": true
+    },
+    "sponsorship": {
+      "type": "string",
+      "enum": [
+        "disclosed",
+        "not-applicable"
+      ]
+    },
+    "runtimeAccessibilityDeferred": {
+      "type": "boolean",
+      "const": true
+    },
+    "targetUserComprehensionDeferred": {
+      "type": "boolean",
+      "const": true
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "scope",
+    "packId",
+    "packVersion",
+    "contentDigest",
+    "localizedContentDigest",
+    "fixtureOnly",
+    "founderApproved",
+    "practitionerApproved",
+    "localizationApproved",
+    "accessibilityApproved",
+    "sponsorship",
+    "runtimeAccessibilityDeferred",
+    "targetUserComprehensionDeferred"
+  ],
+  "additionalProperties": false
+}

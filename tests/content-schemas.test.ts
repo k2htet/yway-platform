@@ -4,6 +4,7 @@ import { stringify } from "yaml";
 import {
   StrictValidationError,
   assertUniquePackVersions,
+  contentAccessibilitySchema,
   experimentSchema,
   localizedContentSchema,
   localizedExperimentSchema,
@@ -85,6 +86,10 @@ function validLocalizedContent(overrides: Overrides = {}): Record<string, unknow
     packVersion: 1,
     locale: "my",
     fixtureOnly: true,
+    preview: {
+      headline: "Synthetic Burmese preview headline",
+      description: "Synthetic Burmese preview description.",
+    },
     title: "Synthetic Burmese title",
     summary: "Synthetic Burmese summary for the fixture pack.",
     limitations: ["Synthetic Burmese limitation line."],
@@ -179,6 +184,9 @@ function validManifest(overrides: Overrides = {}): Record<string, unknown> {
       localizationApproved: true,
       accessibilityApproved: true,
       sponsorship: "not-applicable",
+      localizedContentDigest: digest,
+      runtimeAccessibilityDeferred: true,
+      targetUserComprehensionDeferred: true,
     },
     ...overrides,
   };
@@ -210,6 +218,8 @@ test("accepts a sponsored pack when disclosure fields are complete", () => {
         disclosure: "This synthetic pack is sponsored by Fixture Sponsor.",
         editorialIndependence:
           "The sponsor has no editorial control over ranking or content influence.",
+        editorialControl: "independent",
+        orderingInfluence: "none",
       },
     }),
   );
@@ -229,6 +239,25 @@ test("rejects sponsorship without editorial independence", () => {
         }),
       ),
     "editorialIndependence",
+  );
+});
+
+test("rejects sponsored content that is not editorially independent", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        packSourceSchema,
+        validPack({
+          sponsorship: {
+            sponsorName: "Fixture Sponsor",
+            disclosure: "This synthetic pack is sponsored by Fixture Sponsor.",
+            editorialIndependence: "The sponsor controls this content.",
+            editorialControl: "sponsor-controlled",
+            orderingInfluence: "none",
+          },
+        }),
+      ),
+    "editorialControl",
   );
 });
 
@@ -413,6 +442,78 @@ test("accepts valid localized content", () => {
   assert.equal(parsed.locale, "my");
 });
 
+test("accepts authored accessibility metadata with reading order and media alternatives", () => {
+  const parsed = strictParse(contentAccessibilitySchema, {
+    scope: "content",
+    readingOrder: ["summary", "media-one"],
+    media: [
+      {
+        id: "media-one",
+        reference: "fixture-image.png",
+        alternativeText: "A synthetic local guide scene.",
+        transcript: "A transcript of the synthetic local guide scene.",
+      },
+    ],
+  });
+  assert.equal(parsed.media?.[0]?.alternativeText, "A synthetic local guide scene.");
+});
+
+test("rejects accessibility metadata without a media alternative or transcript", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(contentAccessibilitySchema, {
+        scope: "content",
+        readingOrder: ["media-one"],
+        media: [{ id: "media-one", reference: "fixture-image.png", transcript: "A transcript." }],
+      }),
+    "alternativeText",
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(contentAccessibilitySchema, {
+        scope: "content",
+        readingOrder: ["summary", "summary"],
+      }),
+    "duplicate reading-order reference",
+  );
+});
+
+test("rejects localization review without exact digest and fluent evidence", () => {
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "localization-review",
+          actorId: "fixture-localizer-one",
+          locale: "my",
+          contentReview: undefined,
+          reviewEventSequence: 3,
+        }),
+      ),
+    "localizedContentDigest",
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(
+        reviewAttestationSchema,
+        validAttestation({
+          kind: "localization-review",
+          actorId: "fixture-localizer-one",
+          locale: "my",
+          localizedContentDigest: digest,
+          localizationReview: {
+            fluentBurmeseConfirmed: false,
+            fluentReviewEvidence: "fixture:fluent-review-001",
+          },
+          contentReview: undefined,
+          reviewEventSequence: 3,
+        }),
+      ),
+    "confirm fluent Burmese review",
+  );
+});
+
 test("rejects localized content missing a six-part field", () => {
   const experiment = validLocalizedContent().experiments as Record<string, unknown>[];
   const first = experiment[0];
@@ -533,7 +634,7 @@ test("rejects fixture-only practitioner attestations with a non-fixture actor id
         validAttestation({
           kind: "practitioner-review",
           actorId: "practitioner-one",
-          reviewEventSequence: undefined,
+          reviewEventSequence: 3,
         }),
       ),
     "fixture- identity",
@@ -553,6 +654,8 @@ test("rejects fixture-only attestations of any kind with a non-fixture actor ide
           kind: "localization-review",
           actorId: "fluent-reviewer-one",
           locale: "my",
+          localizedContentDigest: digest,
+          reviewEventSequence: 3,
           contentReview: undefined,
         }),
       ),
@@ -596,19 +699,22 @@ test("requires a review event sequence binding on practitioner attestations", ()
   assert.equal(parsed.reviewEventSequence, 3);
 });
 
-test("rejects review event sequence bindings on non-review-gate attestations", () => {
+test("requires review event sequence bindings for every review kind", () => {
   expectStrictFailure(
     () =>
       strictParse(
         reviewAttestationSchema,
         validAttestation({
           kind: "localization-review",
+          outcome: "changes-requested",
           actorId: "fixture-fluent-reviewer-one",
           locale: "my",
+          localizedContentDigest: digest,
           contentReview: undefined,
+          reviewEventSequence: undefined,
         }),
       ),
-    "reviewEventSequence is not allowed",
+    "reviewEventSequence",
   );
   expectStrictFailure(
     () =>
@@ -616,10 +722,12 @@ test("rejects review event sequence bindings on non-review-gate attestations", (
         reviewAttestationSchema,
         validAttestation({
           kind: "accessibility-review",
-          reviewEventSequence: 3,
+          outcome: "changes-requested",
+          contentReview: undefined,
+          reviewEventSequence: undefined,
         }),
       ),
-    "reviewEventSequence is not allowed",
+    "reviewEventSequence",
   );
 });
 
@@ -705,8 +813,13 @@ test("accepts a localization-review attestation with locale", () => {
       kind: "localization-review",
       actorId: "fixture-fluent-reviewer-one",
       locale: "my",
+      localizedContentDigest: digest,
+      localizationReview: {
+        fluentBurmeseConfirmed: true,
+        fluentReviewEvidence: "fixture:fluent-review-001",
+      },
       contentReview: undefined,
-      reviewEventSequence: undefined,
+      reviewEventSequence: 3,
     }),
   );
   assert.equal(parsed.locale, "my");
@@ -716,10 +829,50 @@ test("rejects a localization-review attestation without locale", () => {
   const attestation = validAttestation({
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
-    reviewEventSequence: undefined,
+    reviewEventSequence: 3,
   });
   delete attestation["contentReview"];
   expectStrictFailure(() => strictParse(reviewAttestationSchema, attestation), "locale");
+});
+
+test("requires approved S2-06 gate review evidence", () => {
+  const accessibility = validAttestation({
+    kind: "accessibility-review",
+    contentReview: undefined,
+    accessibilityReview: {
+      readingOrderConfirmed: true,
+      referencedMediaAlternativesConfirmed: true,
+      runtimeValidationDeferred: true,
+    },
+    reviewEventSequence: 3,
+  });
+  delete accessibility["accessibilityReview"];
+  expectStrictFailure(() => strictParse(reviewAttestationSchema, accessibility));
+
+  const sponsorship = validAttestation({
+    kind: "sponsorship-disclosure",
+    contentReview: undefined,
+    sponsorshipReview: {
+      disclosureConfirmed: true,
+      editorialControlPreserved: true,
+      orderingInfluence: "none",
+    },
+    reviewEventSequence: 3,
+  });
+  delete sponsorship["sponsorshipReview"];
+  expectStrictFailure(() => strictParse(reviewAttestationSchema, sponsorship));
+
+  const falseDisclosure = validAttestation({
+    kind: "sponsorship-disclosure",
+    contentReview: undefined,
+    sponsorshipReview: {
+      disclosureConfirmed: false,
+      editorialControlPreserved: true,
+      orderingInfluence: "none",
+    },
+    reviewEventSequence: 3,
+  });
+  expectStrictFailure(() => strictParse(reviewAttestationSchema, falseDisclosure));
 });
 
 test("rejects content review confirmation on gate-only attestations", () => {
@@ -729,7 +882,7 @@ test("rejects content review confirmation on gate-only attestations", () => {
         reviewAttestationSchema,
         validAttestation({
           kind: "accessibility-review",
-          reviewEventSequence: undefined,
+          reviewEventSequence: 3,
         }),
       ),
     "contentReview is not allowed",

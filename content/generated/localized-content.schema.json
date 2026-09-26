@@ -25,6 +25,26 @@
     "fixtureOnly": {
       "type": "boolean"
     },
+    "preview": {
+      "type": "object",
+      "properties": {
+        "headline": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "headline",
+        "description"
+      ],
+      "additionalProperties": false
+    },
     "title": {
       "type": "string",
       "minLength": 1,
@@ -103,6 +123,64 @@
         ],
         "additionalProperties": false
       }
+    },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "const": "content"
+        },
+        "readingOrder": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          }
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "alternativeText": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "transcript": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "id",
+              "reference",
+              "alternativeText",
+              "transcript"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "scope",
+        "readingOrder"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -111,10 +189,30 @@
     "packVersion",
     "locale",
     "fixtureOnly",
+    "preview",
     "title",
     "summary",
     "limitations",
     "experiments"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "properties": {
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "readingOrder": {
+              "type": "array",
+              "uniqueItems": true
+            },
+            "media": {
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    }
+  ]
 }

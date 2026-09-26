@@ -15,12 +15,14 @@ import {
   commandClock,
   expectExit,
   expectFailureMessage,
+  makeLocalizedContent,
   makePack,
   makeRoot,
   packSourceObject,
   provenancePath,
   readProvenanceLog,
   writeEligibility,
+  writeLocalizedContent,
   writePackSource,
 } from "./content-cli-fixtures.js";
 
@@ -621,6 +623,7 @@ test("content:attest records localization review without changing lifecycle stat
   const root = makeRoot();
   const pack = makePack();
   writePackSource(root, pack);
+  writeLocalizedContent(root, makeLocalizedContent(pack));
   expectExit(register(root), 0);
 
   expectExit(
@@ -638,6 +641,10 @@ test("content:attest records localization review without changing lifecycle stat
         "approved",
         "--locale",
         "my",
+        "--fluent-burmese-confirmed",
+        "true",
+        "--fluent-review-evidence",
+        "fixture:fluent-review-001",
       ],
       options(root),
     ),
@@ -647,8 +654,9 @@ test("content:attest records localization review without changing lifecycle stat
   const status = statusJson(root);
   assert.equal(status["currentStatus"], "authored");
   const events = status["events"] as { type: string }[];
-  assert.equal(events.length, 2);
-  assert.equal(events[1]!.type, "localization-reviewed");
+  assert.equal(events.length, 3);
+  assert.equal(events[1]!.type, "localized");
+  assert.equal(events[2]!.type, "localization-reviewed");
 });
 
 test("content:attest supports a changes-requested cycle followed by fresh founder approval", () => {
@@ -860,6 +868,44 @@ test("content:status fails when an attestation no longer matches its event bindi
   expectFailureMessage(result, "no review attestation binds founder-reviewed event");
 });
 
+test("content:status rejects a wrong sequence binding for an S2-06 review", () => {
+  const root = makeRoot();
+  const pack = makePack();
+  writePackSource(root, pack);
+  writeLocalizedContent(root, makeLocalizedContent(pack));
+  expectExit(register(root), 0);
+  expectExit(
+    runAttestCommand(
+      [
+        "--pack",
+        pack.id,
+        "--version",
+        "1",
+        "--kind",
+        "accessibility-review",
+        "--actor",
+        "fixture-accessibility-reviewer-one",
+        "--outcome",
+        "approved",
+        "--reading-order-confirmed",
+        "true",
+        "--media-alternatives-confirmed",
+        "true",
+        "--runtime-validation-deferred",
+      ],
+      options(root),
+    ),
+    0,
+  );
+  const path = attestationFilePath(root, pack.id, 1, 3, "accessibility-review");
+  const attestation = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+  attestation["reviewEventSequence"] = 99;
+  writeFileSync(path, `${JSON.stringify(attestation, null, 2)}\n`, "utf8");
+  const result = runStatusCommand(["--pack", pack.id, "--version", "1"], options(root));
+  expectExit(result, 1);
+  expectFailureMessage(result, "no review attestation binds accessibility-reviewed event");
+});
+
 test("content:status fails when an attestation binds no provenance event", () => {
   const root = makeRoot();
   const pack = makePack();
@@ -880,7 +926,13 @@ test("content:status fails when an attestation binds no provenance event", () =>
         outcome: "approved",
         actorId: "fixture-reviewer-one",
         fixtureOnly: true,
+        reviewEventSequence: 2,
         recordedAt: "2026-09-24T00:00:00Z",
+        accessibilityReview: {
+          readingOrderConfirmed: true,
+          referencedMediaAlternativesConfirmed: true,
+          runtimeValidationDeferred: true,
+        },
       },
       null,
       2,

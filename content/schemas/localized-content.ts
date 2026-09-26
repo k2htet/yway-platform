@@ -9,6 +9,8 @@ import {
   schemaVersionLiteral,
   versionSchema,
 } from "./common.js";
+import { contentAccessibilitySchema } from "./accessibility.js";
+import { previewMetadataSchema } from "./pack-source.js";
 
 export const localizedExperimentSchema = experimentSchema;
 
@@ -19,10 +21,12 @@ export const localizedContentSchema = z
     packVersion: versionSchema,
     locale: localeSchema,
     fixtureOnly: fixtureOnlySchema,
+    preview: previewMetadataSchema,
     title: nonBlankStringSchema,
     summary: nonBlankStringSchema,
     limitations: z.array(nonBlankStringSchema).min(1),
     experiments: z.array(localizedExperimentSchema).min(1),
+    accessibility: contentAccessibilitySchema.optional(),
   })
   .strict()
   .superRefine((value, context) => {

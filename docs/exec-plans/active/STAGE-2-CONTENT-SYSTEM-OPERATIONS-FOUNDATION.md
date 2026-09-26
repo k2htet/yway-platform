@@ -353,9 +353,50 @@ Use exit code 0 for success, 1 for validation/gate failure, and 2 for invalid in
 
 ### S2-06 — Localization, accessibility, and sponsorship gates
 
-Require Burmese localization plus fluent-review evidence for artifact eligibility in the representative fixture. Add content-level accessibility review for authored reading order and alternatives/transcripts for referenced media. Require sponsorship disclosure when applicable and preserve editorial independence.
+Implemented 2026-09-24. Burmese localization is stored beside each canonical Pack version under
+`content/packs/<pack-id>/localizations/<version>.yaml`; `content:new-version` seals a
+`localized` provenance event when that file is present, and later events inherit its
+`localizedContentDigest`. Registered localization files are checked against that digest, so a
+localization edit at an existing version fails closed and a fresh version is required. The
+`localized-content` schema remains strict, requires localized preview metadata and the same ordered
+experiment coverage as the canonical source, and is fixture-isolated.
 
-Runtime themes, scaling, screen readers, reduced motion, Burmese rendering, target-user comprehension, and device behavior remain later release gates.
+`content/release-gates.ts` now evaluates the exact Pack version/source digest and localized-content
+digest before artifact eligibility. It requires a localized `my` source, a `localization-reviewed`
+attestation with explicit fluent Burmese confirmation and synthetic `fixture:` evidence, authored
+`accessibility` metadata with a non-empty unique reading order and alternatives/transcripts for
+referenced media, and an approved content-accessibility review. Every review attestation, including
+localization/accessibility/sponsorship and changes-requested records, binds to its exact provenance
+sequence and localized-content digest. Accessibility review records require reading-order and
+media-alternative confirmation plus `runtimeValidationDeferred: true`.
+Sponsored Packs require explicit independent editorial control, no ordering influence, and an
+approved `sponsorship-disclosure` review; unsponsored Packs resolve to `not-applicable` and cannot
+carry a disclosure event. Gate results preserve version/digest scope and explicitly report that
+runtime/device and target-user-comprehension validation remain deferred. The canonical
+`releaseGateResultSchema` and `releaseGateManifestFields` projection preserve those exact fields for
+S2-07; S2-07 must call this gate before appending `artifact-eligible`/`artifact-released` events.
+
+Focused schema, CLI, generated-schema, and release-gate coverage was added, including missing
+localization/evidence, media alternatives/transcripts, sponsorship influence, stale localized
+attestations, localization tamper detection, fresh-version behavior, and runtime overclaim checks.
+Final S2-06 verification on 2026-09-24 ran `pnpm verify:full`: lint, typecheck, format, 297 tests,
+product invariants, and documentation checks all passed. `pnpm content:schemas:check`,
+`pnpm agent:doctor`, `pnpm verify:fast`, and `pnpm verify:invariants` also passed.
+
+Issue #38 follow-up audit corrections on 2026-09-26 prevent accessibility/sponsorship approval
+without localization before any write, reject gate evidence recorded after evaluation time, and
+revalidate qualification at the eligibility event's recording time when it differs from evaluation.
+Eligibility recording cannot precede its evaluation. Regression coverage checks unchanged repository
+state after refusal, qualification expiration, inclusive validity boundaries, and timezone-equivalent
+instants. `pnpm agent:doctor`, `pnpm verify:fast`, `pnpm verify:full` (301 tests),
+`pnpm content:schemas:check`, and `pnpm verify:invariants` passed. Full verification ran outside the
+sandbox because the existing CLI process test requires child-process execution.
+Independent Codex product-integrity, architecture, security/privacy, and test reviews found no
+material findings after stabilization; the test reviewer used the repository's shared Codex adapter
+instructions in a read-only agent. S2-06 is ready for human PR review. Stage 2 remains ACTIVE.
+
+Runtime themes, scaling, screen readers, reduced motion, Burmese rendering, target-user
+comprehension, and device behavior remain later release gates.
 
 ### S2-07 — Deterministic release and verification
 
@@ -456,9 +497,8 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 is ACCEPTED. S2-02 through S2-05 are complete; S2-06 (localization/accessibility/
-sponsorship gates) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains
-PLANNED.
+YWAY-D003 is ACCEPTED. S2-02 through S2-06 are complete; S2-07 (deterministic release/verification)
+is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains PLANNED.
 
 Surfaced follow-ups from S2-04 reviews (not decided in that step): founder/practitioner role
 overlap is not gate-enforced — independence in S2-04 means non-author only, and the role-overlap
@@ -480,7 +520,7 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 - [x] S2-03 immutable versions/digests/provenance complete.
 - [x] S2-04 practitioner eligibility/review independence complete.
 - [x] S2-05 authoring/review CLI complete.
-- [ ] S2-06 localization/accessibility/sponsorship gates complete.
+- [x] S2-06 localization/accessibility/sponsorship gates complete.
 - [ ] S2-07 deterministic release/verification complete.
 - [ ] S2-08 synthetic lifecycle fixture complete.
 - [ ] S2-09 operations documentation complete.
@@ -502,7 +542,7 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 - 2026-09-23: S2-04: eligibility validity windows are evaluated against the UTC calendar date of each record's instant (`Date.parse` basis), so offset-crafted wall-clock dates cannot move an approval outside its window, and equal founder/practitioner attestation timestamps are accepted because provenance event sequence and standing status carry the authoritative ordering. Eligibility stays occupation/time-scoped with no embedded pack coordinates (matching YWAY-D003's eligibility definition); its binding to the source-derived scope is through same-actor attestation linkage, fixture classification consistency, and Pack occupation coverage rather than version fields on the eligibility record itself.
 - 2026-09-23: S2-04 reviews surfaced rather than decided: founder/practitioner role overlap is not gate-enforced (non-author independence only; matrix is S2-09); a fully consistent `fixtureOnly: false` relabeling across pack, records, and provenance passes cross-record checks because flag-based classification cannot authenticate intent while identity remains deferred — an inverse fixture-identity rule and qualification-policy wording are recommended for S2-09; the recorded gate validates the latest practitioner event actor with superseded cycle events governed by standing-status semantics; attestation `note` is unbounded free text for S2-09 privacy guidance.
 - 2026-09-23: S2-04 follow-up code review found the recorded gate binding attestations to events only by actor, not time — a practitioner-reviewed event could be satisfied by an attestation recorded after it, and a founder attestation from before a `changes-requested` cycle could be reused against a new same-actor founder event — and both gates could evaluate at a time preceding the approval while both dates still sat inside the eligibility window. Fixes: recorded mode now requires attestation `recordedAt` instants to equal the corresponding event `recordedAt` instants (instant comparison, so offset-equivalent timestamps match), and both modes reject `evaluateAt` earlier than the practitioner approval `recordedAt` (equal allowed). The inclusive-window boundary test now uses a same-window-open approval because an earlier evaluation is correctly refused. Suite grew 176 → 182 tests.
-- 2026-09-23: A second S2-04 follow-up found two remaining founder-attestation reuse paths that timestamp matching alone cannot close: (1) after `changes-requested`, the proposed gate accepted a prior-cycle founder attestation against a new same-actor founder event because it only checked actor and ordering, and (2) the recorded gate's actor+timestamp match could be satisfied when a new founder event reused the prior cycle's `recordedAt`. Fix: founder-review attestations now require `reviewEventSequence` (schema-required, forbidden on non-gate kinds, expressible under generated JSON Schema `allOf`), and both gates require it to equal the checkpoint founder-reviewed event's `sequence`. Sequence is unique and immutable in the chain, so an old attestation cannot bind a new cycle's event even when actor and timestamp match.
+- 2026-09-23: A second S2-04 follow-up found two remaining founder-attestation reuse paths that timestamp matching alone cannot close: (1) after `changes-requested`, the proposed gate accepted a prior-cycle founder attestation against a new same-actor founder event because it only checked actor and ordering, and (2) the recorded gate's actor+timestamp match could be satisfied when a new founder event reused the prior cycle's `recordedAt`. Fix: founder-review attestations now require `reviewEventSequence` (schema-required, forbidden on non-gate kinds, expressible under generated JSON Schema `allOf`), and both gates require it to equal the checkpoint founder-reviewed event's `sequence`. Sequence is unique and immutable in the chain, so an old attestation cannot bind a new cycle's event even when actor and timestamp match. S2-06 later extended the same sequence binding to localization, accessibility, sponsorship, and changes-requested attestations.
 - 2026-09-23: A third S2-04 follow-up closed the parallel practitioner-attestation reuse path: practitioner attestations could not carry `reviewEventSequence`, so the recorded gate matched them only by actor and timestamp, and a new practitioner event could reuse the prior cycle's `recordedAt` (provenance does not require increasing timestamps). Practitioner attestations now also require `reviewEventSequence`; the recorded gate requires it to equal the practitioner-reviewed event's `sequence`, and the proposed gate requires it to equal the next sequence that will record the approval. Suite grew 182 → 192 tests.
 - 2026-09-23: A later S2-04 review found proposed mode accepted a bound founder attestation whose `recordedAt` differed from its founder event, although recorded mode rejected the same pair. Proposed mode now checks instant correspondence too; the co-timestamped founder/practitioner approval test uses a founder event at the same instant, and a regression test rejects mismatched founder times. The latest `verify:full` and `content:schemas:check` runs passed.
 - 2026-09-23: Pre-PR security review found a future `verification.verifiedOn` could retroactively satisfy a practitioner approval made before manual verification. Both gate modes now require the verification date to be no later than the approval's UTC review date. Negative and same-date boundary tests were added; `pnpm test`, `pnpm verify:full`, and `pnpm content:schemas:check` passed after the correction.
@@ -566,6 +606,28 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
   against its source; status checks the retirement record against its source. Regression tests
   cover all three mismatches. `pnpm test` passed 253/253 tests, and `pnpm verify:full` passed lint,
   typecheck, format, tests, invariants, and docs after the correction.
+- 2026-09-24: S2-06 added repository-local Burmese localization under `content/packs/<id>/localizations/`,
+  optional localized accessibility metadata, and a `localizedContentDigest` on provenance/review
+  records. `content:new-version` records the localized binding before any review, and `loadPackState`
+  rejects a missing or changed registered localization. The gate evaluator requires all S2-06
+  evidence before S2-07 can append artifact eligibility; it deliberately reports runtime/device
+  accessibility and target-user comprehension as deferred rather than treating content checks as
+  runtime conformance.
+- 2026-09-24: S2-06 semantic review found and closed review-event reuse, pre-localization review,
+  optional evaluation-time, fixture-promotion, non-synthetic evidence, localized-preview, media
+  reading-order, and generated-schema parity gaps. The remaining release-command/manifest boundary
+  is explicitly assigned to S2-07; the gated `appendArtifactEligibilityEvent` operation is the
+  repository seam that release code must use.
+- 2026-09-24: S2-06 final test review added explicit renewed-cycle assertions for unsponsored and
+  sponsored Packs, prior-version attestation rejection, non-independent sponsorship negatives, and
+  generated-schema parity for all S2-06 review kinds. The final `pnpm verify:full` run passed with
+  297 tests; release commands and persisted manifest enforcement remain S2-07.
+- 2026-09-26: Issue #38 audit found that accessibility/sponsorship approvals could write events
+  that the loader rejected without localization, and that eligibility recording could reuse an
+  earlier evaluation after practitioner qualification expired. The commands now reject missing
+  localization before writing, evaluation covers the timestamps of gate evidence, and eligibility
+  recording rechecks gates at its own timestamp. Focused regressions and full verification passed
+  with 301 tests. No new product or architecture decision was required.
 
 ## Decision log
 
@@ -591,6 +653,8 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 | 2026-09-24 | Persist retirement actor/reason in a source-side `retirement-record` and add `retirement-record`/`retirement-notice` schemas to the generated catalog; `content:retire` emits the artifact notice and index entry for released versions fail-closed | Bounded S2-05 detail under YWAY-D003's retirement-notice requirement; S2-07 must reuse the `artifacts/` paths |
 | 2026-09-24 | Mutating content commands refuse non-fixture sources and non-`fixture-` actors; released retirement fail-closed verifies snapshot-index bundle/manifest entries, bundle bytes, and manifest/source classification agreement; commands commit the provenance log before derived files with in-process rollback; `content:status` enforces attestation-event and retirement-record-event binding | Review-driven corrections under ACCEPTED YWAY-D003 fixture isolation and provenance rules; no new product rule, and crash-journal recovery stays deferred with the interruption guarantee documented |
 | 2026-09-24 | Compare provenance fixture classification and synthetic actor identity with each event's source, and retirement-record fixture classification with its source, before status succeeds | Bounded review correction under ACCEPTED YWAY-D003 fixture isolation; no new product rule or architecture choice |
+| 2026-09-24 | Implement S2-06 as a repository-local gate evaluator over canonical and localized version/digest scope, with explicit localization/accessibility/sponsorship review evidence and content-only runtime deferral | Bounded implementation detail under ACCEPTED YWAY-D003 enforcing YWAY-P020, YWAY-P023, YWAY-P024, YWAY-P019, and YWAY-E005; S2-07 remains responsible for the release boundary |
+| 2026-09-24 | Require every S2-06 review attestation to bind a provenance sequence and localized-content digest, require an explicit release evaluation time, and expose a gated artifact-eligibility append operation | Review-driven enforcement of exact review scope and practitioner eligibility at release time; no deferred architecture choice |
 
 ## Completion criteria
 
