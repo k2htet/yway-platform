@@ -148,6 +148,11 @@ export function failureResult(usage: string, error: unknown): CommandResult {
   if (error instanceof StrictValidationError) {
     return { exitCode: 1, stderr: `FAIL  ${error.message}\n` };
   }
+  if (error instanceof Error) {
+    // Fail closed rather than crashing: an unexpected repository or environment
+    // error is a validation failure, not a reason to exit with an unhandled throw.
+    return { exitCode: 1, stderr: `FAIL  ${error.name}: ${error.message}\n` };
+  }
   throw error;
 }
 

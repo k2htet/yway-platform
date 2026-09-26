@@ -1,20 +1,25 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { contentDigest, sha256Hex } from "../digest.js";
+import { assertReleaseManifestBindsVersion } from "../governance.js";
+import { readCanonicalSnapshotIndex } from "./release.js";
 import { appendProvenanceEvent } from "../provenance.js";
 import { deriveVersionLifecycleStatus } from "../lifecycle.js";
+import {
+  buildSnapshotIndexEntry,
+  canonicalArtifactPath,
+  snapshotIndexBytes,
+} from "../snapshot-index.js";
 import {
   StrictValidationError,
   retirementNoticeSchema,
   retirementRecordSchema,
   releaseManifestSchema,
-  snapshotIndexSchema,
   strictParse,
   type RetirementNotice,
   type RetirementRecord,
 } from "../schemas/index.js";
 import {
-  artifactRootDirectory,
+  artifactPath,
   commitWrites,
   digestFile,
   displayPath,
@@ -129,26 +134,16 @@ export function runRetireCommand(
         releaseManifestSchema,
         readJsonFile(manifestPath, "release manifest"),
       );
-      if (
-        manifest.packId !== packId ||
-        manifest.packVersion !== version ||
-        manifest.contentDigest !== contentDigestHex
-      ) {
-        throw new StrictValidationError([
-          {
-            path: ["releaseManifest"],
-            message: `release manifest at ${displayPath(repositoryRoot, manifestPath)} does not bind ${packId} version ${version} with contentDigest ${contentDigestHex}`,
-          },
-        ]);
-      }
-      if (manifest.fixtureOnly !== source.fixtureOnly) {
-        throw new StrictValidationError([
-          {
-            path: ["releaseManifest", "fixtureOnly"],
-            message: `release manifest at ${displayPath(repositoryRoot, manifestPath)} declares fixtureOnly ${manifest.fixtureOnly} but the source for ${packId} version ${version} declares fixtureOnly ${source.fixtureOnly}; fixture isolation must match`,
-          },
-        ]);
-      }
+      assertReleaseManifestBindsVersion(
+        manifest,
+        {
+          packId,
+          packVersion: version,
+          contentDigest: contentDigestHex,
+          fixtureOnly: source.fixtureOnly,
+        },
+        displayPath(repositoryRoot, manifestPath),
+      );
       const manifestDigestHex = digestFile(manifestPath);
 
       const noticePath = retirementNoticePath(repositoryRoot, packId, version);
@@ -161,10 +156,17 @@ export function runRetireCommand(
         ]);
       }
 
-      const indexPath = snapshotIndexPath(repositoryRoot);
-      const index = strictParse(snapshotIndexSchema, readJsonFile(indexPath, "snapshot index"));
-      const manifestRelativePath = `manifests/${packId}/${version}/manifest.json`;
-      const manifestEntry = index.entries.find(
+      if (!existsSync(snapshotIndexPath(repositoryRoot))) {
+        throw new StrictValidationError([
+          {
+            path: ["entries"],
+            message: `snapshot index not found at ${displayPath(repositoryRoot, snapshotIndexPath(repositoryRoot))}; a released version cannot be retired without its canonical artifact inventory`,
+          },
+        ]);
+      }
+      const indexEntries = readCanonicalSnapshotIndex(repositoryRoot);
+      const manifestRelativePath = canonicalArtifactPath("release-manifest", packId, version);
+      const manifestEntry = indexEntries.find(
         (entry) =>
           entry.kind === "release-manifest" &&
           entry.packId === packId &&
@@ -182,7 +184,7 @@ export function runRetireCommand(
           },
         ]);
       }
-      const bundleEntry = index.entries.find(
+      const bundleEntry = indexEntries.find(
         (entry) =>
           entry.kind === "bundle" && entry.packId === packId && entry.packVersion === version,
       );
@@ -198,7 +200,7 @@ export function runRetireCommand(
           },
         ]);
       }
-      const bundlePath = join(repositoryRoot, artifactRootDirectory, manifest.bundle.path);
+      const bundlePath = artifactPath(repositoryRoot, manifest.bundle.path);
       if (!existsSync(bundlePath) || digestFile(bundlePath) !== manifest.bundle.digest) {
         throw new StrictValidationError([
           {
@@ -209,7 +211,7 @@ export function runRetireCommand(
       }
 
       const noticeRelativePath = retirementNoticeRelativePath(packId, version);
-      if (index.entries.some((entry) => entry.path === noticeRelativePath)) {
+      if (indexEntries.some((entry) => entry.path === noticeRelativePath)) {
         throw new StrictValidationError([
           {
             path: ["entries"],
@@ -226,23 +228,20 @@ export function runRetireCommand(
         retirementEventDigest: head.eventDigest,
       });
       const noticeBytes = formatRecord(notice);
-      const nextIndex = strictParse(snapshotIndexSchema, {
-        schemaVersion: index.schemaVersion,
-        entries: [
-          ...index.entries,
-          {
-            kind: "retirement-notice",
-            packId,
-            packVersion: version,
-            path: noticeRelativePath,
-            digest: sha256Hex(noticeBytes),
-          },
-        ],
-      });
+      const nextIndexBytes = snapshotIndexBytes([
+        ...indexEntries,
+        buildSnapshotIndexEntry({
+          kind: "retirement-notice",
+          packId,
+          packVersion: version,
+          path: noticeRelativePath,
+          digest: sha256Hex(noticeBytes),
+        }),
+      ]);
       plannedNotice = {
         path: noticePath,
         bytes: noticeBytes,
-        indexBytes: formatRecord(nextIndex),
+        indexBytes: nextIndexBytes,
       };
     }
 

@@ -79,6 +79,17 @@ export function eligibilityPath(repositoryRoot: string, actorId: string): string
   return join(repositoryRoot, eligibilityDirectory, `${actorId}.json`);
 }
 
+export function releaseBundlePath(repositoryRoot: string, packId: string, version: number): string {
+  return join(
+    repositoryRoot,
+    artifactRootDirectory,
+    "bundles",
+    packId,
+    String(version),
+    "bundle.json",
+  );
+}
+
 export function releaseManifestPath(
   repositoryRoot: string,
   packId: string,
@@ -106,8 +117,21 @@ export function snapshotIndexPath(repositoryRoot: string): string {
   return join(repositoryRoot, artifactRootDirectory, snapshotIndexRelativePath);
 }
 
+/** Absolute path of a path recorded in the snapshot index (artifact-relative). */
+export function artifactPath(repositoryRoot: string, relativePath: string): string {
+  return join(repositoryRoot, artifactRootDirectory, ...relativePath.split("/"));
+}
+
 export function retirementNoticeRelativePath(packId: string, version: number): string {
   return `retirements/${packId}/${version}.json`;
+}
+
+export function releaseBundleRelativePath(packId: string, version: number): string {
+  return `bundles/${packId}/${version}/bundle.json`;
+}
+
+export function releaseManifestRelativePath(packId: string, version: number): string {
+  return `manifests/${packId}/${version}/manifest.json`;
 }
 
 export function displayPath(repositoryRoot: string, path: string): string {
@@ -153,7 +177,8 @@ function writeFileAtomicSync(path: string, bytes: string): void {
   atomicCounter += 1;
   const temporaryPath = `${path}.tmp-${process.pid}-${atomicCounter}`;
   try {
-    writeFileSync(temporaryPath, bytes, "utf8");
+    // `wx` refuses to follow a pre-planted symlink at the predictable temp path.
+    writeFileSync(temporaryPath, bytes, { encoding: "utf8", flag: "wx" });
     renameSync(temporaryPath, path);
   } catch (error) {
     try {
@@ -195,13 +220,9 @@ export class WriteTransaction {
           },
         ]);
       }
-      try {
-        if (existsSync(path)) {
-          unlinkSync(path);
-        }
-      } catch {
-        // Best-effort cleanup of a partial exclusive write; preserve the original failure.
-      }
+      // `wx` either creates the file or throws, so a non-EEXIST failure means this
+      // call created nothing. Unlinking here could delete a pre-existing file, which
+      // would break the command's never-overwrite contract.
       throw error;
     }
     this.undos.push({ path, previous: null });
@@ -335,7 +356,32 @@ export interface PackState {
   readonly provenanceLog: ProvenanceEventLog | undefined;
 }
 
-function listPackSourceVersions(packRoot: string): number[] {
+/**
+ * Discovers every registered Pack directory under `content/packs/`.
+ * A directory that contains no versioned source file is still reported so that
+ * repository verification can surface it rather than silently ignoring it.
+ */
+export function listPackIds(repositoryRoot: string): string[] {
+  const packsRoot = join(repositoryRoot, packDirectory);
+  if (!existsSync(packsRoot)) {
+    return [];
+  }
+  return readdirSync(packsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/**
+ * Lists the versioned Pack source files registered under `content/packs/<id>/`.
+ * Shared by state loading and repository verification so both enumerate the same
+ * set of immutable versions.
+ */
+export function listPackSourceVersions(repositoryRoot: string, packId: string): number[] {
+  return listVersionsInDirectory(join(repositoryRoot, packDirectory, packId));
+}
+
+function listVersionsInDirectory(packRoot: string): number[] {
   if (!existsSync(packRoot)) {
     return [];
   }
@@ -353,9 +399,8 @@ function listPackSourceVersions(packRoot: string): number[] {
 }
 
 export function loadPackState(repositoryRoot: string, packId: string): PackState {
-  const packRoot = join(repositoryRoot, packDirectory, packId);
   const sources: PackSource[] = [];
-  for (const version of listPackSourceVersions(packRoot)) {
+  for (const version of listPackSourceVersions(repositoryRoot, packId)) {
     const path = packSourcePath(repositoryRoot, packId, version);
     const source = parseStrictYaml(packSourceSchema, readFileSync(path, "utf8"));
     if (source.id !== packId) {

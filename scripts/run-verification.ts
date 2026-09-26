@@ -33,12 +33,19 @@ const scripts = manifest.scripts ?? {};
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const fastModeScripts = ["lint", "typecheck"] as const;
 const fullModeInitialScripts = ["lint", "typecheck", "format:check"] as const;
-const fullModePostScripts = ["verify:invariants", "verify:docs"] as const;
+// Pin the whole governed content control surface: generated-schema drift and
+// content/artifact drift must both fail `verify:full`, which CI runs.
+const expectedFullModePostScripts = [
+  "content:schemas:check",
+  "content:verify",
+  "verify:invariants",
+  "verify:docs",
+] as const;
+const fullModePostScripts = expectedFullModePostScripts;
+// The test suite is a required full-verification script: skipping it silently would
+// leave the governed content control surface unverified.
+const fullModeRequiredTestScripts = ["test"] as const;
 const fullModeRequiredScripts = [...fullModeInitialScripts, ...fullModePostScripts];
-
-function hasScript(name: string): boolean {
-  return typeof scripts[name] === "string" && scripts[name].trim().length > 0;
-}
 
 function findMissingScripts(
   requiredNames: readonly string[],
@@ -53,21 +60,31 @@ function findMissingScripts(
 
 function runVerificationRunnerSelfTest(): void {
   const fixtureScripts = Object.fromEntries(
-    fullModeRequiredScripts.map((name) => [name, `fixture ${name}`]),
+    [...fullModeRequiredScripts, ...fullModeRequiredTestScripts].map((name) => [
+      name,
+      `fixture ${name}`,
+    ]),
   );
   delete fixtureScripts["verify:docs"];
-  const missing = findMissingScripts(fullModeRequiredScripts, fixtureScripts);
-  const complete = findMissingScripts(fullModeRequiredScripts, {
+  const required = [...fullModeRequiredScripts, ...fullModeRequiredTestScripts];
+  const missing = findMissingScripts(required, fixtureScripts);
+  const complete = findMissingScripts(required, {
     ...fixtureScripts,
     "verify:docs": "fixture verify:docs",
   });
+  // The content commands and the test suite are part of the governed control
+  // surface, so a full verification must not silently skip them.
+  const contentCommandsCovered = fullModeRequiredScripts.includes("content:verify");
+  const testsRequired = fullModeRequiredTestScripts.length > 0;
 
   if (
     !fullModeRequiredScripts.includes("verify:docs") ||
     !fullModePostScripts.includes("verify:docs") ||
     missing.length !== 1 ||
     missing[0] !== "verify:docs" ||
-    complete.length !== 0
+    complete.length !== 0 ||
+    !contentCommandsCovered ||
+    !testsRequired
   ) {
     console.error("FAIL  verification runner self-test");
     process.exit(1);
@@ -98,7 +115,10 @@ function runScript(name: string): void {
 
 const initialScripts = mode === "fast" ? fastModeScripts : fullModeInitialScripts;
 const requiredScripts = mode === "fast" ? fastModeScripts : fullModeRequiredScripts;
-const missingScripts = findMissingScripts(requiredScripts, scripts);
+const missingScripts = findMissingScripts(
+  [...requiredScripts, ...fullModeRequiredTestScripts],
+  scripts,
+);
 
 if (missingScripts.length > 0) {
   console.error(`FAIL  Required package script is missing: ${missingScripts.join(", ")}`);
@@ -112,11 +132,9 @@ for (const script of initialScripts) {
 if (mode === "full") {
   runVerificationRunnerSelfTest();
 
-  if (hasScript("test")) {
-    runScript("test");
-  } else {
-    console.log("SKIP  tests — no test script configured yet");
-  }
+  // Fail closed: a full verification that silently skipped the suite would leave
+  // the content control surface unverified.
+  runScript("test");
 
   for (const script of fullModePostScripts) {
     runScript(script);

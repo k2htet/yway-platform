@@ -6,6 +6,7 @@ import { practitionerEligibilitySchema } from "./practitioner-eligibility.js";
 import { reviewAttestationSchema } from "./review-attestation.js";
 import { provenanceEventSchema, provenanceEventLogSchema } from "./provenance-event.js";
 import { releaseGateResultSchema, releaseManifestSchema } from "./release-manifest.js";
+import { releaseBundleSchema } from "./release-bundle.js";
 import { snapshotIndexSchema } from "./snapshot-index.js";
 import { retirementRecordSchema } from "./retirement-record.js";
 import { retirementNoticeSchema } from "./retirement-notice.js";
@@ -19,6 +20,7 @@ export * from "./practitioner-eligibility.js";
 export * from "./review-attestation.js";
 export * from "./provenance-event.js";
 export * from "./release-manifest.js";
+export * from "./release-bundle.js";
 export * from "./snapshot-index.js";
 export * from "./retirement-record.js";
 export * from "./retirement-notice.js";
@@ -38,6 +40,7 @@ export const generatedSchemas: readonly GeneratedSchema[] = [
   { name: "provenance-event-log", schema: provenanceEventLogSchema },
   { name: "release-gate-result", schema: releaseGateResultSchema },
   { name: "release-manifest", schema: releaseManifestSchema },
+  { name: "release-bundle", schema: releaseBundleSchema },
   { name: "snapshot-index", schema: snapshotIndexSchema },
   { name: "retirement-record", schema: retirementRecordSchema },
   { name: "retirement-notice", schema: retirementNoticeSchema },
