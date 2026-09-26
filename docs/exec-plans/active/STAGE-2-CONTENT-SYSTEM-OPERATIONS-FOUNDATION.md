@@ -395,6 +395,14 @@ Independent Codex product-integrity, architecture, security/privacy, and test re
 material findings after stabilization; the test reviewer used the repository's shared Codex adapter
 instructions in a read-only agent. S2-06 is ready for human PR review. Stage 2 remains ACTIVE.
 
+PR #51 merge-readiness follow-up on 2026-09-26 merged `origin/main` at `9604fa7` into
+the S2-06 branch. The S2-05 squash merge had the same repository tree as the branch's
+`fc20ebb` baseline; resolving the conflicts preserved the reviewed S2-06 code unchanged.
+`pnpm agent:doctor`, `pnpm verify:full` (301 tests, none skipped), and
+`pnpm content:schemas:check` passed after resolution. Full verification ran outside the
+sandbox so the existing subprocess test could execute. GitHub reported no review threads;
+the required remote `Verify` check remains pending the branch update.
+
 Runtime themes, scaling, screen readers, reduced motion, Burmese rendering, target-user
 comprehension, and device behavior remain later release gates.
 
