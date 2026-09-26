@@ -118,7 +118,7 @@ test("intermediate statuses are derived from cumulative history", () => {
 
 test("provenance-only events do not change current status", () => {
   const log = buildLog([
-    { type: "localized", actorId: "fixture-localizer-one" },
+    { type: "localized", actorId: "fixture-localizer-one", localizedContentDigest: digestV1 },
     { type: "founder-reviewed", actorId: "fixture-founder-one" },
     { type: "localization-reviewed", actorId: "fixture-fluent-reviewer-one" },
   ]);

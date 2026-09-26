@@ -163,6 +163,9 @@ function validGeneratedManifest(overrides: Record<string, unknown> = {}): Record
       localizationApproved: true,
       accessibilityApproved: true,
       sponsorship: "not-applicable",
+      localizedContentDigest: generatedDigest,
+      runtimeAccessibilityDeferred: true,
+      targetUserComprehensionDeferred: true,
     },
     ...overrides,
   };
@@ -217,13 +220,16 @@ test("generated attestation schema enforces founder/practitioner content review 
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
     locale: "my",
+    localizedContentDigest: generatedDigest,
+    localizationReview: {
+      fluentBurmeseConfirmed: true,
+      fluentReviewEvidence: "fixture:fluent-review-001",
+    },
+    contentReview: undefined,
+    reviewEventSequence: 3,
   });
   delete localizationWithSequence["contentReview"];
-  assert.equal(
-    validate(localizationWithSequence),
-    false,
-    "non-gate attestations must not carry reviewEventSequence",
-  );
+  assert.equal(validate(localizationWithSequence), true, firstValidationError(validate));
 });
 
 test("generated attestation schema enforces localization-review locale conditionals", () => {
@@ -232,8 +238,13 @@ test("generated attestation schema enforces localization-review locale condition
   const withoutLocale = validGeneratedAttestation({
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
+    localizedContentDigest: generatedDigest,
+    localizationReview: {
+      fluentBurmeseConfirmed: true,
+      fluentReviewEvidence: "fixture:fluent-review-001",
+    },
     contentReview: undefined,
-    reviewEventSequence: undefined,
+    reviewEventSequence: 3,
   });
   delete withoutLocale["contentReview"];
   assert.equal(validate(withoutLocale), false, "localization-review requires locale");
@@ -242,10 +253,162 @@ test("generated attestation schema enforces localization-review locale condition
     kind: "localization-review",
     actorId: "fixture-fluent-reviewer-one",
     locale: "my",
-    reviewEventSequence: undefined,
+    localizedContentDigest: generatedDigest,
+    localizationReview: {
+      fluentBurmeseConfirmed: true,
+      fluentReviewEvidence: "fixture:fluent-review-001",
+    },
+    reviewEventSequence: 3,
   });
   delete withLocale["contentReview"];
   assert.equal(validate(withLocale), true, firstValidationError(validate));
+  const changesRequested = validGeneratedAttestation({
+    kind: "localization-review",
+    outcome: "changes-requested",
+    actorId: "fixture-localizer-one",
+    locale: "my",
+    localizedContentDigest: generatedDigest,
+    contentReview: undefined,
+    reviewEventSequence: 3,
+  });
+  delete changesRequested["contentReview"];
+  assert.equal(validate(changesRequested), true, firstValidationError(validate));
+});
+
+test("generated attestation schema enforces localization, accessibility, and sponsorship evidence", () => {
+  const validate = compileGenerated("review-attestation");
+
+  const localization = validGeneratedAttestation({
+    kind: "localization-review",
+    actorId: "fixture-localizer-one",
+    locale: "my",
+    localizedContentDigest: generatedDigest,
+    localizationReview: {
+      fluentBurmeseConfirmed: true,
+      fluentReviewEvidence: "fixture:fluent-review-001",
+    },
+    contentReview: undefined,
+    reviewEventSequence: 3,
+  });
+  assert.equal(validate(localization), true, firstValidationError(validate));
+  const missingFluentEvidence = structuredClone(localization);
+  delete missingFluentEvidence["localizationReview"];
+  assert.equal(validate(missingFluentEvidence), false, "localization evidence is required");
+  const notFluent = structuredClone(localization);
+  notFluent["localizationReview"] = {
+    fluentBurmeseConfirmed: false,
+    fluentReviewEvidence: "fixture:fluent-review-001",
+  };
+  assert.equal(validate(notFluent), false, "approved localization must be fluent");
+  const nonFixtureEvidence = structuredClone(localization);
+  nonFixtureEvidence["localizationReview"] = {
+    fluentBurmeseConfirmed: true,
+    fluentReviewEvidence: "manual-review-001",
+  };
+  assert.equal(
+    validate(nonFixtureEvidence),
+    false,
+    "fixture localization evidence must be synthetic",
+  );
+
+  const accessibility = validGeneratedAttestation({
+    kind: "accessibility-review",
+    accessibilityReview: {
+      readingOrderConfirmed: true,
+      referencedMediaAlternativesConfirmed: true,
+      runtimeValidationDeferred: true,
+    },
+    contentReview: undefined,
+    reviewEventSequence: 3,
+  });
+  assert.equal(validate(accessibility), true, firstValidationError(validate));
+  const runtimeClaim = structuredClone(accessibility);
+  runtimeClaim["accessibilityReview"] = {
+    readingOrderConfirmed: true,
+    referencedMediaAlternativesConfirmed: true,
+    runtimeValidationDeferred: false,
+  };
+  assert.equal(validate(runtimeClaim), false, "runtime validation must remain deferred");
+  const missingAccessibilityEvidence = structuredClone(accessibility);
+  delete missingAccessibilityEvidence["accessibilityReview"];
+  assert.equal(validate(missingAccessibilityEvidence), false, "accessibility evidence is required");
+  const falseReadingOrder = structuredClone(accessibility);
+  falseReadingOrder["accessibilityReview"] = {
+    readingOrderConfirmed: false,
+    referencedMediaAlternativesConfirmed: true,
+    runtimeValidationDeferred: true,
+  };
+  assert.equal(validate(falseReadingOrder), false, "reading-order confirmation is required");
+  const falseMediaAlternatives = structuredClone(accessibility);
+  falseMediaAlternatives["accessibilityReview"] = {
+    readingOrderConfirmed: true,
+    referencedMediaAlternativesConfirmed: false,
+    runtimeValidationDeferred: true,
+  };
+  assert.equal(
+    validate(falseMediaAlternatives),
+    false,
+    "media-alternative confirmation is required",
+  );
+
+  const sponsorship = validGeneratedAttestation({
+    kind: "sponsorship-disclosure",
+    sponsorshipReview: {
+      disclosureConfirmed: true,
+      editorialControlPreserved: true,
+      orderingInfluence: "none",
+    },
+    contentReview: undefined,
+    reviewEventSequence: 3,
+  });
+  assert.equal(validate(sponsorship), true, firstValidationError(validate));
+  const influenced = structuredClone(sponsorship);
+  influenced["sponsorshipReview"] = {
+    disclosureConfirmed: true,
+    editorialControlPreserved: true,
+    orderingInfluence: "some",
+  };
+  assert.equal(validate(influenced), false, "sponsorship cannot influence ordering");
+  const missingSponsorshipEvidence = structuredClone(sponsorship);
+  delete missingSponsorshipEvidence["sponsorshipReview"];
+  assert.equal(validate(missingSponsorshipEvidence), false, "sponsorship evidence is required");
+  const falseDisclosure = structuredClone(sponsorship);
+  falseDisclosure["sponsorshipReview"] = {
+    disclosureConfirmed: false,
+    editorialControlPreserved: true,
+    orderingInfluence: "none",
+  };
+  assert.equal(validate(falseDisclosure), false, "sponsorship disclosure must be confirmed");
+  const sponsorControlLost = structuredClone(sponsorship);
+  sponsorControlLost["sponsorshipReview"] = {
+    disclosureConfirmed: true,
+    editorialControlPreserved: false,
+    orderingInfluence: "none",
+  };
+  assert.equal(validate(sponsorControlLost), false, "sponsorship must preserve editorial control");
+
+  for (const record of [localization, accessibility, sponsorship]) {
+    const missingSequence = structuredClone(record);
+    delete missingSequence["reviewEventSequence"];
+    assert.equal(validate(missingSequence), false, "every review kind must bind an event sequence");
+  }
+
+  const accessibilityChanges = validGeneratedAttestation({
+    kind: "accessibility-review",
+    outcome: "changes-requested",
+    contentReview: undefined,
+    reviewEventSequence: 3,
+  });
+  delete accessibilityChanges["contentReview"];
+  assert.equal(validate(accessibilityChanges), true, firstValidationError(validate));
+  const sponsorshipChanges = validGeneratedAttestation({
+    kind: "sponsorship-disclosure",
+    outcome: "changes-requested",
+    contentReview: undefined,
+    reviewEventSequence: 3,
+  });
+  delete sponsorshipChanges["contentReview"];
+  assert.equal(validate(sponsorshipChanges), true, firstValidationError(validate));
 });
 
 test("generated manifest schema rejects production classification for fixture records", () => {
@@ -298,6 +461,10 @@ function runtimeValidLocalizedFixture(): Record<string, unknown> {
     packVersion: 1,
     locale: "my",
     fixtureOnly: true,
+    preview: {
+      headline: "Synthetic Burmese preview headline",
+      description: "Synthetic Burmese preview description.",
+    },
     title: "Try being a local guide (Myanmar)",
     summary: "A localized synthetic pack exercising the Stage 2 content pipeline.",
     limitations: ["This synthetic pack does not replace real workplace experience."],
@@ -329,6 +496,22 @@ test("generated pack source schema accepts a runtime-valid pack fixture", () => 
   );
 });
 
+test("generated pack source schema rejects non-independent sponsorship", () => {
+  const validate = compileGenerated("pack-source");
+  const pack = runtimeValidPackFixture();
+  const sponsored = {
+    ...pack,
+    sponsorship: {
+      sponsorName: "Fixture Sponsor",
+      disclosure: "Sponsored fixture.",
+      editorialIndependence: "The sponsor controls this content.",
+      editorialControl: "sponsor-controlled",
+      orderingInfluence: "none",
+    },
+  };
+  assert.equal(validate(sponsored), false, "sponsored content must remain editorially independent");
+});
+
 test("generated schemas reject whitespace-only nonblank fields", () => {
   const packValidate = compileGenerated("pack-source");
   const whitespaceTitle = { ...runtimeValidPackFixture(), title: "   " };
@@ -348,6 +531,24 @@ test("generated schemas reject whitespace-only nonblank fields", () => {
   assert.ok(
     (localizedValidate.errors ?? []).some((error) => error.keyword === "pattern"),
     firstValidationError(localizedValidate),
+  );
+});
+
+test("generated accessibility schema rejects duplicate reading-order references", () => {
+  const validate = compileGenerated("content-accessibility");
+  const base = {
+    scope: "content",
+    readingOrder: ["summary", "experiment-one"],
+  };
+  assert.equal(validate(base), true, firstValidationError(validate));
+  assert.equal(
+    validate({ ...base, readingOrder: ["summary", "summary"] }),
+    false,
+    "reading-order references must be unique",
+  );
+  assert.ok(
+    (validate.errors ?? []).some((error) => error.keyword === "uniqueItems"),
+    firstValidationError(validate),
   );
 });
 
@@ -425,6 +626,45 @@ test("generated attestation schema enforces fixture actor identity for every kin
     false,
     "fixtureOnly founder-review actorId must use a fixture- identity",
   );
+  for (const record of [
+    validGeneratedAttestation({
+      kind: "localization-review",
+      actorId: "fixture-localizer-one",
+      locale: "my",
+      localizedContentDigest: generatedDigest,
+      localizationReview: {
+        fluentBurmeseConfirmed: true,
+        fluentReviewEvidence: "fixture:fluent-review-001",
+      },
+      contentReview: undefined,
+      reviewEventSequence: 3,
+    }),
+    validGeneratedAttestation({
+      kind: "accessibility-review",
+      actorId: "fixture-accessibility-reviewer-one",
+      accessibilityReview: {
+        readingOrderConfirmed: true,
+        referencedMediaAlternativesConfirmed: true,
+        runtimeValidationDeferred: true,
+      },
+      contentReview: undefined,
+      reviewEventSequence: 3,
+    }),
+    validGeneratedAttestation({
+      kind: "sponsorship-disclosure",
+      actorId: "fixture-sponsorship-reviewer-one",
+      sponsorshipReview: {
+        disclosureConfirmed: true,
+        editorialControlPreserved: true,
+        orderingInfluence: "none",
+      },
+      contentReview: undefined,
+      reviewEventSequence: 3,
+    }),
+  ]) {
+    delete record["contentReview"];
+    assert.equal(validate({ ...record, actorId: "reviewer-one" }), false);
+  }
   assert.equal(
     validate({ ...base, fixtureOnly: false, actorId: "practitioner-one" }),
     true,

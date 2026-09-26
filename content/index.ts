@@ -4,5 +4,6 @@ export * from "./digest.js";
 export * from "./lifecycle.js";
 export * from "./practitioner-gate.js";
 export * from "./provenance.js";
+export * from "./release-gates.js";
 export * from "./schemas/index.js";
 export * from "./store.js";

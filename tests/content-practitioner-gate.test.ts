@@ -962,8 +962,13 @@ test("refuses attestations of the wrong kind", () => {
             kind: "localization-review",
             actorId: "fixture-fluent-reviewer-one",
             locale: "my",
+            localizedContentDigest: digest,
+            localizationReview: {
+              fluentBurmeseConfirmed: true,
+              fluentReviewEvidence: "fixture:fluent-review-001",
+            },
             contentReview: undefined,
-            reviewEventSequence: undefined,
+            reviewEventSequence: 3,
           }),
         }),
       ),
@@ -975,8 +980,13 @@ test("refuses attestations of the wrong kind", () => {
         proposedInput({
           practitionerAttestation: practitionerAttestation({
             kind: "accessibility-review",
+            accessibilityReview: {
+              readingOrderConfirmed: true,
+              referencedMediaAlternativesConfirmed: true,
+              runtimeValidationDeferred: true,
+            },
             contentReview: undefined,
-            reviewEventSequence: undefined,
+            reviewEventSequence: 3,
           }),
         }),
       ),

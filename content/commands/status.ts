@@ -53,6 +53,9 @@ function attestationBindsEvent(attestation: ReviewAttestation, event: Provenance
   if (attestation.actorId !== event.actorId || attestation.recordedAt !== event.recordedAt) {
     return false;
   }
+  if (attestation.localizedContentDigest !== event.localizedContentDigest) {
+    return false;
+  }
   switch (event.type) {
     case "founder-reviewed":
       return (
@@ -67,16 +70,28 @@ function attestationBindsEvent(attestation: ReviewAttestation, event: Provenance
         attestation.reviewEventSequence === event.sequence
       );
     case "localization-reviewed":
-      return attestation.kind === "localization-review" && attestation.outcome === "approved";
+      return (
+        attestation.kind === "localization-review" &&
+        attestation.outcome === "approved" &&
+        attestation.locale === "my" &&
+        attestation.reviewEventSequence === event.sequence
+      );
     case "accessibility-reviewed":
-      return attestation.kind === "accessibility-review" && attestation.outcome === "approved";
+      return (
+        attestation.kind === "accessibility-review" &&
+        attestation.outcome === "approved" &&
+        attestation.reviewEventSequence === event.sequence
+      );
     case "sponsorship-disclosed":
-      return attestation.kind === "sponsorship-disclosure" && attestation.outcome === "approved";
+      return (
+        attestation.kind === "sponsorship-disclosure" &&
+        attestation.outcome === "approved" &&
+        attestation.reviewEventSequence === event.sequence
+      );
     case "changes-requested":
       return (
         attestation.outcome === "changes-requested" &&
-        (attestation.reviewEventSequence === undefined ||
-          attestation.reviewEventSequence === event.sequence)
+        attestation.reviewEventSequence === event.sequence
       );
     default:
       return false;
@@ -250,11 +265,20 @@ export function runStatusCommand(
     }
 
     if (jsonOutput) {
+      const localized = state.localizedContentByVersion.get(version);
       const payload = {
         packId,
         packVersion: version,
         contentDigest: contentDigestHex,
         fixtureOnly: source.fixtureOnly,
+        ...(localized === undefined
+          ? {}
+          : {
+              localizedContent: {
+                locale: localized.locale,
+                contentDigest: contentDigest(localized),
+              },
+            }),
         currentStatus: status.currentStatus,
         events: status.history.map((event) => ({
           sequence: event.sequence,
@@ -262,6 +286,9 @@ export function runStatusCommand(
           actorId: event.actorId,
           recordedAt: event.recordedAt,
           eventDigest: event.eventDigest,
+          ...(event.localizedContentDigest === undefined
+            ? {}
+            : { localizedContentDigest: event.localizedContentDigest }),
         })),
         attestations: attestations.map((attestation) => ({
           reviewEventSequence: attestation.reviewEventSequence ?? null,
@@ -269,6 +296,9 @@ export function runStatusCommand(
           outcome: attestation.outcome,
           actorId: attestation.actorId,
           recordedAt: attestation.recordedAt,
+          ...(attestation.localizedContentDigest === undefined
+            ? {}
+            : { localizedContentDigest: attestation.localizedContentDigest }),
         })),
         ...(retirement !== undefined
           ? {

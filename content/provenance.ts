@@ -22,6 +22,7 @@ export interface ProvenanceEventDraft {
   readonly actorId: string;
   readonly fixtureOnly: boolean;
   readonly contentDigest: string;
+  readonly localizedContentDigest?: string;
   readonly recordedAt: string;
 }
 
@@ -31,6 +32,8 @@ export interface ProvenanceVerificationOptions {
    * A mismatch means a recorded source was tampered with after its events were sealed.
    */
   readonly expectedContentDigests?: ReadonlyMap<number, string> | Readonly<Record<number, string>>;
+  readonly expectedLocalizedContentDigests?:
+    ReadonlyMap<number, string> | Readonly<Record<number, string>>;
   /**
    * Exact sealed digest of the expected final event. When the caller pins the head,
    * tail truncation of an otherwise internally valid chain is detected.
@@ -39,10 +42,9 @@ export interface ProvenanceVerificationOptions {
 }
 
 function expectedDigestFor(
-  options: ProvenanceVerificationOptions | undefined,
+  expected: ReadonlyMap<number, string> | Readonly<Record<number, string>> | undefined,
   packVersion: number,
 ): string | undefined {
-  const expected = options?.expectedContentDigests;
   if (expected === undefined) {
     return undefined;
   }
@@ -73,6 +75,14 @@ export function computeProvenanceEventDigest(
 }
 
 export function createGenesisProvenanceEvent(draft: ProvenanceEventDraft): ProvenanceEvent {
+  if (draft.localizedContentDigest !== undefined && draft.type !== "localized") {
+    throw new StrictValidationError([
+      {
+        path: ["localizedContentDigest"],
+        message: "a genesis localizedContentDigest can only be carried by a localized event",
+      },
+    ]);
+  }
   return sealEvent({
     schemaVersion: 1,
     packId: draft.packId,
@@ -82,6 +92,9 @@ export function createGenesisProvenanceEvent(draft: ProvenanceEventDraft): Prove
     actorId: draft.actorId,
     fixtureOnly: draft.fixtureOnly,
     contentDigest: draft.contentDigest,
+    ...(draft.localizedContentDigest === undefined
+      ? {}
+      : { localizedContentDigest: draft.localizedContentDigest }),
     previousEventDigest: null,
     recordedAt: draft.recordedAt,
   });
@@ -146,7 +159,53 @@ export function collectProvenanceIssues(
   }
 
   const versionMeta = new Map<number, { digest: string; fixtureOnly: boolean; sequence: number }>();
+  const versionEventState = new Map<
+    number,
+    { firstType: ProvenanceEvent["type"]; count: number; localizedSequence?: number }
+  >();
+  const localizedVersionMeta = new Map<number, { digest: string; sequence: number }>();
   for (const [index, event] of log.events.entries()) {
+    const eventState = versionEventState.get(event.packVersion);
+    if (eventState === undefined) {
+      versionEventState.set(event.packVersion, {
+        firstType: event.type,
+        count: 1,
+      });
+    } else {
+      eventState.count += 1;
+    }
+    const currentEventState = versionEventState.get(event.packVersion)!;
+    if (event.type === "localized") {
+      if (event.localizedContentDigest === undefined) {
+        issues.push({
+          path: ["events", index, "localizedContentDigest"],
+          message: `localized event for pack version ${event.packVersion} must bind the localized content digest`,
+        });
+      }
+      if (currentEventState.firstType !== "authored" || currentEventState.count !== 2) {
+        issues.push({
+          path: ["events", index, "type"],
+          message: `localized event for pack version ${event.packVersion} must immediately follow its authored event`,
+        });
+      }
+      if (currentEventState.localizedSequence !== undefined) {
+        issues.push({
+          path: ["events", index, "type"],
+          message: `pack version ${event.packVersion} has more than one localized event`,
+        });
+      } else if (event.localizedContentDigest !== undefined) {
+        currentEventState.localizedSequence = event.sequence;
+      }
+    } else if (
+      event.localizedContentDigest !== undefined &&
+      currentEventState.localizedSequence === undefined
+    ) {
+      issues.push({
+        path: ["events", index, "localizedContentDigest"],
+        message: `the first localizedContentDigest for pack version ${event.packVersion} must appear on its localized event`,
+      });
+    }
+
     const known = versionMeta.get(event.packVersion);
     if (known === undefined) {
       versionMeta.set(event.packVersion, {
@@ -154,29 +213,67 @@ export function collectProvenanceIssues(
         fixtureOnly: event.fixtureOnly,
         sequence: event.sequence,
       });
-      continue;
+    } else {
+      if (known.digest !== event.contentDigest) {
+        issues.push({
+          path: ["events", index, "contentDigest"],
+          message: `pack version ${event.packVersion} has conflicting content digests (sequence ${known.sequence} vs ${event.sequence}): immutable versions cannot change content`,
+        });
+      }
+      if (known.fixtureOnly !== event.fixtureOnly) {
+        issues.push({
+          path: ["events", index, "fixtureOnly"],
+          message: `pack version ${event.packVersion} mixes fixtureOnly ${known.fixtureOnly} and ${event.fixtureOnly} events (sequence ${known.sequence} vs ${event.sequence}): fixture classification must be consistent across a version's provenance (YWAY-D003 fixture isolation)`,
+        });
+      }
     }
-    if (known.digest !== event.contentDigest) {
+
+    const localizedKnown = localizedVersionMeta.get(event.packVersion);
+    if (localizedKnown === undefined) {
+      if (event.localizedContentDigest !== undefined) {
+        localizedVersionMeta.set(event.packVersion, {
+          digest: event.localizedContentDigest,
+          sequence: event.sequence,
+        });
+      }
+    } else if (event.localizedContentDigest === undefined) {
       issues.push({
-        path: ["events", index, "contentDigest"],
-        message: `pack version ${event.packVersion} has conflicting content digests (sequence ${known.sequence} vs ${event.sequence}): immutable versions cannot change content`,
+        path: ["events", index, "localizedContentDigest"],
+        message: `pack version ${event.packVersion} has an event after the localized binding without a localizedContentDigest`,
       });
-    }
-    if (known.fixtureOnly !== event.fixtureOnly) {
+    } else if (localizedKnown.digest !== event.localizedContentDigest) {
       issues.push({
-        path: ["events", index, "fixtureOnly"],
-        message: `pack version ${event.packVersion} mixes fixtureOnly ${known.fixtureOnly} and ${event.fixtureOnly} events (sequence ${known.sequence} vs ${event.sequence}): fixture classification must be consistent across a version's provenance (YWAY-D003 fixture isolation)`,
+        path: ["events", index, "localizedContentDigest"],
+        message: `pack version ${event.packVersion} has conflicting localized content digests (sequence ${localizedKnown.sequence} vs ${event.sequence}): localized content is immutable within a version`,
       });
     }
   }
 
   for (const [packVersion, meta] of versionMeta) {
-    const expected = expectedDigestFor(options, packVersion);
+    const expected = expectedDigestFor(options?.expectedContentDigests, packVersion);
     if (expected !== undefined && expected !== meta.digest) {
       issues.push({
         path: ["events"],
         message: `recorded contentDigest for pack version ${packVersion} does not match the source-derived digest: source was tampered with or events bind stale content`,
       });
+    }
+    const expectedLocalized = expectedDigestFor(
+      options?.expectedLocalizedContentDigests,
+      packVersion,
+    );
+    if (expectedLocalized !== undefined) {
+      const localizedMeta = localizedVersionMeta.get(packVersion);
+      if (localizedMeta === undefined) {
+        issues.push({
+          path: ["events"],
+          message: `pack version ${packVersion} has localized content but no localized provenance digest`,
+        });
+      } else if (localizedMeta.digest !== expectedLocalized) {
+        issues.push({
+          path: ["events"],
+          message: `recorded localizedContentDigest for pack version ${packVersion} does not match the source-derived digest: localization was tampered with or events bind stale content`,
+        });
+      }
     }
   }
 
@@ -277,6 +374,40 @@ export function appendProvenanceEvent(
     ]);
   }
 
+  const localizedContentDigest = draft.localizedContentDigest ?? last?.localizedContentDigest;
+  if (
+    draft.localizedContentDigest !== undefined &&
+    last?.localizedContentDigest === undefined &&
+    draft.type !== "localized"
+  ) {
+    throw new StrictValidationError([
+      {
+        path: ["localizedContentDigest"],
+        message: `pack version ${draft.packVersion} must bind localized content on a localized event before later provenance`,
+      },
+    ]);
+  }
+  if (draft.type === "localized" && last !== undefined && last.type !== "authored") {
+    throw new StrictValidationError([
+      {
+        path: ["type"],
+        message: `the localized event for pack version ${draft.packVersion} must immediately follow its authored event`,
+      },
+    ]);
+  }
+  if (
+    draft.localizedContentDigest !== undefined &&
+    last?.localizedContentDigest !== undefined &&
+    draft.localizedContentDigest !== last.localizedContentDigest
+  ) {
+    throw new StrictValidationError([
+      {
+        path: ["localizedContentDigest"],
+        message: `pack version ${draft.packVersion} is immutable: events must bind the original localizedContentDigest`,
+      },
+    ]);
+  }
+
   const event = sealEvent({
     schemaVersion: 1,
     packId: draft.packId,
@@ -286,6 +417,7 @@ export function appendProvenanceEvent(
     actorId: draft.actorId,
     fixtureOnly: draft.fixtureOnly,
     contentDigest: draft.contentDigest,
+    ...(localizedContentDigest === undefined ? {} : { localizedContentDigest }),
     previousEventDigest,
     recordedAt: draft.recordedAt,
   });

@@ -61,6 +61,10 @@
         "my"
       ]
     },
+    "localizedContentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "contentReview": {
       "type": "object",
       "properties": {
@@ -74,6 +78,66 @@
       "required": [
         "sixPartStructureConfirmed",
         "exposureBeforeCommitmentConfirmed"
+      ],
+      "additionalProperties": false
+    },
+    "localizationReview": {
+      "type": "object",
+      "properties": {
+        "fluentBurmeseConfirmed": {
+          "type": "boolean"
+        },
+        "fluentReviewEvidence": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "fluentBurmeseConfirmed",
+        "fluentReviewEvidence"
+      ],
+      "additionalProperties": false
+    },
+    "accessibilityReview": {
+      "type": "object",
+      "properties": {
+        "readingOrderConfirmed": {
+          "type": "boolean"
+        },
+        "referencedMediaAlternativesConfirmed": {
+          "type": "boolean"
+        },
+        "runtimeValidationDeferred": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "readingOrderConfirmed",
+        "referencedMediaAlternativesConfirmed",
+        "runtimeValidationDeferred"
+      ],
+      "additionalProperties": false
+    },
+    "sponsorshipReview": {
+      "type": "object",
+      "properties": {
+        "disclosureConfirmed": {
+          "type": "boolean"
+        },
+        "editorialControlPreserved": {
+          "type": "boolean"
+        },
+        "orderingInfluence": {
+          "type": "string",
+          "const": "none"
+        }
+      },
+      "required": [
+        "disclosureConfirmed",
+        "editorialControlPreserved",
+        "orderingInfluence"
       ],
       "additionalProperties": false
     },
@@ -139,15 +203,7 @@
       "if": {
         "required": [
           "kind"
-        ],
-        "properties": {
-          "kind": {
-            "enum": [
-              "founder-review",
-              "practitioner-review"
-            ]
-          }
-        }
+        ]
       },
       "then": {
         "required": [
@@ -158,27 +214,6 @@
             "type": "integer",
             "exclusiveMinimum": 0
           }
-        }
-      }
-    },
-    {
-      "if": {
-        "required": [
-          "kind"
-        ],
-        "properties": {
-          "kind": {
-            "enum": [
-              "localization-review",
-              "accessibility-review",
-              "sponsorship-disclosure"
-            ]
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "reviewEventSequence": false
         }
       }
     },
@@ -233,10 +268,113 @@
       },
       "then": {
         "required": [
-          "locale"
+          "locale",
+          "localizedContentDigest"
         ],
         "properties": {
-          "contentReview": false
+          "contentReview": false,
+          "localizedContentDigest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "localizationReview": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fluentBurmeseConfirmed",
+              "fluentReviewEvidence"
+            ],
+            "properties": {
+              "fluentBurmeseConfirmed": {
+                "type": "boolean"
+              },
+              "fluentReviewEvidence": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "const": "localization-review"
+          },
+          "outcome": {
+            "const": "approved"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "localizationReview"
+        ],
+        "properties": {
+          "localizationReview": {
+            "type": "object",
+            "properties": {
+              "fluentBurmeseConfirmed": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "fixtureOnly"
+        ],
+        "properties": {
+          "kind": {
+            "const": "localization-review"
+          },
+          "fixtureOnly": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "localizationReview": {
+            "type": "object",
+            "properties": {
+              "fluentReviewEvidence": {
+                "type": "string",
+                "pattern": "^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review",
+              "accessibility-review",
+              "sponsorship-disclosure"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "localizationReview": false
         }
       }
     },
@@ -258,6 +396,214 @@
         "properties": {
           "locale": false,
           "contentReview": false
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "const": "accessibility-review"
+          },
+          "outcome": {
+            "const": "changes-requested"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "accessibilityReview": {
+            "type": "object",
+            "required": [
+              "readingOrderConfirmed",
+              "referencedMediaAlternativesConfirmed",
+              "runtimeValidationDeferred"
+            ],
+            "properties": {
+              "readingOrderConfirmed": {
+                "type": "boolean"
+              },
+              "referencedMediaAlternativesConfirmed": {
+                "type": "boolean"
+              },
+              "runtimeValidationDeferred": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "const": "accessibility-review"
+          },
+          "outcome": {
+            "const": "approved"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "accessibilityReview"
+        ],
+        "properties": {
+          "accessibilityReview": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "readingOrderConfirmed",
+              "referencedMediaAlternativesConfirmed",
+              "runtimeValidationDeferred"
+            ],
+            "properties": {
+              "readingOrderConfirmed": {
+                "const": true
+              },
+              "referencedMediaAlternativesConfirmed": {
+                "const": true
+              },
+              "runtimeValidationDeferred": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review",
+              "localization-review",
+              "sponsorship-disclosure"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "accessibilityReview": false
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "const": "sponsorship-disclosure"
+          },
+          "outcome": {
+            "const": "changes-requested"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sponsorshipReview": {
+            "type": "object",
+            "required": [
+              "disclosureConfirmed",
+              "editorialControlPreserved",
+              "orderingInfluence"
+            ],
+            "properties": {
+              "disclosureConfirmed": {
+                "type": "boolean"
+              },
+              "editorialControlPreserved": {
+                "type": "boolean"
+              },
+              "orderingInfluence": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "outcome"
+        ],
+        "properties": {
+          "kind": {
+            "const": "sponsorship-disclosure"
+          },
+          "outcome": {
+            "const": "approved"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "sponsorshipReview"
+        ],
+        "properties": {
+          "sponsorshipReview": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "disclosureConfirmed",
+              "editorialControlPreserved",
+              "orderingInfluence"
+            ],
+            "properties": {
+              "disclosureConfirmed": {
+                "const": true
+              },
+              "editorialControlPreserved": {
+                "const": true
+              },
+              "orderingInfluence": {
+                "const": "none"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "founder-review",
+              "practitioner-review",
+              "localization-review",
+              "accessibility-review"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sponsorshipReview": false
         }
       }
     },

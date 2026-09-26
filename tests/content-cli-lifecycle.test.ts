@@ -19,6 +19,7 @@ import {
   driveToReleased,
   expectExit,
   expectFailureMessage,
+  makeLocalizedContent,
   makePack,
   makeRoot,
   provenancePath,
@@ -27,6 +28,7 @@ import {
   retirementNoticePath,
   retirementRecordPath,
   snapshotIndexPath,
+  writeLocalizedContent,
   writePackSource,
   writeReleaseArtifacts,
   writeProvenanceLog,
@@ -38,9 +40,12 @@ function options(root: string): { repositoryRoot: string; now: () => string } {
   return { repositoryRoot: root, now: commandClock };
 }
 
-function setupRegisteredPack(root: string): ReturnType<typeof makePack> {
+function setupRegisteredPack(root: string, withLocalization = false): ReturnType<typeof makePack> {
   const pack = makePack();
   writePackSource(root, pack);
+  if (withLocalization) {
+    writeLocalizedContent(root, makeLocalizedContent(pack));
+  }
   expectExit(
     runNewVersionCommand(["--pack", pack.id, "--actor", "fixture-author-one"], options(root)),
     0,
@@ -194,7 +199,7 @@ test("content:retire refuses to overwrite an existing retirement record", () => 
 
 test("a retired version rejects further attestations and stays retired", () => {
   const root = makeRoot();
-  const pack = setupRegisteredPack(root);
+  const pack = setupRegisteredPack(root, true);
   expectExit(runRetireCommand(retireArgs(root), options(root)), 0);
 
   const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
@@ -210,6 +215,11 @@ test("a retired version rejects further attestations and stays retired", () => {
       "fixture-reviewer-one",
       "--outcome",
       "approved",
+      "--reading-order-confirmed",
+      "true",
+      "--media-alternatives-confirmed",
+      "true",
+      "--runtime-validation-deferred",
     ],
     options(root),
   );

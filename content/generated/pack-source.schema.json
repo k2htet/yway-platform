@@ -134,6 +134,64 @@
         "additionalProperties": false
       }
     },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "const": "content"
+        },
+        "readingOrder": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          }
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "alternativeText": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "transcript": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "id",
+              "reference",
+              "alternativeText",
+              "transcript"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "scope",
+        "readingOrder"
+      ],
+      "additionalProperties": false
+    },
     "sponsorship": {
       "type": "object",
       "properties": {
@@ -151,12 +209,22 @@
           "type": "string",
           "minLength": 1,
           "pattern": "\\S"
+        },
+        "editorialControl": {
+          "type": "string",
+          "const": "independent"
+        },
+        "orderingInfluence": {
+          "type": "string",
+          "const": "none"
         }
       },
       "required": [
         "sponsorName",
         "disclosure",
-        "editorialIndependence"
+        "editorialIndependence",
+        "editorialControl",
+        "orderingInfluence"
       ],
       "additionalProperties": false
     },
@@ -188,6 +256,19 @@
         "occupations": {
           "type": "array",
           "uniqueItems": true
+        },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "readingOrder": {
+              "type": "array",
+              "uniqueItems": true
+            },
+            "media": {
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
         }
       }
     }

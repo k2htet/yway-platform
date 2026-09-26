@@ -14,8 +14,44 @@ export function schemaFileName(name: string): string {
 
 function governanceAllOfClauses(name: string): JsonObject[] {
   switch (name) {
+    case "content-accessibility":
+      return [
+        {
+          properties: {
+            readingOrder: { type: "array", uniqueItems: true },
+            media: { type: "array", uniqueItems: true },
+          },
+        },
+      ];
     case "pack-source":
-      return [{ properties: { occupations: { type: "array", uniqueItems: true } } }];
+      return [
+        {
+          properties: {
+            occupations: { type: "array", uniqueItems: true },
+            accessibility: {
+              type: "object",
+              properties: {
+                readingOrder: { type: "array", uniqueItems: true },
+                media: { type: "array", uniqueItems: true },
+              },
+            },
+          },
+        },
+      ];
+    case "localized-content":
+      return [
+        {
+          properties: {
+            accessibility: {
+              type: "object",
+              properties: {
+                readingOrder: { type: "array", uniqueItems: true },
+                media: { type: "array", uniqueItems: true },
+              },
+            },
+          },
+        },
+      ];
     case "practitioner-eligibility":
       return [
         { properties: { occupations: { type: "array", uniqueItems: true } } },
@@ -56,27 +92,13 @@ function governanceAllOfClauses(name: string): JsonObject[] {
           },
         },
         {
-          if: {
-            required: ["kind"],
-            properties: { kind: { enum: ["founder-review", "practitioner-review"] } },
-          },
+          if: { required: ["kind"] },
           then: {
             required: ["reviewEventSequence"],
             properties: {
               reviewEventSequence: { type: "integer", exclusiveMinimum: 0 },
             },
           },
-        },
-        {
-          if: {
-            required: ["kind"],
-            properties: {
-              kind: {
-                enum: ["localization-review", "accessibility-review", "sponsorship-disclosure"],
-              },
-            },
-          },
-          then: { properties: { reviewEventSequence: false } },
         },
         {
           if: {
@@ -102,9 +124,80 @@ function governanceAllOfClauses(name: string): JsonObject[] {
         {
           if: { required: ["kind"], properties: { kind: { const: "localization-review" } } },
           then: {
-            required: ["locale"],
-            properties: { contentReview: false },
+            required: ["locale", "localizedContentDigest"],
+            properties: {
+              contentReview: false,
+              localizedContentDigest: {
+                type: "string",
+                pattern: "^[0-9a-f]{64}$",
+              },
+              localizationReview: {
+                type: "object",
+                additionalProperties: false,
+                required: ["fluentBurmeseConfirmed", "fluentReviewEvidence"],
+                properties: {
+                  fluentBurmeseConfirmed: { type: "boolean" },
+                  fluentReviewEvidence: { type: "string" },
+                },
+              },
+            },
           },
+        },
+        {
+          if: {
+            required: ["kind", "outcome"],
+            properties: {
+              kind: { const: "localization-review" },
+              outcome: { const: "approved" },
+            },
+          },
+          then: {
+            required: ["localizationReview"],
+            properties: {
+              localizationReview: {
+                type: "object",
+                properties: { fluentBurmeseConfirmed: { const: true } },
+              },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind", "fixtureOnly"],
+            properties: {
+              kind: { const: "localization-review" },
+              fixtureOnly: { const: true },
+            },
+          },
+          then: {
+            properties: {
+              localizationReview: {
+                type: "object",
+                properties: {
+                  fluentReviewEvidence: {
+                    type: "string",
+                    pattern: "^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind"],
+            properties: {
+              kind: {
+                enum: [
+                  "founder-review",
+                  "practitioner-review",
+                  "accessibility-review",
+                  "sponsorship-disclosure",
+                ],
+              },
+            },
+          },
+          then: { properties: { localizationReview: false } },
         },
         {
           if: {
@@ -112,6 +205,138 @@ function governanceAllOfClauses(name: string): JsonObject[] {
             properties: { kind: { enum: ["accessibility-review", "sponsorship-disclosure"] } },
           },
           then: { properties: { locale: false, contentReview: false } },
+        },
+        {
+          if: {
+            required: ["kind", "outcome"],
+            properties: {
+              kind: { const: "accessibility-review" },
+              outcome: { const: "changes-requested" },
+            },
+          },
+          then: {
+            properties: {
+              accessibilityReview: {
+                type: "object",
+                required: [
+                  "readingOrderConfirmed",
+                  "referencedMediaAlternativesConfirmed",
+                  "runtimeValidationDeferred",
+                ],
+                properties: {
+                  readingOrderConfirmed: { type: "boolean" },
+                  referencedMediaAlternativesConfirmed: { type: "boolean" },
+                  runtimeValidationDeferred: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind", "outcome"],
+            properties: {
+              kind: { const: "accessibility-review" },
+              outcome: { const: "approved" },
+            },
+          },
+          then: {
+            required: ["accessibilityReview"],
+            properties: {
+              accessibilityReview: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "readingOrderConfirmed",
+                  "referencedMediaAlternativesConfirmed",
+                  "runtimeValidationDeferred",
+                ],
+                properties: {
+                  readingOrderConfirmed: { const: true },
+                  referencedMediaAlternativesConfirmed: { const: true },
+                  runtimeValidationDeferred: { const: true },
+                },
+              },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind"],
+            properties: {
+              kind: {
+                enum: [
+                  "founder-review",
+                  "practitioner-review",
+                  "localization-review",
+                  "sponsorship-disclosure",
+                ],
+              },
+            },
+          },
+          then: { properties: { accessibilityReview: false } },
+        },
+        {
+          if: {
+            required: ["kind", "outcome"],
+            properties: {
+              kind: { const: "sponsorship-disclosure" },
+              outcome: { const: "changes-requested" },
+            },
+          },
+          then: {
+            properties: {
+              sponsorshipReview: {
+                type: "object",
+                required: ["disclosureConfirmed", "editorialControlPreserved", "orderingInfluence"],
+                properties: {
+                  disclosureConfirmed: { type: "boolean" },
+                  editorialControlPreserved: { type: "boolean" },
+                  orderingInfluence: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind", "outcome"],
+            properties: {
+              kind: { const: "sponsorship-disclosure" },
+              outcome: { const: "approved" },
+            },
+          },
+          then: {
+            required: ["sponsorshipReview"],
+            properties: {
+              sponsorshipReview: {
+                type: "object",
+                additionalProperties: false,
+                required: ["disclosureConfirmed", "editorialControlPreserved", "orderingInfluence"],
+                properties: {
+                  disclosureConfirmed: { const: true },
+                  editorialControlPreserved: { const: true },
+                  orderingInfluence: { const: "none" },
+                },
+              },
+            },
+          },
+        },
+        {
+          if: {
+            required: ["kind"],
+            properties: {
+              kind: {
+                enum: [
+                  "founder-review",
+                  "practitioner-review",
+                  "localization-review",
+                  "accessibility-review",
+                ],
+              },
+            },
+          },
+          then: { properties: { sponsorshipReview: false } },
         },
         {
           if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },

@@ -15,11 +15,13 @@ import { verifyProvenanceLog } from "./provenance.js";
 import {
   StrictValidationError,
   assertUniquePackVersions,
+  localizedContentSchema,
   packSourceSchema,
   parseStrictYaml,
   reviewAttestationSchema,
   strictParse,
   type PackSource,
+  type LocalizedContent,
   type ProvenanceEventLog,
   type ReviewAttestation,
 } from "./schemas/index.js";
@@ -27,12 +29,21 @@ import {
 export const defaultRepositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 
 export const packDirectory = "content/packs";
+export const localizedContentDirectory = "localizations";
 export const eligibilityDirectory = "content/eligibility";
 export const artifactRootDirectory = "artifacts";
 export const snapshotIndexRelativePath = "snapshot-index.json";
 
 export function packSourcePath(repositoryRoot: string, packId: string, version: number): string {
   return join(repositoryRoot, packDirectory, packId, `${version}.yaml`);
+}
+
+export function localizedContentPath(
+  repositoryRoot: string,
+  packId: string,
+  version: number,
+): string {
+  return join(repositoryRoot, packDirectory, packId, localizedContentDirectory, `${version}.yaml`);
 }
 
 export function provenanceLogPath(repositoryRoot: string, packId: string): string {
@@ -257,9 +268,70 @@ export function requireFixtureIsolation(
   }
 }
 
+export function assertFixtureOnlyProvenance(fixtureOnly: boolean, log: ProvenanceEventLog): void {
+  for (const event of log.events) {
+    if (event.fixtureOnly !== fixtureOnly) {
+      throw new StrictValidationError([
+        {
+          path: ["events"],
+          message: `provenance event at sequence ${event.sequence} has fixtureOnly ${event.fixtureOnly}, expected ${fixtureOnly}`,
+        },
+      ]);
+    }
+    if (fixtureOnly && !event.actorId.startsWith("fixture-")) {
+      throw new StrictValidationError([
+        {
+          path: ["events"],
+          message: `provenance event at sequence ${event.sequence} for a fixture-only pack must use a fixture- actor identity`,
+        },
+      ]);
+    }
+  }
+}
+
+function resolveLocalizedContentPath(
+  repositoryRoot: string,
+  packId: string,
+  version: number,
+): string | undefined {
+  const path = localizedContentPath(repositoryRoot, packId, version);
+  return existsSync(path) ? path : undefined;
+}
+
+function readOptionalLocalizedContent(
+  repositoryRoot: string,
+  packId: string,
+  version: number,
+): { readonly path: string; readonly content: LocalizedContent } | undefined {
+  const path = resolveLocalizedContentPath(repositoryRoot, packId, version);
+  if (path === undefined) {
+    return undefined;
+  }
+  return {
+    path,
+    content: parseStrictYaml(localizedContentSchema, readFileSync(path, "utf8")),
+  };
+}
+
+export function loadLocalizedContent(
+  repositoryRoot: string,
+  packId: string,
+  version: number,
+): LocalizedContent {
+  const loaded = readOptionalLocalizedContent(repositoryRoot, packId, version);
+  if (loaded === undefined) {
+    throw missingFileError(
+      displayPath(repositoryRoot, localizedContentPath(repositoryRoot, packId, version)),
+      `localized content for ${packId} version ${version}`,
+    );
+  }
+  return loaded.content;
+}
+
 export interface PackState {
   readonly sources: readonly PackSource[];
   readonly sourceByVersion: ReadonlyMap<number, PackSource>;
+  readonly localizedContentByVersion: ReadonlyMap<number, LocalizedContent>;
   readonly provenanceLog: ProvenanceEventLog | undefined;
 }
 
@@ -306,16 +378,90 @@ export function loadPackState(repositoryRoot: string, packId: string): PackState
   }
   assertUniquePackVersions(sources);
   const sourceByVersion = new Map(sources.map((source) => [source.version, source]));
+  const localizedContentByVersion = new Map<number, LocalizedContent>();
+  for (const source of sources) {
+    const loaded = readOptionalLocalizedContent(repositoryRoot, packId, source.version);
+    if (loaded === undefined) {
+      continue;
+    }
+    const localized = loaded.content;
+    if (localized.packId !== source.id) {
+      throw new StrictValidationError([
+        {
+          path: ["localizedContent", "packId"],
+          message: `localized content file ${displayPath(repositoryRoot, loaded.path)} declares pack id "${localized.packId}" but was loaded for "${source.id}"`,
+        },
+      ]);
+    }
+    if (localized.packVersion !== source.version) {
+      throw new StrictValidationError([
+        {
+          path: ["localizedContent", "packVersion"],
+          message: `localized content file ${displayPath(repositoryRoot, loaded.path)} declares version ${localized.packVersion}; the source version is ${source.version}`,
+        },
+      ]);
+    }
+    if (localized.fixtureOnly !== source.fixtureOnly) {
+      throw new StrictValidationError([
+        {
+          path: ["localizedContent", "fixtureOnly"],
+          message: `localized content file ${displayPath(repositoryRoot, loaded.path)} declares fixtureOnly ${localized.fixtureOnly} but the source declares fixtureOnly ${source.fixtureOnly}`,
+        },
+      ]);
+    }
+    const sourceExperimentIds = source.experiments.map((experiment) => experiment.id);
+    const localizedExperimentIds = localized.experiments.map((experiment) => experiment.id);
+    if (
+      sourceExperimentIds.length !== localizedExperimentIds.length ||
+      sourceExperimentIds.some((id, index) => id !== localizedExperimentIds[index])
+    ) {
+      throw new StrictValidationError([
+        {
+          path: ["localizedContent", "experiments"],
+          message: `localized content for ${packId} version ${source.version} must cover the same ordered experiment IDs as the canonical source`,
+        },
+      ]);
+    }
+    localizedContentByVersion.set(source.version, localized);
+  }
 
   const logPath = provenanceLogPath(repositoryRoot, packId);
   let provenanceLog: ProvenanceEventLog | undefined;
   if (existsSync(logPath)) {
     const expectedContentDigests: Record<number, string> = {};
+    const expectedLocalizedContentDigests: Record<number, string> = {};
     for (const source of sources) {
       expectedContentDigests[source.version] = contentDigest(source);
     }
-    provenanceLog = verifyProvenanceLog(readJsonFile(logPath, "provenance log"), {
+    const rawLog = readJsonFile(logPath, "provenance log");
+    const rawEvents =
+      rawLog !== null &&
+      typeof rawLog === "object" &&
+      "events" in rawLog &&
+      Array.isArray(rawLog.events)
+        ? rawLog.events
+        : [];
+    const registeredVersions = new Set(
+      rawEvents.flatMap((event) => {
+        if (
+          event !== null &&
+          typeof event === "object" &&
+          "packVersion" in event &&
+          typeof event.packVersion === "number"
+        ) {
+          return [event.packVersion];
+        }
+        return [];
+      }),
+    );
+    for (const [version, localized] of localizedContentByVersion) {
+      if (registeredVersions.has(version)) {
+        expectedLocalizedContentDigests[version] = contentDigest(localized);
+      }
+    }
+    provenanceLog = verifyProvenanceLog(rawLog, {
       expectedContentDigests,
+      expectedLocalizedContentDigests,
     });
     for (const [index, event] of provenanceLog.events.entries()) {
       const source = sourceByVersion.get(event.packVersion);
@@ -343,10 +489,35 @@ export function loadPackState(repositoryRoot: string, packId: string): PackState
           },
         ]);
       }
+      if (
+        event.localizedContentDigest !== undefined &&
+        !localizedContentByVersion.has(event.packVersion)
+      ) {
+        throw new StrictValidationError([
+          {
+            path: ["events", index, "localizedContentDigest"],
+            message: `provenance event at sequence ${event.sequence} binds localized content for ${packId} version ${event.packVersion}, but the localized source is missing`,
+          },
+        ]);
+      }
+      if (
+        (event.type === "localized" ||
+          event.type === "localization-reviewed" ||
+          event.type === "accessibility-reviewed" ||
+          event.type === "sponsorship-disclosed") &&
+        !localizedContentByVersion.has(event.packVersion)
+      ) {
+        throw new StrictValidationError([
+          {
+            path: ["events", index, "type"],
+            message: `${event.type} event at sequence ${event.sequence} requires localized content for ${packId} version ${event.packVersion}`,
+          },
+        ]);
+      }
     }
   }
 
-  return { sources, sourceByVersion, provenanceLog };
+  return { sources, sourceByVersion, localizedContentByVersion, provenanceLog };
 }
 
 export function requirePackSource(
@@ -363,6 +534,22 @@ export function requirePackSource(
     );
   }
   return source;
+}
+
+export function requireLocalizedContent(
+  state: PackState,
+  repositoryRoot: string,
+  packId: string,
+  version: number,
+): LocalizedContent {
+  const localized = state.localizedContentByVersion.get(version);
+  if (localized === undefined) {
+    throw missingFileError(
+      displayPath(repositoryRoot, localizedContentPath(repositoryRoot, packId, version)),
+      `localized content for ${packId} version ${version}`,
+    );
+  }
+  return localized;
 }
 
 export function requireProvenanceLog(state: PackState, packId: string): ProvenanceEventLog {

@@ -1,0 +1,73 @@
+{
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "type": "object",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "const": "content"
+    },
+    "readingOrder": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      }
+    },
+    "media": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "alternativeText": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "transcript": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "alternativeText",
+          "transcript"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "scope",
+    "readingOrder"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "properties": {
+        "readingOrder": {
+          "type": "array",
+          "uniqueItems": true
+        },
+        "media": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    }
+  ]
+}
