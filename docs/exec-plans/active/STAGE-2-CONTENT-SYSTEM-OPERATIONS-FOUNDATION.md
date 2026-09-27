@@ -785,6 +785,21 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
   attested reviewer boolean rather than text analysis. The test is now named for the mechanism it
   actually proves, and the committed commitment-first negative Pack fixture remains explicitly S2-08
   scope rather than being implied satisfied here.
+- 2026-09-27: Follow-up review found two fail-closed gaps in the snapshot boundary. A pinned,
+  digest-consistent index could label a retirement-notice path with another kind or version and make
+  the consumer interpret the notice as absent; trusted-snapshot verification now checks every entry's
+  declared kind, Pack ID, and version against its canonical path before loading. An interrupted write
+  could leave an unindexed artifact file that release preflight ignored; release and retirement now
+  inventory the complete artifact root, refuse unindexed files even when the index is missing, and
+  reject noncanonical entry identities before writing. Regression tests cover both cases, including
+  preserving provenance and existing artifacts on release refusal. `pnpm verify:full` passed under
+  Node 24 on 2026-09-27: 399 tests passed, with lint, typecheck, format, schema, repository content,
+  structural invariant, and documentation checks passing.
+- 2026-09-27: Focused test review identified missing command-level coverage for rejecting a
+  digest-valid index entry whose kind, Pack ID, or version disagrees with its canonical path. New
+  release and retirement regressions assert refusal before writes and preservation of provenance,
+  index bytes, and existing artifacts. `pnpm verify:full` passed under Node 24 outside the sandbox:
+  401 tests passed, with all other verification checks passing.
 - 2026-09-26: Issue #38 audit found that accessibility/sponsorship approvals could write events
   that the loader rejected without localization, and that eligibility recording could reuse an
   earlier evaluation after practitioner qualification expired. The commands now reject missing

@@ -458,7 +458,7 @@ test("content:retire of a released version fails closed when index entries are m
   const beforeIndex = readFileSync(emptyIndexPath, "utf8");
   const emptyIndexResult = runRetireCommand(retireArgs(root), options(root));
   expectExit(emptyIndexResult, 1);
-  expectFailureMessage(emptyIndexResult, "must contain the release-manifest entry");
+  expectFailureMessage(emptyIndexResult, "is not enumerated by the snapshot index");
   assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
   assert.equal(readFileSync(emptyIndexPath, "utf8"), beforeIndex);
   assert.equal(existsSync(retirementNoticePath(root, pack.id, 1)), false);
@@ -478,6 +478,35 @@ test("content:retire of a released version fails closed when index entries are m
   expectFailureMessage(staleResult, "but the file digest is");
   assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
   assert.equal(readFileSync(emptyIndexPath, "utf8"), staleBytes);
+  assert.equal(existsSync(retirementNoticePath(root, pack.id, 1)), false);
+  assert.equal(existsSync(retirementRecordPath(root, pack.id, 1)), false);
+});
+
+test("content:retire refuses a digest-valid index entry with a noncanonical identity", () => {
+  const root = makeRoot();
+  const pack = releaseFixturePack(root).pack;
+  const indexPath = snapshotIndexPath(root);
+  const index = JSON.parse(readFileSync(indexPath, "utf8")) as {
+    entries: Record<string, unknown>[];
+  };
+  index.entries = index.entries.map((entry) =>
+    entry["kind"] === "bundle" ? { ...entry, packId: "fixture-other-pack" } : entry,
+  );
+  const alteredIndex = snapshotIndexBytes(index.entries as never);
+  writeFileSync(indexPath, alteredIndex, "utf8");
+  const bundlePath = join(root, "artifacts", "bundles", pack.id, "1", "bundle.json");
+  const manifestPath = releaseManifestPath(root, pack.id, 1);
+  const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
+  const beforeBundle = readFileSync(bundlePath);
+  const beforeManifest = readFileSync(manifestPath);
+
+  const result = runRetireCommand(retireArgs(root), options(root));
+  expectExit(result, 1);
+  expectFailureMessage(result, "canonical path");
+  assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
+  assert.equal(readFileSync(indexPath, "utf8"), alteredIndex);
+  assert.deepEqual(readFileSync(bundlePath), beforeBundle);
+  assert.deepEqual(readFileSync(manifestPath), beforeManifest);
   assert.equal(existsSync(retirementNoticePath(root, pack.id, 1)), false);
   assert.equal(existsSync(retirementRecordPath(root, pack.id, 1)), false);
 });

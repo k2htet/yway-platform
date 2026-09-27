@@ -364,6 +364,15 @@ export function verifyArtifactSnapshot(input: {
     }
   }
   for (const entry of index.entries) {
+    const canonicalPath = canonicalArtifactPath(entry.kind, entry.packId, entry.packVersion);
+    if (entry.path !== canonicalPath) {
+      throw new StrictValidationError([
+        {
+          path: ["entries", entry.path],
+          message: `snapshot index entry ${entry.path} declares ${entry.kind} for ${entry.packId} version ${entry.packVersion}, but its canonical path is ${canonicalPath}`,
+        },
+      ]);
+    }
     const bytes = files.get(entry.path);
     if (bytes === undefined) {
       throw new StrictValidationError([

@@ -1,10 +1,16 @@
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { buildReleaseArtifacts, provenancePrefixThrough } from "../artifacts.js";
 import { contentDigest } from "../digest.js";
 import { verifyVersionGovernance } from "../governance.js";
 import { appendProvenanceEvent } from "../provenance.js";
 import { appendArtifactEligibilityEvent, evaluateReleaseGates } from "../release-gates.js";
-import { readSnapshotIndex, snapshotIndexBytes } from "../snapshot-index.js";
+import {
+  canonicalArtifactPath,
+  listRegularFiles,
+  readSnapshotIndex,
+  snapshotIndexBytes,
+} from "../snapshot-index.js";
 import {
   StrictValidationError,
   dateTimeSchema,
@@ -15,6 +21,7 @@ import {
 } from "../schemas/index.js";
 import {
   artifactPath,
+  artifactRootDirectory,
   commitWrites,
   digestFile,
   displayPath,
@@ -29,6 +36,7 @@ import {
   requireFixtureIsolation,
   resolveRepositoryRoot,
   snapshotIndexPath,
+  snapshotIndexRelativePath,
 } from "../store.js";
 import {
   failureResult,
@@ -73,7 +81,16 @@ function headOf(log: ProvenanceEventLog) {
  * refuses rather than silently re-rendering an anomalous index.
  */
 export function readCanonicalSnapshotIndex(repositoryRoot: string): readonly SnapshotIndexEntry[] {
+  const inventory = listRegularFiles(join(repositoryRoot, artifactRootDirectory));
   if (!existsSync(snapshotIndexPath(repositoryRoot))) {
+    if (inventory.length > 0) {
+      throw new StrictValidationError([
+        {
+          path: [inventory[0]!.relativePath],
+          message: `artifact file ${artifactRootDirectory}/${inventory[0]!.relativePath} is not enumerated by a snapshot index`,
+        },
+      ]);
+    }
     return [];
   }
   const index = readSnapshotIndex(repositoryRoot);
@@ -88,7 +105,27 @@ export function readCanonicalSnapshotIndex(repositoryRoot: string): readonly Sna
       },
     ]);
   }
+  const indexedPaths = new Set(index.entries.map((entry) => entry.path));
+  for (const file of inventory) {
+    if (file.relativePath !== snapshotIndexRelativePath && !indexedPaths.has(file.relativePath)) {
+      throw new StrictValidationError([
+        {
+          path: [file.relativePath],
+          message: `artifact file ${artifactRootDirectory}/${file.relativePath} is not enumerated by the snapshot index`,
+        },
+      ]);
+    }
+  }
   for (const entry of index.entries) {
+    const canonicalPath = canonicalArtifactPath(entry.kind, entry.packId, entry.packVersion);
+    if (entry.path !== canonicalPath) {
+      throw new StrictValidationError([
+        {
+          path: ["entries", entry.path],
+          message: `snapshot index entry ${entry.path} declares ${entry.kind} for ${entry.packId} version ${entry.packVersion}, but its canonical path is ${canonicalPath}`,
+        },
+      ]);
+    }
     const path = artifactPath(repositoryRoot, entry.path);
     if (!existsSync(path)) {
       throw new StrictValidationError([

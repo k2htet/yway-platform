@@ -311,6 +311,40 @@ gitTest("deleting only a retirement notice is detected against the trusted snaps
   );
 });
 
+gitTest("a digest-consistent index cannot disguise a retirement notice as another artifact", () => {
+  for (const change of [
+    { kind: "bundle", packId: "fixture-other-pack", packVersion: 1 },
+    { kind: "retirement-notice", packId: "fixture-other-pack", packVersion: 1 },
+    { kind: "retirement-notice", packId: "fixture-local-guide", packVersion: 2 },
+  ]) {
+    const { root, fixture } = pinnedRepository();
+    retireFixture(root, fixture);
+    const indexPath = snapshotIndexPath(root);
+    const index = JSON.parse(readFileSync(indexPath, "utf8")) as {
+      entries: Record<string, unknown>[];
+    };
+    index.entries = index.entries.map((entry) =>
+      entry["kind"] === "retirement-notice" ? { ...entry, ...change } : entry,
+    );
+    writeFileSync(indexPath, snapshotIndexBytes(index.entries as never), "utf8");
+    const tamperedCommit = commitAll(root, "mislabel the retirement notice");
+
+    const result = runVerifyCommand(["--trusted-commit", tamperedCommit], commandOptions(root));
+    expectExit(result, 1);
+    expectFailureMessage(result, "canonical path");
+    assert.throws(
+      () =>
+        loadReleasedBundle({
+          repositoryRoot: root,
+          trustedCommit: tamperedCommit,
+          packId: fixture.pack.id,
+          packVersion: 1,
+        }),
+      /canonical path/,
+    );
+  }
+});
+
 gitTest(
   "deleting a retirement notice and rewriting the index is detected against the trusted snapshot",
   () => {
@@ -423,9 +457,10 @@ gitTest("a trusted snapshot refuses an index entry at a non-canonical path", () 
   writeFileSync(indexPath, snapshotIndexBytes(index.entries as never), "utf8");
   const movedCommit = commitAll(root, "move the bundle to a non-canonical path");
 
-  // The snapshot is internally consistent, so only the consumer's canonical-path
-  // requirement refuses to resolve this version.
-  expectExit(runVerifyCommand(["--trusted-commit", movedCommit], commandOptions(root)), 0);
+  // Even with matching file digests, snapshot verification rejects the path.
+  const result = runVerifyCommand(["--trusted-commit", movedCommit], commandOptions(root));
+  expectExit(result, 1);
+  expectFailureMessage(result, "canonical path");
   assert.throws(
     () =>
       loadReleasedBundle({
@@ -434,7 +469,7 @@ gitTest("a trusted snapshot refuses an index entry at a non-canonical path", () 
         packId: fixture.pack.id,
         packVersion: 1,
       }),
-    /not the canonical bundles\/fixture-local-guide\/1\/bundle.json/,
+    /canonical path is bundles\/fixture-local-guide\/1\/bundle.json/,
   );
   assert.notEqual(movedCommit, commit);
 });

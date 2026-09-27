@@ -901,6 +901,60 @@ test("content:release refuses pre-existing artifact files", () => {
   assert.equal(existsSync(snapshotIndexPath(withFiles)), false);
 });
 
+test("content:release refuses unindexed artifact files before writing", () => {
+  for (const withIndex of [false, true]) {
+    const root = makeRoot();
+    const pack = driveToReleaseReady(root);
+    if (withIndex) {
+      writeIndex(root, []);
+    }
+    const stray = join(root, "artifacts", "retirements", "fixture-other-pack", "1.json");
+    writeFileCreatingParents(stray, "{}\n");
+    const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
+
+    const result = runReleaseCommand(releaseArgs(pack.id, 1), options(root));
+    expectExit(result, 1);
+    expectFailureMessage(result, "is not enumerated by");
+    assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
+    assert.equal(existsSync(bundlePath(root, pack.id, 1)), false);
+    assert.equal(existsSync(manifestPath(root, pack.id, 1)), false);
+    assert.equal(readFileSync(stray, "utf8"), "{}\n");
+  }
+});
+
+test("content:release refuses a digest-valid index entry with a noncanonical identity", () => {
+  for (const change of [
+    { kind: "bundle", packId: "fixture-other-pack", packVersion: 1 },
+    { kind: "retirement-notice", packId: "fixture-third-pack", packVersion: 1 },
+    { kind: "retirement-notice", packId: "fixture-other-pack", packVersion: 2 },
+  ] as const) {
+    const root = makeRoot();
+    const pack = driveToReleaseReady(root);
+    const relativePath = "retirements/fixture-other-pack/1.json";
+    const stray = join(root, "artifacts", relativePath);
+    const bytes = "{}\n";
+    writeFileCreatingParents(stray, bytes);
+    writeIndex(root, [
+      buildSnapshotIndexEntry({
+        ...change,
+        path: relativePath,
+        digest: sha256Hex(bytes),
+      }),
+    ]);
+    const beforeLog = readFileSync(provenancePath(root, pack.id), "utf8");
+    const beforeIndex = readFileSync(snapshotIndexPath(root), "utf8");
+
+    const result = runReleaseCommand(releaseArgs(pack.id, 1), options(root));
+    expectExit(result, 1);
+    expectFailureMessage(result, "canonical path");
+    assert.equal(readFileSync(provenancePath(root, pack.id), "utf8"), beforeLog);
+    assert.equal(readFileSync(snapshotIndexPath(root), "utf8"), beforeIndex);
+    assert.equal(readFileSync(stray, "utf8"), bytes);
+    assert.equal(existsSync(bundlePath(root, pack.id, 1)), false);
+    assert.equal(existsSync(manifestPath(root, pack.id, 1)), false);
+  }
+});
+
 test("content:release refuses a snapshot index that already claims this version", () => {
   const withIndex = makeRoot();
   const pack = driveToReleaseReady(withIndex);
