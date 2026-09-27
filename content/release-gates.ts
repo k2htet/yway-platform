@@ -7,6 +7,7 @@ import {
 } from "./lifecycle.js";
 import { verifyRecordedPractitionerApproval } from "./practitioner-gate.js";
 import { appendProvenanceEvent, verifyProvenanceLog } from "./provenance.js";
+import { reviewEventTypes } from "./governance.js";
 import { assertFixtureOnlyProvenance, requireFixtureIsolation } from "./store.js";
 import {
   StrictValidationError,
@@ -197,16 +198,7 @@ function assertReviewAttestationBindings(
   scope: VersionScope,
   issues: StrictValidationIssue[],
 ): void {
-  const reviewEvents = events.filter((event) =>
-    [
-      "founder-reviewed",
-      "practitioner-reviewed",
-      "localization-reviewed",
-      "accessibility-reviewed",
-      "sponsorship-disclosed",
-      "changes-requested",
-    ].includes(event.type),
-  );
+  const reviewEvents = events.filter((event) => reviewEventTypes.has(event.type));
   const remaining = [...attestations];
   for (const event of reviewEvents) {
     const index = remaining.findIndex((attestation) =>
