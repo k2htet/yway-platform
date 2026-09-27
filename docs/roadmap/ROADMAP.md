@@ -72,7 +72,7 @@ Statuses reflect current repository evidence, not aspiration. See
   evidenced, including enforced branch protection, onboarding documentation,
   and the fresh-session acceptance test.
 - **Status:** COMPLETE.
-- **Important unresolved questions:** Stage 0 through Stage 2 are complete; Stage 3 remains PLANNED and requires separate activation.
+- **Important unresolved questions:** Stage 0 through Stage 2 are complete; Stage 3 is ACTIVE under its separately authorized ExecPlan.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 
@@ -125,10 +125,14 @@ Statuses reflect current repository evidence, not aspiration. See
 - **Exit gate:** The core exploration journey works end to end with qualitative,
   reversible guidance, correct signal separation, no prohibited scoring, and no
   login before first value.
-- **Status:** PLANNED.
-- **Important unresolved questions:** Mobile delivery approach, first physical
-  application boundary, detailed anonymous-to-identified continuity, and partial
-  pack download strategy remain undecided.
+- **Status:** ACTIVE.
+- **Active ExecPlan:** `docs/exec-plans/active/STAGE-3-YOUTH-EXPLORATION.md`.
+- **Activation authority:** On 2026-09-27, the owner explicitly approved Stage 3 activation in the kickoff conversation. The kickoff issue records that direction and the bounded private-pilot scope.
+- **Kickoff:** Issue #56 records owner activation authority and the private moderated Android pilot direction.
+- **Important unresolved questions:** The mobile delivery approach and first
+  physical application boundary require an accepted ADR. The private pilot uses
+  complete bundled Packs; post-pilot download strategy and detailed
+  anonymous-to-identified continuity remain undecided.
 
 ## Stage 4 — Practice + Evidence
 
