@@ -13,6 +13,7 @@ import {
   runReleaseCommand,
   strictParse,
   sha256Hex,
+  type AttestationKind,
   type CommandResult,
   type LocalizedContent,
   type PackSource,
@@ -278,6 +279,105 @@ export function releaseArgs(packId: string, version: number, actor = "fixture-op
   return ["--pack", packId, "--version", String(version), "--actor", actor];
 }
 
+/** The synthetic reviewer identity the fixture lifecycles approve each review kind. */
+export const fixtureReviewActors: Readonly<Record<AttestationKind, string>> = {
+  "founder-review": "fixture-founder-one",
+  "practitioner-review": "fixture-practitioner-one",
+  "localization-review": "fixture-localizer-one",
+  "accessibility-review": "fixture-accessibility-reviewer-one",
+  "sponsorship-disclosure": "fixture-sponsorship-reviewer-one",
+};
+
+/** The order the release gates require reviews to be recorded in. */
+export const fixtureReviewOrder = [
+  "founder-review",
+  "practitioner-review",
+  "localization-review",
+  "accessibility-review",
+  "sponsorship-disclosure",
+] as const satisfies readonly AttestationKind[];
+
+export interface FixtureReviewArgsInput {
+  readonly packId: string;
+  readonly version: number;
+  readonly kind: AttestationKind;
+  readonly outcome: "approved" | "changes-requested";
+  /**
+   * The reviewer's content confirmation that a next fork increases real-world
+   * exposure before commitment. Only the content review kinds carry it.
+   */
+  readonly exposureBeforeCommitment?: boolean;
+  readonly fluentReviewEvidence?: string;
+  readonly note?: string;
+}
+
+/**
+ * Builds the `content:attest` argument vector for one fixture review.
+ *
+ * Every schema-required review flag lives here, so the two repository-command
+ * fixture lifecycles that drive a Pack to release cannot drift apart when a flag is
+ * added or an actor identity changes.
+ *
+ * Known remaining duplication: `tests/content-release.test.ts` and
+ * `tests/content-cli-lifecycle.test.ts` still hand-write some attest argument
+ * vectors. Consolidating them onto this builder is recorded as a Stage 2 follow-up.
+ */
+export function fixtureReviewArgs(input: FixtureReviewArgsInput): string[] {
+  const args = [
+    "--pack",
+    input.packId,
+    "--version",
+    String(input.version),
+    "--kind",
+    input.kind,
+    "--actor",
+    fixtureReviewActors[input.kind],
+    "--outcome",
+    input.outcome,
+  ];
+  if (input.kind === "founder-review" || input.kind === "practitioner-review") {
+    args.push(
+      "--six-part-confirmed",
+      "true",
+      "--exposure-before-commitment-confirmed",
+      String(input.exposureBeforeCommitment ?? true),
+    );
+  }
+  if (input.kind === "localization-review") {
+    args.push(
+      "--locale",
+      "my",
+      "--fluent-burmese-confirmed",
+      "true",
+      "--fluent-review-evidence",
+      input.fluentReviewEvidence ?? "fixture:fluent-review-001",
+    );
+  }
+  if (input.kind === "accessibility-review") {
+    args.push(
+      "--reading-order-confirmed",
+      "true",
+      "--media-alternatives-confirmed",
+      "true",
+      "--runtime-validation-deferred",
+    );
+  }
+  if (input.kind === "sponsorship-disclosure") {
+    args.push(
+      "--disclosure-confirmed",
+      "true",
+      "--editorial-control-preserved",
+      "true",
+      "--ordering-influence",
+      "none",
+    );
+  }
+  if (input.note !== undefined) {
+    args.push("--note", input.note);
+  }
+  return args;
+}
+
 function packOverrides(sponsored: boolean): Record<string, unknown> {
   if (!sponsored) {
     return {};
@@ -311,98 +411,26 @@ export function driveToReleaseReady(root: string, options_: ReviewSetupOptions =
     ),
     0,
   );
-  writeEligibility(root, "fixture-practitioner-one");
+  writeEligibility(root, fixtureReviewActors["practitioner-review"]);
 
-  const approve = (args: string[]): void => {
-    expectExit(runAttestCommand(args, commandOptions(root)), 0);
+  const approve = (kind: AttestationKind): void => {
+    expectExit(
+      runAttestCommand(
+        fixtureReviewArgs({ packId: pack.id, version, kind, outcome: "approved" }),
+        commandOptions(root),
+      ),
+      0,
+    );
   };
 
-  approve([
-    "--pack",
-    pack.id,
-    "--version",
-    String(version),
-    "--kind",
-    "founder-review",
-    "--actor",
-    "fixture-founder-one",
-    "--outcome",
-    "approved",
-    "--six-part-confirmed",
-    "true",
-    "--exposure-before-commitment-confirmed",
-    "true",
-  ]);
-  approve([
-    "--pack",
-    pack.id,
-    "--version",
-    String(version),
-    "--kind",
-    "practitioner-review",
-    "--actor",
-    "fixture-practitioner-one",
-    "--outcome",
-    "approved",
-    "--six-part-confirmed",
-    "true",
-    "--exposure-before-commitment-confirmed",
-    "true",
-  ]);
-  approve([
-    "--pack",
-    pack.id,
-    "--version",
-    String(version),
-    "--kind",
-    "localization-review",
-    "--actor",
-    "fixture-localizer-one",
-    "--outcome",
-    "approved",
-    "--locale",
-    "my",
-    "--fluent-burmese-confirmed",
-    "true",
-    "--fluent-review-evidence",
-    "fixture:fluent-review-001",
-  ]);
-  approve([
-    "--pack",
-    pack.id,
-    "--version",
-    String(version),
-    "--kind",
-    "accessibility-review",
-    "--actor",
-    "fixture-accessibility-reviewer-one",
-    "--outcome",
-    "approved",
-    "--reading-order-confirmed",
-    "true",
-    "--media-alternatives-confirmed",
-    "true",
-    "--runtime-validation-deferred",
-  ]);
-  if (pack.sponsorship !== undefined && options_.omitSponsorshipReview !== true) {
-    approve([
-      "--pack",
-      pack.id,
-      "--version",
-      String(version),
-      "--kind",
-      "sponsorship-disclosure",
-      "--actor",
-      "fixture-sponsorship-reviewer-one",
-      "--outcome",
-      "approved",
-      "--disclosure-confirmed",
-      "true",
-      "--editorial-control-preserved",
-      "true",
-      "--ordering-influence",
-      "none",
-    ]);
+  for (const kind of fixtureReviewOrder) {
+    if (kind === "sponsorship-disclosure" && pack.sponsorship === undefined) {
+      continue;
+    }
+    if (kind === "sponsorship-disclosure" && options_.omitSponsorshipReview === true) {
+      continue;
+    }
+    approve(kind);
   }
   return pack;
 }

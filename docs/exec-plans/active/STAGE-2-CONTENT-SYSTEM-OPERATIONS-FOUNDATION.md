@@ -490,9 +490,124 @@ The protected Git commit/tree containing the index is the Stage 2 trusted snapsh
 
 ### S2-08 — Synthetic representative lifecycle
 
+Implemented 2026-09-27. The committed representative Pack is `fixture-retail-assistant`, authored in
+Simple English with a `retail-assistant` occupation scope. Version 1 is a deliberately incomplete
+first draft whose single experiment's next fork asks for a paid course and two promised shifts
+*before* the young person has watched the work. Version 2 is the corrected version: the next fork
+adds a second observation before any course, shift, job, or application, a second experiment is
+added, and the Burmese localization, the authored content reading order with media
+alternatives/transcripts, and an explicitly fictional sponsor disclosure are introduced.
+
+The whole lifecycle was driven through the repository commands, not by hand-written records. In
+order, with the resulting provenance sequences:
+
+1. `content:new-version -- --pack fixture-retail-assistant --actor fixture-author-one` → seq 1
+   `authored` for version 1.
+2. `content:attest … --version 1 --kind founder-review --outcome approved --six-part-confirmed true
+   --exposure-before-commitment-confirmed false` → **refused**, exit 1, "approved founder/practitioner
+   attestations must confirm both six-part structure and exposure before commitment", with no write.
+3. `content:attest … --version 1 --kind founder-review --outcome changes-requested
+   --exposure-before-commitment-confirmed false` → seq 2 `changes-requested`, the only attestation
+   for version 1.
+4. `content:new-version -- --pack fixture-retail-assistant --from 1 --actor fixture-author-one` →
+   seq 3 `authored` and seq 4 `localized` for version 2, sharing one instant.
+5. `content:attest … --version 2` for `founder-review`, `practitioner-review`, `localization-review`
+   (`--locale my --fluent-burmese-confirmed true --fluent-review-evidence
+   fixture:synthetic-fluent-review-002`), `accessibility-review` (`--runtime-validation-deferred`),
+   and `sponsorship-disclosure` (`--ordering-influence none`) → seq 5–9, each bound to its exact
+   version/source digest and, from seq 5 onward, the exact Burmese digest. The practitioner
+   eligibility record `content/eligibility/fixture-practitioner-one.json` is hand-authored
+   content-as-code and must exist before step 5's `practitioner-review`.
+6. `content:release -- --pack fixture-retail-assistant --version 2 --actor fixture-operator-one` →
+   seq 10 `artifact-eligible` and seq 11 `artifact-released`, sharing one instant, and the bundle,
+   the manifest, and the snapshot index.
+7. `content:status -- --pack fixture-retail-assistant --version 2` → `artifact-released`.
+8. `content:retire -- --pack fixture-retail-assistant --version 2 --actor fixture-operator-one
+   --reason …` → seq 12 `retired`, the source-side retirement record, the artifact retirement notice,
+   and the third snapshot-index entry.
+
+**The committed tree is frozen and must be appended to, never regenerated.** Every `recordedAt` in
+the committed provenance log is a real wall-clock reading taken by the commands, and
+`content:release` reads the clock once and uses that single instant for both `artifact-eligible` and
+`artifact-released`. Re-running the sequence therefore produces different instants, different event
+digests, a different `previousEventDigest` chain, and different bundle/manifest bytes, so the
+committed artifacts are reproducible **only from the committed records** — which is exactly what
+`pnpm content:verify` proves — and never by re-execution. `1.yaml`, `2.yaml`,
+`localizations/2.yaml`, `provenance.json`, all six attestations, `retirements/2.json`, the eligibility
+record, and the four files under `artifacts/` are all append-only. The only permitted evolution is to
+author `3.yaml` (and optionally `localizations/3.yaml`) and run a fresh sequence; any *semantic* change
+to an existing record is exactly the tamper event `content:verify` is designed to fail on, and the four
+files under `artifacts/` are additionally compared byte for byte, so a whitespace-only change to a
+record is not itself detected. This also makes
+`content/eligibility/fixture-practitioner-one.json` a frozen input: because historical verification
+re-evaluates the practitioner gate against the *current* record (recorded as an S2-07 residual), a
+later deactivation, occupation amendment, or `verification.status` change breaks the already-released
+version 2 with a practitioner-gate error that never names the fixture. `validUntil` expiry alone is
+safe.
+
+Focused coverage was added in `tests/content-fixture-lifecycle.test.ts`, which reads the committed
+state and replays the *same committed source files* in throwaway repositories. It proves the approval
+refusal for version 1 and that its `changes-requested` version can never be released; that version 2
+is refused while each required gate is missing (no review, practitioner, localization review,
+accessibility review, sponsorship disclosure, and the localization file itself); that the committed
+bundle and manifest rebuild byte for byte and that a single whitespace change to a copied bundle is
+refused; that retirement leaves bundle, manifest, and the release event byte-identical while blocking
+a further release; that the bundle carries cumulative provenance for both versions and no retired
+event; that no committed artifact, free-text note, or retirement reason claims real endorsement,
+production quality, or release readiness; and that the retired version cannot be loaded from a
+pinned snapshot while notice deletion, with or without a committed index rewrite, is detected against
+the pin. `tests/git-fixture.ts` extracts the previously inline hermetic Git harness from
+`tests/content-snapshot-verify.test.ts` so both files share one harness, and the review-argument
+contract is now built once by `fixtureReviewArgs` in `tests/content-cli-fixtures.ts` and used by both
+repository-command fixture lifecycles. It also pins that the committed reading order covers every
+authored section and experiment in both locales, which the accessibility gate does not require.
+
+`artifacts/` is excluded from Prettier alongside
+`content/generated/`, `content/packs/**/*.json`, and `content/eligibility/`. The first two are excluded because a byte-level
+check exists for them (`verifyRepository` rebuilds and compares the artifacts, `content:schemas:check`
+regenerates and diffs the schemas), so reformatting them would desynchronise committed bytes from the
+renderer that produced them. The governance records are excluded conservatively on the same principle,
+so that `pnpm format` cannot rewrite a digest-sealed audit chain; nothing depends on the eligibility
+record's bytes, since it is authored rather than command-written and is only parsed and checked. The
+hand-authored YAML sources stay formatted, because `contentDigest` is computed over the parsed object
+rather than the file bytes.
+
+Verification run on 2026-09-27, all passing: `pnpm content:verify` (1 release, 3 index entries,
+`retired: true`), `pnpm agent:doctor` (READY), `pnpm verify:fast`, `pnpm verify:invariants`,
+`pnpm content:schemas:check`, and `pnpm verify:full` — lint, typecheck, format, 433 tests with 0
+failed and 0 skipped, generated-schema drift, `content:verify`, product invariants, and documentation
+checks. Four-discipline review (product-integrity, architecture, security/privacy, test) ran three
+rounds; the material findings were addressed and the residual limits are recorded below.
+The retained release event and immutable artifact files demonstrate that version 2 previously reached
+release; its committed status is `retired`.
+
 Create one clearly synthetic Pack with Simple-English canonical content and Burmese localization. Mark all representative actors, attestations, and content `fixtureOnly`. Exercise the happy path through artifact release and separately exercise `changes-requested` and `retired` outcomes through repository commands. Add a negative experiment fixture that contains all six required fields but increases commitment before real-world exposure; review, artifact eligibility, and release must reject it. Retirement coverage must confirm that current status becomes `retired`, prior provenance/release history remains intact, a released version gains a deterministic retirement notice visible through the artifact boundary, artifact consumers reject that version, notice deletion is detected against the trusted snapshot root, and further release is refused. Commit the deterministic fixture artifact/manifests, snapshot index, and any retirement notice generated for a released fixture version.
 
 Synthetic evidence must never be described as real practitioner endorsement, production-quality content, or public-release readiness.
+
+The negative fixture's rejection is the *reviewer confirmation*, not `nextFork` analysis. An approved
+founder/practitioner attestation cannot record `exposureBeforeCommitmentConfirmed: false`, and because
+that is the only content-review gate, version 1 can never reach approval and therefore can never be
+released. Nothing in the pipeline reads the fork text: a commitment-first fork reviewed with
+`--exposure-before-commitment-confirmed true` would pass every remaining gate. The committed negative
+fixture plus the content-level assertion that version 1 really is commitment-first is therefore a
+demonstration of the confirmation gate and of the human review obligation, not of automated detection.
+
+`content/schemas/localized-content.ts` has no `sponsorship` field and `assertSponsorshipGate` reads
+`pack.sponsorship` only, so a sponsored Pack can reach release with the disclosure present solely in
+the canonical source while the manifest reports `sponsorship: "disclosed"`. The committed fixture
+does not rely on that: the fictional-sponsor disclosure, the no-money/no-youth-data boundary, and the
+editorial-control boundary are all stated in the Burmese `limitations` as well as in the canonical
+`disclosure`/`editorialIndependence`, and both locales are asserted. The structural gap is not fixed
+here because S2-08 planned no schema change and the choice of a localized sponsorship representation
+is a product and schema decision. Adding a localized sponsorship field, and requiring it in the
+sponsorship gate whenever `pack.sponsorship` is present, must happen before any stage emits
+non-fixture sponsored localized content.
+
+The trusted-snapshot evidence is git-backed and `gitTest` reports a skipped test when git is
+unavailable, so a non-skipped assertion of `gitAvailable()` now fails the suite closed rather than
+letting full verification pass with that coverage silently unexecuted.
+
 
 ### S2-09 — Operations documentation
 
@@ -576,8 +691,9 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 is ACCEPTED. S2-02 through S2-07 are complete; S2-08 (the synthetic representative Pack
-lifecycle) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains PLANNED.
+YWAY-D003 is ACCEPTED. S2-02 through S2-08 are complete; S2-09 (content operations policies and
+lifecycle runbooks) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains
+PLANNED.
 
 Surfaced from S2-07 review but not decided in that step:
 
@@ -622,6 +738,30 @@ authenticate intent while identity/authorization remain deferred under YWAY-D003
 `fixture-`-identity ⇒ `fixtureOnly` rule and qualification-policy wording are deferred to S2-09;
 the attestation `note` field remains unbounded free text for S2-09 privacy guidance.
 
+Surfaced from S2-08 review and left for S2-09 or a later step (not decided in S2-08):
+
+- The review-argument contract is built once in `tests/content-cli-fixtures.ts`
+  (`fixtureReviewArgs`, `fixtureReviewActors`, `fixtureReviewOrder`) and used by the two
+  repository-command fixture lifecycles, but `tests/content-release.test.ts` and
+  `tests/content-cli-lifecycle.test.ts` still hand-write some attest argument vectors and
+  hardcode the practitioner actor. Consolidating them onto the shared builder is a test-harness
+  refactor, not product or architecture authority, and is recorded rather than folded into S2-08.
+- `content/accessibility.readingOrder` is not required to cover every authored section or
+  experiment, so an accessibility approval can confirm a reading order that silently omits an
+  experiment. The committed fixture's reading order is complete and is asserted as a fixture property
+  in both locales, but the gate still does not require it; making it a gate-level requirement is a
+  S2-09 accessibility-policy question.
+- The attestation `note` field remains unbounded free text. S2-08 asserts that every committed
+  fixture note is non-empty and carries a synthetic marker, which pins this fixture's privacy
+  posture but does not constrain a future non-fixture note. The S2-09 privacy guidance still owns
+  the bound.
+- The localization-review `fluentBurmeseConfirmed` field reads as a real confirmation even for a
+  fixture record; only the `fixture-` actor, the `fixture:` evidence reference, `classification:
+  "fixture"`, and the note text mark it as synthetic. This extends the S2-07 unresolved question
+  about a symmetric synthetic marker on `localizationApproved` to the attestation itself, and is
+  recorded here with `artifacts/manifests/fixture-retail-assistant/2/manifest.json` as the reference
+  instance.
+
 ## Progress checklist
 
 - [x] Stage 2 owner activation authority recorded in #32.
@@ -636,7 +776,7 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
 - [x] S2-05 authoring/review CLI complete.
 - [x] S2-06 localization/accessibility/sponsorship gates complete.
 - [x] S2-07 deterministic release/verification complete.
-- [ ] S2-08 synthetic lifecycle fixture complete.
+- [x] S2-08 synthetic lifecycle fixture complete.
 - [ ] S2-09 operations documentation complete.
 - [ ] S2-10 closure validation complete.
 
@@ -806,6 +946,61 @@ the attestation `note` field remains unbounded free text for S2-09 privacy guida
   localization before writing, evaluation covers the timestamps of gate evidence, and eligibility
   recording rechecks gates at its own timestamp. Focused regressions and full verification passed
   with 301 tests. No new product or architecture decision was required.
+
+- 2026-09-27: S2-08's committed fixture is reproducible only from its committed records, never by
+  re-running the commands. Every `recordedAt` is a real wall-clock instant, and `content:release`
+  reads the clock once for both `artifact-eligible` and `artifact-released`, so a replay produces a
+  different provenance chain and therefore different artifact bytes. The whole fixture tree —
+  sources, provenance, attestations, retirement record, eligibility record, and all four artifacts —
+  is append-only; the only permitted evolution is a new version with a fresh command sequence.
+  Recorded because a future contributor who "regenerates" or tidies a committed record would break
+  `content:verify` with a message that does not mention the fixture.
+- 2026-09-27: `content/eligibility/fixture-practitioner-one.json` is now a frozen input rather than
+  a free-standing record, because `verifyRepository` re-evaluates every historical release against
+  the *current* eligibility record. Its `status`, `verification.status`, `occupations`, and
+  `evidenceReferences` are load-bearing for the already-released version 2; only `validUntil` expiry
+  is safe. S2-09's qualification policy must state this append-only rule.
+- 2026-09-27: `localizedContentSchema` cannot represent a sponsorship disclosure, so the S2-06
+  sponsorship gate is satisfiable from the canonical source alone while a Burmese-reading young
+  person sees no disclosure. The committed fixture does not rely on that — the fictional-sponsor
+  disclosure is repeated in the Burmese `limitations` and asserted — but the structural gap is
+  surfaced, not silently fixed, because S2-08 planned no schema change and the representation
+  choice is a product and schema decision. No non-fixture sponsored localized content may be emitted
+  before that decision is taken.
+- 2026-09-27: The YWAY-P002 negative fixture is enforced through the attested reviewer confirmation
+  only. An approved attestation cannot record `exposureBeforeCommitmentConfirmed: false`, and that
+  is what blocks version 1; no gate reads `nextFork` text, so a commitment-first fork confirmed as
+  exposure-first would pass every remaining gate. Recorded in the S2-08 step so the fixture is not
+  read as automated P002 detection.
+- 2026-09-27: Deterministic renderer output now has one consistent Prettier policy. `artifacts/`
+  was excluded alongside `content/generated/`, and the same reasoning extends to the command-written
+  governance records `content/packs/**/*.json` and `content/eligibility/`, which `pnpm format` could
+  otherwise reformat away from the bytes the commands wrote. The hand-authored YAML sources stay
+  formatted, because `contentDigest` is computed over the parsed object rather than the file bytes.
+- 2026-09-27: Review rounds surfaced that the trusted-snapshot evidence is git-backed and therefore
+  skippable, which would let `verify:full` pass with a Stage 2 exit criterion unexecuted. A
+  non-skipped assertion of `gitAvailable()` now fails the suite closed. The same reasoning applies to
+  any future Git-backed acceptance evidence.
+- 2026-09-27: The round-3 review checked the S2-08 record against the repository and found three
+  claims that were too strong rather than untrue in substance: the release step was described as
+  writing three artifact files when it writes the bundle, the manifest, and the index; the frozen-tree
+  rule implied that any byte change to a record is detected, when only the four artifact files are
+  compared byte for byte and a whitespace-only change to a governance record is not; and the Prettier
+  exclusion of `content/eligibility/` was justified as renderer output although no command writes that
+  file. All three wordings were corrected, because a plan record that overstates its own guarantees is
+  itself a durability defect.
+- 2026-09-27: Round-3 also found that the committed reading order was described as asserted when no
+  test asserted it, and that the honesty test checked only the canonical title/summary while one
+  Burmese deferral assertion was a vacuous substring of another. Both are now real assertions: the
+  reading order is pinned against the authored sections and experiment IDs in both locales, the
+  localized title and summary must carry the synthetic disclosure, and the Burmese runtime-accessibility
+  deferral is anchored on its own wording. A pattern this easy to satisfy accidentally is not a
+  disclosure control.
+- 2026-09-27: Round-2 architecture and test review disagreed on whether to keep the explicit
+  `buildReleaseArtifacts` rebuild in the S2-08 test. It was removed as a second copy of
+  `verifyRepository`'s wiring, and replaced with a non-redundant negative through the same
+  production seam: a copy of the committed tree verifies, and a single whitespace change to the
+  copied bundle does not.
 
 ## Decision log
 

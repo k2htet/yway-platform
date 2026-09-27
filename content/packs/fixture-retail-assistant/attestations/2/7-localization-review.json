@@ -1,0 +1,19 @@
+{
+  "actorId": "fixture-localizer-one",
+  "contentDigest": "ae30f63e0b9568d03f0e025138da10a1ef96a158a8d697703cebba7384419a8f",
+  "fixtureOnly": true,
+  "kind": "localization-review",
+  "locale": "my",
+  "localizationReview": {
+    "fluentBurmeseConfirmed": true,
+    "fluentReviewEvidence": "fixture:synthetic-fluent-review-002"
+  },
+  "localizedContentDigest": "0cfad4dae45aba7d96ce5e95fc1dfb7a13072ac551423f50934d66dec747a17c",
+  "note": "Synthetic fixture localization review bound to fixture:synthetic-fluent-review-002. The confirmation is a fixture assertion: no fluent Burmese reviewer took part, the Burmese text was not validated with Burmese-speaking young people, and comprehension is unknown.",
+  "outcome": "approved",
+  "packId": "fixture-retail-assistant",
+  "packVersion": 2,
+  "recordedAt": "2026-09-27T04:52:56.516Z",
+  "reviewEventSequence": 7,
+  "schemaVersion": 1
+}

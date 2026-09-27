@@ -1,0 +1,19 @@
+{
+  "accessibilityReview": {
+    "readingOrderConfirmed": true,
+    "referencedMediaAlternativesConfirmed": true,
+    "runtimeValidationDeferred": true
+  },
+  "actorId": "fixture-accessibility-reviewer-one",
+  "contentDigest": "ae30f63e0b9568d03f0e025138da10a1ef96a158a8d697703cebba7384419a8f",
+  "fixtureOnly": true,
+  "kind": "accessibility-review",
+  "localizedContentDigest": "0cfad4dae45aba7d96ce5e95fc1dfb7a13072ac551423f50934d66dec747a17c",
+  "note": "Synthetic fixture accessibility review of authored content structure only. Screen reader, text scaling, Burmese wrapping, and device behaviour remain untested and deferred.",
+  "outcome": "approved",
+  "packId": "fixture-retail-assistant",
+  "packVersion": 2,
+  "recordedAt": "2026-09-27T04:52:57.240Z",
+  "reviewEventSequence": 8,
+  "schemaVersion": 1
+}

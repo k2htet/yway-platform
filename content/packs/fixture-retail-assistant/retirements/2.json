@@ -1,0 +1,12 @@
+{
+  "actorId": "fixture-operator-one",
+  "contentDigest": "ae30f63e0b9568d03f0e025138da10a1ef96a158a8d697703cebba7384419a8f",
+  "fixtureOnly": true,
+  "packId": "fixture-retail-assistant",
+  "packVersion": 2,
+  "reason": "Synthetic fixture retired once the Stage 2 lifecycle exercise was complete; the release event and artifact files are kept as history.",
+  "recordedAt": "2026-09-27T04:53:00.712Z",
+  "retirementEventDigest": "04a3d656c85079483b1b8db488c0ee9de483cc7490b15c9e6f97452bf18450fd",
+  "retirementEventSequence": 12,
+  "schemaVersion": 1
+}

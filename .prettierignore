@@ -6,6 +6,9 @@ docs/decisions/000-TEMPLATE.md
 .codex/
 .agents/
 content/generated/
+artifacts/
+content/packs/**/*.json
+content/eligibility/
 pnpm-lock.yaml
 node_modules/
 dist/

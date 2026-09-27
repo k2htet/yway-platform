@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "actorId": "fixture-practitioner-one",
+  "fixtureOnly": true,
+  "occupations": ["retail-assistant"],
+  "status": "active",
+  "verification": {
+    "method": "manual",
+    "status": "verified",
+    "verifiedOn": "2026-09-01"
+  },
+  "validFrom": "2026-01-01",
+  "validUntil": "2031-12-31",
+  "evidenceReferences": ["fixture:synthetic-no-credential-001"]
+}

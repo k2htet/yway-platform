@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "digest": "fa053a0e642ae72b8216bf15e71634dbc26ff8fcfed041cb39ba5d5f6825f23b",
+      "kind": "bundle",
+      "packId": "fixture-retail-assistant",
+      "packVersion": 2,
+      "path": "bundles/fixture-retail-assistant/2/bundle.json"
+    },
+    {
+      "digest": "df5691427ec242f13203bd37481d7433253647c984df9846a2c1650a9103d032",
+      "kind": "release-manifest",
+      "packId": "fixture-retail-assistant",
+      "packVersion": 2,
+      "path": "manifests/fixture-retail-assistant/2/manifest.json"
+    },
+    {
+      "digest": "0d43d048528bf57d0b6bb9cfd40908d4522ac6a6339e7e85b23a19fa2ab90829",
+      "kind": "retirement-notice",
+      "packId": "fixture-retail-assistant",
+      "packVersion": 2,
+      "path": "retirements/fixture-retail-assistant/2.json"
+    }
+  ],
+  "schemaVersion": 1
+}
