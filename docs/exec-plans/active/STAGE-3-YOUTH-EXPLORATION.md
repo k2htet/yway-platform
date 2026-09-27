@@ -89,13 +89,13 @@ After the focused review edits, `pnpm verify:docs`, Prettier check of changed fi
 
 ## Kickoff independent review
 
-Product integrity and architecture reviewers found no material issue. Security/privacy review identified a missing backup, shared-storage, export, and diagnostic-log boundary for private youth responses; the plan and issues #57/#68 now make exclusion and erase verification explicit, and the same reviewer confirmed the finding resolved. Test review identified that S3-08 could not satisfy its two-Pack build criterion before S3-05 and S3-06; the plan and issue #63 now state those dependencies, and the same reviewer confirmed resolution. No material review finding remains. Human PR review and branch-protection checks are still required before merge.
+Product integrity and architecture reviewers found no material issue. Security/privacy review identified a missing backup, shared-storage, export, and diagnostic-log boundary for private youth responses; the plan and issues #57/#68 now make exclusion and erase verification explicit, and the same reviewer confirmed the finding resolved. Test review identified that S3-08 could not satisfy its two-Pack build criterion before S3-05 and S3-06; the plan and issue #63 now state those dependencies, and the same reviewer confirmed resolution. No material review finding remained. The owner authorized merging PR #70 after the required GitHub `Verify` check passed; PR #70 merged on 2026-09-27.
 
 ## Progress checklist
 
 - [x] Owner explicitly activated Stage 3 and approved the bounded plan on 2026-09-27.
 - [x] Kickoff issue #56 and S3-01 through S3-13 published and mapped here on 2026-09-27.
-- [ ] Roadmap and stage index activation merged with required review.
+- [x] Roadmap and stage index activation merged in PR #70 on 2026-09-27 after required review and CI.
 - [ ] S3-01–S3-02 accepted and Architecture reconciled.
 - [ ] S3-03–S3-06 content and real review gates complete.
 - [ ] S3-07–S3-11 youth flow and device validation complete.
