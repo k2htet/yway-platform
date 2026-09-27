@@ -186,12 +186,16 @@ function canonicalGovernedFile(filePath: string, label: string): string {
   return canonicalPath;
 }
 
-function canonicalGovernedDirectory(directoryPath: string, label: string): string {
+function canonicalGovernedDirectory(
+  directoryPath: string,
+  label: string,
+  canonicalBase: string = canonicalRepositoryRoot,
+): string {
   if (lstatSync(directoryPath).isSymbolicLink()) {
     throw new Error(`${label} must not be a symbolic link`);
   }
   const canonicalPath = realpathSync(directoryPath);
-  if (!pathIsInside(canonicalRepositoryRoot, canonicalPath)) {
+  if (!pathIsInside(canonicalBase, canonicalPath)) {
     throw new Error(`${label} resolves outside the repository`);
   }
   if (!statSync(canonicalPath).isDirectory()) {
@@ -786,15 +790,20 @@ function extractActiveExecPlanReferences(section: string): string[] {
   return references;
 }
 
-function checkRoadmapActiveExecPlanReferences(rawRoadmapText: string): string[] {
+function checkRoadmapActiveExecPlanReferences(
+  rawRoadmapText: string,
+  root: string = repositoryRoot,
+): string[] {
   const failures: string[] = [];
   const text = stripCodeFences(rawRoadmapText);
   const headings = [...text.matchAll(/^## Stage (\d+) — .*$/gm)];
   const planPlacementCache = new Map<string, string[]>();
   let totalReferencedPlanBytes = 0;
+  const canonicalRoot = realpathSync(root);
   const canonicalActiveDirectory = canonicalGovernedDirectory(
-    activePlansDirectory,
+    resolve(root, "docs/exec-plans/active"),
     "docs/exec-plans/active/",
+    canonicalRoot,
   );
 
   headings.forEach((heading, index) => {
@@ -818,8 +827,8 @@ function checkRoadmapActiveExecPlanReferences(rawRoadmapText: string): string[] 
 
     if (references.length > 0) {
       for (const reference of references) {
-        const planPath = resolve(repositoryRoot, reference);
-        const relativeToRoot = relative(repositoryRoot, planPath);
+        const planPath = resolve(root, reference);
+        const relativeToRoot = relative(root, planPath);
         const insideRepository =
           relativeToRoot.length > 0 &&
           relativeToRoot !== ".." &&
@@ -834,7 +843,7 @@ function checkRoadmapActiveExecPlanReferences(rawRoadmapText: string): string[] 
           failures.push(`Stage ${stage}: ExecPlan "${reference}" is not a plan file`);
         } else {
           const canonicalPlanPath = realpathSync(planPath);
-          if (!pathIsInside(canonicalRepositoryRoot, canonicalPlanPath)) {
+          if (!pathIsInside(canonicalRoot, canonicalPlanPath)) {
             failures.push(
               `Stage ${stage}: ExecPlan "${reference}" resolves outside the repository through a symlink`,
             );
@@ -1256,8 +1265,10 @@ function runSelfTest(): void {
     failures.push("duplicate stage row in STAGE-INDEX.md was not detected");
   }
 
-  const validActivePlanPath =
-    "docs/exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md";
+  const temporaryPlanRoot = mkdtempSync(join(tmpdir(), "yway-roadmap-plan-check-"));
+  const validActivePlanPath = "docs/exec-plans/active/self-test-active-plan.md";
+  mkdirSync(resolve(temporaryPlanRoot, "docs/exec-plans/active"), { recursive: true });
+  writeFileSync(resolve(temporaryPlanRoot, validActivePlanPath), "## Status\n\nACTIVE\n");
   const completedPlanPath =
     "docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md";
 
@@ -1268,6 +1279,7 @@ function runSelfTest(): void {
       `- **Active ExecPlan:** \`${validActivePlanPath}\`.`,
       "",
     ].join("\n"),
+    temporaryPlanRoot,
   );
   if (existingPlanReference.length !== 0) {
     failures.push(
@@ -1285,6 +1297,7 @@ function runSelfTest(): void {
       `- **Active ExecPlan:** \`${validActivePlanPath}\`.`,
       "",
     ].join("\n"),
+    temporaryPlanRoot,
   );
   if (repeatedCanonicalPlanReference.length !== 0) {
     failures.push(
@@ -1350,6 +1363,7 @@ function runSelfTest(): void {
       "```",
       "",
     ].join("\n"),
+    temporaryPlanRoot,
   );
   if (fencedExecPlanExample.length !== 0) {
     failures.push(
@@ -1365,6 +1379,7 @@ function runSelfTest(): void {
       `- **Active ExecPlan:** \`${validActivePlanPath}\`.`,
       "",
     ].join("\n"),
+    temporaryPlanRoot,
   );
   if (inlineExecPlanExample.length !== 0) {
     failures.push(
@@ -1382,12 +1397,14 @@ function runSelfTest(): void {
       `- **Active ExecPlan:** \`${validActivePlanPath}\`.`,
       "",
     ].join("\n"),
+    temporaryPlanRoot,
   );
   if (multilineInlineExecPlanExample.length !== 0) {
     failures.push(
       `multiline inline-code Active ExecPlan example was treated as live metadata (${multilineInlineExecPlanExample.join("; ")})`,
     );
   }
+  rmSync(temporaryPlanRoot, { force: true, recursive: true });
 
   const duplicateExecPlanReferences = checkRoadmapActiveExecPlanReferences(
     [

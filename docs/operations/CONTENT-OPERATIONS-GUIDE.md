@@ -13,8 +13,8 @@ This guide is operational documentation. It is not product or architecture autho
   [`docs/decisions/003-stage-2-content-pipeline.md`](../decisions/003-stage-2-content-pipeline.md)
   and the Content and Operations sections of
   [`docs/architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
-- Execution state is tracked in the active plan
-  [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
+- Stage 2 execution evidence is recorded in the completed plan
+  [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
 
 Contracts this pipeline touches: `YWAY-P002` (six-part experiment structure), `YWAY-P005` and
 `YWAY-E006` (no scoring or ranking), `YWAY-P019` and `YWAY-E005` (cumulative provenance plus

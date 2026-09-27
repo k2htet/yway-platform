@@ -72,7 +72,7 @@ Statuses reflect current repository evidence, not aspiration. See
   evidenced, including enforced branch protection, onboarding documentation,
   and the fresh-session acceptance test.
 - **Status:** COMPLETE.
-- **Important unresolved questions:** Stage 0 and Stage 1 are complete. Stage 2 is ACTIVE under issue #32; Stage 3 remains PLANNED.
+- **Important unresolved questions:** Stage 0 through Stage 2 are complete; Stage 3 remains PLANNED and requires separate activation.
 
 ## Stage 1 — Product Contracts + Domain Architecture Refinement
 
@@ -90,7 +90,7 @@ Statuses reflect current repository evidence, not aspiration. See
   appropriately reviewed decision records.
 - **Status:** COMPLETE.
 - **Completed ExecPlan:** `docs/exec-plans/completed/STAGE-1-PRODUCT-CONTRACTS-DOMAIN-ARCHITECTURE.md`.
-- **Important unresolved questions:** Deferred architecture questions remain open unless separately decided; the first physical application boundary and future product technology choices are not selected. Stage 2 is ACTIVE under issue #32.
+- **Important unresolved questions:** Deferred architecture questions remain open unless separately decided; the first physical application boundary and future product technology choices are not selected. Stage 2 is COMPLETE.
 
 ## Stage 2 — Content System + Operations Foundation
 
@@ -105,10 +105,10 @@ Statuses reflect current repository evidence, not aspiration. See
   YWAY-P024, and YWAY-E005.
 - **Exit gate:** A representative pack can pass the governed content lifecycle
   with its provenance and review eligibility demonstrably preserved.
-- **Status:** ACTIVE.
-- **Active ExecPlan:** `docs/exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`.
+- **Status:** COMPLETE.
+- **Completed ExecPlan:** `docs/exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`.
 - **Kickoff:** Issue #32 provides explicit owner activation authority and the bounded Stage 2 direction.
-- **Accepted decision and next step:** YWAY-D003 governs the bounded repository-native Stage 2 content pipeline; S2-01 through S2-09 are complete and S2-10 closure validation is next.
+- **Closure evidence:** YWAY-D003 governs the bounded repository-native Stage 2 content pipeline. S2-01 through S2-09 are merged, and issue #42 records S2-10 verification, representative fixture evidence, and final reviews in the completed ExecPlan.
 - **Important unresolved questions:** Production CMS/database/auth/UI, artifact distribution, trusted-root acquisition, and Stage 3 delivery choices remain deferred.
 
 ## Stage 3 — Youth Exploration

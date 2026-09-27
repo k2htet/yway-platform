@@ -2,9 +2,11 @@
 
 ## Status
 
-ACTIVE
+COMPLETE
 
 Activation date: 2026-09-21
+
+Completion date: 2026-09-27
 
 Kickoff issue: #32
 
@@ -42,9 +44,9 @@ Primary contracts:
 - Stage 0 and Stage 1 are COMPLETE.
 - Issue #32 supplies explicit owner authority to start Stage 2.
 - Stage 3 and all later stages remain PLANNED.
-- The repository has no active ExecPlan before this kickoff.
+- The repository had no active ExecPlan before this kickoff.
 - No CMS, workflow engine, database, authentication system, application framework, hosting platform, or UI implementation is selected.
-- Current repository verification has no runtime `test` script; Stage 2 must add `node:test` coverage and include it in `verify:full`.
+- The kickoff repository had no runtime `test` script; Stage 2 added `node:test` coverage and included it in `verify:full`.
 - YWAY-D003 was accepted on 2026-09-22 after four-discipline review, repository verification, and explicit product-owner approval. Its bounded Stage 2 architecture choices are normative; production distribution and trusted-root acquisition remain deferred.
 
 ## Target state
@@ -783,9 +785,8 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 is ACCEPTED. S2-02 through S2-09 are complete; S2-10 (Stage 2 closure validation without
-activating Stage 3) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains
-PLANNED.
+YWAY-D003 is ACCEPTED. S2-02 through S2-10 are complete. Stage 2 is COMPLETE; Stage 3 remains
+PLANNED pending separate owner activation.
 
 Surfaced from S2-07 review but not decided in that step:
 
@@ -885,7 +886,7 @@ Surfaced from S2-08 review. S2-09 answered the three items it owned and left the
 - [x] S2-07 deterministic release/verification complete.
 - [x] S2-08 synthetic lifecycle fixture complete.
 - [x] S2-09 operations documentation complete.
-- [ ] S2-10 closure validation complete.
+- [x] S2-10 closure validation complete.
 
 ## Discoveries log
 
@@ -896,6 +897,7 @@ Surfaced from S2-08 review. S2-09 answered the three items it owned and left the
 - 2026-09-21: A repository-only retirement event is invisible to artifact-only consumers after release; a committed retirement notice and mandatory artifact-side check close that gap without rewriting historical artifacts.
 - 2026-09-22: Checking an optional retirement-notice path cannot authenticate absence; the snapshot needs a canonical inventory bound to the protected Git tree, plus deletion tests.
 - 2026-09-22: Six-field completeness alone does not enforce YWAY-P002; experiment review and release must reject a next fork that escalates commitment before real-world exposure.
+- 2026-09-27: S2-10 closure initially exposed a documentation-check self-test that assumed the Stage 2 plan remained under `active/`; the self-test now uses a temporary active-plan fixture so completed stages do not invalidate it.
 - 2026-09-22: Four-discipline review found no material issue in YWAY-D003, local and GitHub verification passed, and the product owner explicitly accepted the bounded Stage 2 recommendation. Production artifact distribution and trusted-root acquisition remain deferred.
 - 2026-09-23: S2-02 implemented with Zod strict objects, a recursive prohibited-key scan, alias-free strict YAML (`uniqueKeys`, `maxAliasCount: 0`), and draft-2022-12 JSON Schema generation under `content/schemas/` + `content/generated/`. `pnpm test` (`node:test`, 60 tests) was added and now runs inside `verify:full` without changing the verification runner. Generated schema files are excluded from Prettier so committed artifacts stay byte-identical to the deterministic renderer.
 - 2026-09-23: S2-02 review corrections: Pack sources now carry required occupation scope so S2-04 can compare practitioner eligibility against the Pack; source uniqueness is (pack ID, version) because immutable versions share a pack ID; generated JSON Schemas carry the expressible governance conditionals under `allOf` (not emitted by `z.toJSONSchema` from `superRefine`) plus a `$comment` limiting non-expressible rules to runtime validation, with AJV tests proving parity on the cited cases.
@@ -1178,6 +1180,7 @@ Surfaced from S2-08 review. S2-09 answered the three items it owned and left the
 | 2026-09-27 | Add `docs/operations/` content-operations guide, practitioner qualification policy with role-overlap matrix, and lifecycle runbook as operational documentation under ACCEPTED YWAY-D003 | Bounded S2-09 documentation of existing enforced behaviour; states deferred identity, real-qualification, and public-release authority as still deferred, and changes no product rule, schema, command, or public API |
 | 2026-09-27 | Add `tests/content-operations-docs.test.ts` as a documentation drift guard that parses the documented templates with the live schemas and checks every documented invocation against the real parsers | Bounded test-harness addition; verifies the S2-09 documentation instead of asserting it, touches no schema or command, and runs only against temporary roots |
 | 2026-09-27 | Record the S2-09 qualification-policy rules: enforced independence is non-authorship of that exact version; role separation, translator/reviewer separation, `fixture-` ⇒ fixture-only classification, and the frozen eligibility record are policy rather than gate enforcement | Operational statement of rules already authorized by issue #32 and enforced by ACCEPTED YWAY-D003; introduces no new product requirement and leaves identity and authorization deferred |
+| 2026-09-27 | Close Stage 2 under owner-authored issue #42 after merged S2-01–S2-09 work, passing closure verification, and four-discipline review; leave Stage 3 PLANNED | Owner-directed stage closure with evidence, not Stage 3 activation or a new product/architecture decision |
 
 ## Completion criteria
 
@@ -1202,3 +1205,48 @@ Stage 2 closes only when:
 - final product-integrity, architecture, security/privacy, and test reviews have no unresolved material finding
 - Stage 2 is marked COMPLETE only after the exit evidence exists
 - Stage 3 remains PLANNED until separately activated
+
+## S2-10 closure evidence
+
+Stage 2 closed on 2026-09-27 under owner-authored issue #42 after the merged work for
+S2-01 through S2-09. PRs #52, #53, and #54 merged S2-07, S2-08, and S2-09 to `main`;
+GitHub issues #39 and #40 still show OPEN and need tracking cleanup, but their implementation
+and fixture evidence are present in the merged tree. The representative
+`fixture-retail-assistant` Pack exercises a refused commitment-first approval, a
+changes-requested first version, a corrected reviewed and localized second version,
+deterministic release, and retirement. `tests/content-fixture-lifecycle.test.ts` replays
+the lifecycle through repository commands, verifies the committed artifacts, and checks
+that a trusted snapshot refuses the retired version and retirement-notice deletion.
+
+Verification on 2026-09-27 used Node 24.20.0 and pnpm 11.24.0:
+
+| Command | Actual result |
+| --- | --- |
+| `pnpm test` | PASS: 440 tests, 0 failed, 0 skipped |
+| `pnpm agent:doctor` | PASS: READY |
+| `pnpm verify:fast` | PASS: lint and typecheck |
+| `pnpm verify:invariants` | PASS: structural product guardrails |
+| `pnpm verify:full` | PASS: lint, typecheck, format, 440 tests, schema drift, content verification, invariants, and docs |
+
+The Git-backed tests needed execution outside the managed filesystem sandbox because they
+create temporary Git repositories. The first in-sandbox `pnpm test` run failed in three
+test files, and the first doctor run used unsupported Node 22; both were rerun in the
+supported environment before the passing results above. `verify:full` rebuilt the one
+fixture release, checked all three snapshot-index entries, and reported it retired.
+
+Final independent review of the closure change set on 2026-09-27:
+
+- Product integrity: no material product-contract finding. The reviewer confirmed the
+  synthetic fixture is not described as real practitioner endorsement or public release.
+- Architecture: no material domain or ADR finding. YWAY-D003 remains bounded to the
+  repository pipeline; production and physical architecture choices remain deferred.
+- Security/privacy: no material finding. The closure adds no youth-data or consent path
+  and preserves fixture isolation and the deferred identity/trusted-root boundaries.
+- Test: no material finding. The reviewer checked the fixture lifecycle, negative gates,
+  pinned-snapshot retirement cases, and the self-contained documentation-check fixture.
+
+Reviewers identified a closure-record gap while the draft said these outcomes
+would appear below but did not yet include them. This record resolves that finding;
+there is no unresolved material review issue. Stage 3 remains PLANNED and requires
+separate owner activation; no production CMS, database, authentication, distribution,
+or youth-facing application choice is made here.
