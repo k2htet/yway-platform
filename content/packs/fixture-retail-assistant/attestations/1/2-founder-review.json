@@ -1,0 +1,17 @@
+{
+  "actorId": "fixture-founder-one",
+  "contentDigest": "feb1a0b6a69bd870807cfb34358ac71fb351380423a021763c60999bc73ac104",
+  "contentReview": {
+    "exposureBeforeCommitmentConfirmed": false,
+    "sixPartStructureConfirmed": true
+  },
+  "fixtureOnly": true,
+  "kind": "founder-review",
+  "note": "Synthetic fixture review. This draft's next fork asks for a paid course and promised shifts before the young person has watched the work, so it increases commitment before real-world exposure (YWAY-P002). Rewrite the next fork in a new version, and add the Burmese version, the content reading order, and the fictional sponsor disclosure the release gates require.",
+  "outcome": "changes-requested",
+  "packId": "fixture-retail-assistant",
+  "packVersion": 1,
+  "recordedAt": "2026-09-27T04:52:45.248Z",
+  "reviewEventSequence": 2,
+  "schemaVersion": 1
+}

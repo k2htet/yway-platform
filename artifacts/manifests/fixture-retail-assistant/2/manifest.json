@@ -1,0 +1,23 @@
+{
+  "bundle": {
+    "digest": "fa053a0e642ae72b8216bf15e71634dbc26ff8fcfed041cb39ba5d5f6825f23b",
+    "path": "bundles/fixture-retail-assistant/2/bundle.json"
+  },
+  "classification": "fixture",
+  "contentDigest": "ae30f63e0b9568d03f0e025138da10a1ef96a158a8d697703cebba7384419a8f",
+  "fixtureOnly": true,
+  "gates": {
+    "accessibilityApproved": true,
+    "founderApproved": true,
+    "localizationApproved": true,
+    "localizedContentDigest": "0cfad4dae45aba7d96ce5e95fc1dfb7a13072ac551423f50934d66dec747a17c",
+    "practitionerApproved": true,
+    "runtimeAccessibilityDeferred": true,
+    "sponsorship": "disclosed",
+    "targetUserComprehensionDeferred": true
+  },
+  "packId": "fixture-retail-assistant",
+  "packVersion": 2,
+  "releasedAt": "2026-09-27T04:52:59.338Z",
+  "schemaVersion": 1
+}

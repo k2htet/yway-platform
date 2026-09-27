@@ -1,0 +1,34 @@
+schemaVersion: 1
+id: fixture-retail-assistant
+version: 1
+fixtureOnly: true
+canonicalLanguage: en-simple
+aiAssisted: true
+title: "Try shop work: a synthetic practice pack"
+summary: >-
+  A first synthetic draft of a small practice pack about working in a shop. It helps a young
+  person test the work before choosing it. This draft is deliberately incomplete: it has no
+  Burmese version, no reading order, and no sponsorship disclosure yet.
+occupations:
+  - retail-assistant
+preview:
+  headline: Guess what shop work is like
+  description: Write down your assumptions about shop work without visiting or watching a shop.
+limitations:
+  - This is a synthetic fixture pack. No real practitioner wrote or reviewed it.
+  - Nothing here describes a real shop, a real employer, or a real vacancy.
+  - It does not tell you whether shop work suits you, and it does not rank anything.
+  - It has no Burmese version yet, so young people who read Burmese cannot use it.
+experiments:
+  - id: exp-guess-a-busy-counter
+    title: Guess what happens at a busy shop counter
+    question: What do you assume happens when a shop counter gets busy?
+    action: Write down three guesses from memory without visiting a shop or speaking to a worker.
+    timebox: Ten minutes, once.
+    whatToNotice: >-
+      Which guesses are based only on assumptions, and which details you still need to check.
+    reflection: Write one sentence about each guess and one question you still need to check.
+    nextFork: >-
+      Sign up for a paid shop assistant course and promise a shop owner two shifts before you
+      visit a shop or watch the work at all.
+authoredAt: 2026-09-23T00:00:00Z

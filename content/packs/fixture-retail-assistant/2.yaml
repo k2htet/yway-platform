@@ -1,0 +1,87 @@
+schemaVersion: 1
+id: fixture-retail-assistant
+version: 2
+fixtureOnly: true
+canonicalLanguage: en-simple
+aiAssisted: true
+title: "Try shop work: a synthetic practice pack"
+summary: >-
+  A clearly synthetic practice pack about working in a shop. It helps a young person test the
+  work by watching and asking questions before choosing it. It is a fixture for exercising this
+  content pipeline. It is not real career advice and it is not published to young people.
+occupations:
+  - retail-assistant
+preview:
+  headline: Watch one shop worker before you decide
+  description: Spend one hour watching a shop worker and notice what the job really asks of you.
+limitations:
+  - This is a synthetic fixture pack. No real practitioner wrote, reviewed, or endorsed it, and
+    it is not published to young people.
+  - Nothing here describes a real shop, a real employer, a real sponsor, or a real vacancy.
+  - It does not tell you whether shop work suits you. It does not score, rank, compare, or
+    recommend careers.
+  - Anything you write in a reflection is exploration. It is not practice evidence and it is not
+    a verified assessment.
+  - The Burmese version is a synthetic translation fixture. It has not been checked with
+    Burmese-speaking young people, so comprehension is not yet known.
+  - The accessibility check covers content structure only. Screen readers, text scaling, Burmese
+    wrapping, and device behaviour still need separate testing.
+experiments:
+  - id: exp-watch-a-busy-counter
+    title: Watch a busy shop counter
+    question: What is it really like to serve customers on a busy shop counter?
+    action: Ask to spend one hour watching a shop worker at a small shop or market stall.
+    timebox: One hour, once, on a weekend.
+    whatToNotice: >-
+      Which moments felt tiring, which felt calm, and which needed a skill you did not know
+      you had.
+    reflection: Write three sentences about what you noticed and one thing you want to check.
+    nextFork: >-
+      Watch a second shop at a different time of day, then ask one shop worker what a first
+      week on the counter is like. Do this before you pay for any course or promise any shifts.
+  - id: exp-ask-about-a-stock-check
+    title: Ask how a stock check works
+    question: How does a shop worker notice that something is missing from the shelf?
+    action: Watch one shop worker do a stock check and ask what each step is for.
+    timebox: Thirty minutes, once.
+    whatToNotice: Which steps took the longest, and which ones needed careful reading or counting.
+    reflection: >-
+      Write three sentences about the hardest step, and one thing you would want to practise
+      before doing it alone.
+    nextFork: >-
+      Do one small stock check yourself at a shop that will let you, before you ask about a job,
+      a course, or a shift.
+accessibility:
+  scope: content
+  readingOrder:
+    - summary
+    - preview
+    - limitations
+    - exp-watch-a-busy-counter
+    - exp-ask-about-a-stock-check
+  media:
+    - id: exp-ask-about-a-stock-check
+      reference: >-
+        Synthetic placeholder for a photograph of a shop worker counting shelf stock. No real
+        photograph is used.
+      alternativeText: >-
+        A shop worker stands at a shelf with a paper list in one hand and moves boxed items from
+        the shelf to a counter while checking each one off the list.
+      transcript: >-
+        Synthetic text alternative for the stock-check photograph. The image shows a person
+        holding a printed stock list, taking one boxed item at a time from a shelf, and placing
+        it on a counter. Written and checked as part of this synthetic fixture only.
+sponsorship:
+  sponsorName: Not A Real Sponsor Company (fictional fixture sponsor)
+  disclosure: >-
+    This synthetic fixture pack is sponsored by a fictional company that does not exist. The
+    disclosure exists only to exercise the sponsorship gate. No money, product, or service is
+    involved, and no youth data is shared with anyone.
+  editorialIndependence: >-
+    The fictional sponsor cannot add, remove, or rewrite any experiment, cannot change the order
+    of experiments, and cannot see, request, or receive any young person's data. Editorial
+    decisions stay with the content team and with the reviewing practitioner, who for this
+    synthetic fixture is a fixture identity and not a real practitioner.
+  editorialControl: independent
+  orderingInfluence: none
+authoredAt: 2026-09-25T00:00:00Z

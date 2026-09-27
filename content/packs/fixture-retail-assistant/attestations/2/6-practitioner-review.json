@@ -1,0 +1,18 @@
+{
+  "actorId": "fixture-practitioner-one",
+  "contentDigest": "ae30f63e0b9568d03f0e025138da10a1ef96a158a8d697703cebba7384419a8f",
+  "contentReview": {
+    "exposureBeforeCommitmentConfirmed": true,
+    "sixPartStructureConfirmed": true
+  },
+  "fixtureOnly": true,
+  "kind": "practitioner-review",
+  "localizedContentDigest": "0cfad4dae45aba7d96ce5e95fc1dfb7a13072ac551423f50934d66dec747a17c",
+  "note": "Synthetic fixture practitioner review bound to fixture:synthetic-no-credential-001. It exercises the review gate only. No real practitioner reviewed or endorsed this content, and it is not production-quality content.",
+  "outcome": "approved",
+  "packId": "fixture-retail-assistant",
+  "packVersion": 2,
+  "recordedAt": "2026-09-27T04:52:55.831Z",
+  "reviewEventSequence": 6,
+  "schemaVersion": 1
+}
