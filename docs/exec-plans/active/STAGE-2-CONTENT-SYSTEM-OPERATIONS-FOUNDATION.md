@@ -611,6 +611,98 @@ letting full verification pass with that coverage silently unexecuted.
 
 ### S2-09 — Operations documentation
 
+Completed 2026-09-27. Three operations documents were added under `docs/operations/`:
+`CONTENT-OPERATIONS-GUIDE.md` (canonical schema links, the repository layout and its writers, annotated
+YAML authoring templates for the Pack source and the Burmese localization, authoring rules, the
+six-part experiment and exposure-first rule, content-accessibility content, sponsorship disclosure,
+version registration, every review invocation with its full flag set, and the status/verification
+commands); `PRACTITIONER-QUALIFICATION-POLICY.md` (eligibility record template, the mechanically
+enforced eligibility and independence rules, the role-overlap matrix, the four matrix rules that hold
+regardless, the frozen-record rule, and deferred items); and `CONTENT-LIFECYCLE-RUNBOOK.md` (exact
+version/digest review scope, fresh review after every source or localization change, requesting
+changes, the six release gates in order, release, status, trusted-commit snapshot verification, failure
+recovery, retirement, repository privacy rules with a suspected-exposure response, ten known limits,
+and the operational check table). No schema, command, or product rule changed, and no existing
+canonical document was edited.
+
+The documented examples are executable rather than illustrative. `tests/content-operations-docs.test.ts`
+(suite 434 → 440 tests) parses the guide's two YAML templates and the policy's eligibility JSON with
+the live strict schemas, registers and releases those templates together in a temporary repository,
+and checks documented shell-fenced and transcript `pnpm content:*` invocations against the real
+argument parsers for usage errors. It checks that documented `pnpm` scripts exist in `package.json`
+and that documented free-text command flags omit obvious email and URL markers; that narrow marker
+check is not a personal-data audit. Mutation checks confirmed the test fails on a mistyped flag and
+on a template whose literal drifted from the schema. The tests run only against `mkdtemp` roots, so
+a documented mutating command cannot touch the repository.
+
+Verification of the examples was done against the live repository rather than asserted. In a
+throwaway copy of the repository, the guide's own templates were written to disk and every documented
+happy-path command was run in order: registration (seq 1 `authored`, 2 `localized`), the five
+approvals, `content:status` in both output modes, `content:release` (seq 8 `artifact-eligible`, 9
+`artifact-released`), and `content:verify`. A second walkthrough drove the committed fixture Pack
+forward on new versions in a throwaway copy to produce every transcript in the runbook: registration,
+release refusal at `authored` and at `changes-requested`, the approved-attestation confirmation
+refusal, the practitioner-approval-without-founder-checkpoint refusal, an in-place edit of a registered
+version refused on a source-derived digest mismatch, a successful release, duplicate release refused,
+retirement with the notice and index entry, duplicate retirement refused, release of a retired version
+refused, bundle and manifest byte-identical across retirement, a multi-gate release refusal that
+listed all three missing gates and wrote no artifact and no event, a missing previously committed
+attestation detected by `content:status` and restored from Git by path, an altered provenance event and an
+altered attestation actor both detected, an altered content confirmation detected, an elided
+`content:status` transcript annotated, and trusted-commit verification passing then failing on
+notice deletion both with and without a rewritten index.
+
+Two limits were confirmed empirically rather than assumed, and both are now recorded. A note-only
+edit to an attestation file is detected by nothing — `content:status` and `content:verify` both exit 0
+— because no digest covers it. And `evidenceReferences` on the eligibility record is read by no gate
+at all, so an edit to it breaks nothing; only `status`, `verification.status`, `verification.verifiedOn`,
+and `occupations` are gate-load-bearing for historical rebuilds. Earlier drafts of this step claimed
+otherwise and were corrected.
+
+Risk-relevant product-integrity and security/privacy reviews were obtained after the documentation was
+written and the examples were verified, and both reported no blocker and no major finding. Their
+material minor findings were addressed before this record: the guide's contract-coverage sentence
+claimed the pipeline "implements" six contracts and now states the fixture-only subset with the
+reviewer-attested, comprehension-deferred, and fixture-asserted limits inline; the generated JSON
+Schemas were described as a full rendering of the runtime rules and are now described as the
+expressible subset, with the `$comment` and the prohibited-key scan named; the lifecycle diagram
+omitted the legal `changes-requested → founder-reviewed` edge and the prose wrongly said
+`changes-requested` can follow any non-terminal state; the committed negative fixture
+(`content/packs/fixture-retail-assistant/1.yaml`) was undocumented and is now identified in the guide
+as a deliberate commitment-first example that must not be used as an authoring model; the guide's
+sponsored template shipped `"..."` disclosure text and the Burmese template omitted the no-scoring,
+exploration-only, and sponsorship disclosure boundaries its own guidance required, and both now carry
+real clearly-fictional Burmese text matching the committed fixture; the guide's trusted-commit example
+derived the trust anchor from `HEAD`, which the runbook elsewhere forbids, and now uses an explicit
+placeholder and names the owner-published requirement; the policy and runbook both claimed
+`evidenceReferences` was gate-load-bearing and now state the opposite precisely, including that the
+occupation failure names the occupation while the others do not; the artifact boundary was documented
+only for what stays out and now enumerates what crosses it, including that every review actor identity
+and instant is in the bundle bytes; the policy called all four free-text fields unbounded when the two
+evidence fields are 128-capped and pattern-restricted; the runbook's opaque-reference rule dropped the
+length bound and its escalation advice invited an external locator; the `fixture:` evidence rule was
+attributed to the fixture-isolation gate rather than to the two schemas that enforce it; the
+content-accessibility generated schema was listed as "part of both files above"; the eligibility
+follow-up list omitted the sealing decision the S2-07/S2-08 reviews had already surfaced; and the
+exclusivity claim that only `validUntil` expiry is a safe eligibility edit is now stated as which
+edits cannot break a rebuild. Remaining reviewer suggestions were either conservative restatements or
+are recorded as known limits.
+
+PR review then checked product integrity, architecture, security/privacy, and testing against the
+final change set. The runbook now separates restoration of a committed deletion from recovery after
+an uncommitted partial write; the qualification policy names the `localized` actor as registrar, not
+translator. Architecture review prompted the explicit policy for comment/format-only edits that
+canonical digests cannot detect. Test review prompted transcript-command coverage, a linked
+template lifecycle test, and narrower privacy-test wording. Focused re-reviews found no remaining
+material findings.
+
+Verification run on 2026-09-27, all passing: `pnpm verify:docs` (markdown links, roadmap/stage-index
+consistency, ExecPlan placement), `pnpm verify:fast` (lint, typecheck), `pnpm verify:invariants`,
+`pnpm content:schemas:check`, `pnpm content:verify` (1 release, 3 index entries, `retired: true`),
+`pnpm agent:doctor` (READY), and `pnpm verify:full` — lint, typecheck, format, 440 tests with 0 failed
+and 0 skipped, generated-schema drift, `content:verify`, product invariants, and documentation checks.
+S2-10 is next; Stage 2 remains ACTIVE and Stage 3 remains PLANNED.
+
 Add authoring templates, qualification policy, role-overlap matrix, review-scope and re-review rules, failure recovery, release/retirement procedures, and repository privacy guidance.
 
 ### S2-10 — Closure validation
@@ -691,8 +783,8 @@ N/A for youth interaction and synchronization. Stage 2 produces governed content
 
 No kickoff product decision remains unresolved in issue #32. Implementation must stop and surface any newly discovered product or significant architecture decision that is not covered by Product Contracts or an ACCEPTED ADR.
 
-YWAY-D003 is ACCEPTED. S2-02 through S2-08 are complete; S2-09 (content operations policies and
-lifecycle runbooks) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains
+YWAY-D003 is ACCEPTED. S2-02 through S2-09 are complete; S2-10 (Stage 2 closure validation without
+activating Stage 3) is the next active plan step. Stage 2 remains ACTIVE, and Stage 3 remains
 PLANNED.
 
 Surfaced from S2-07 review but not decided in that step:
@@ -705,7 +797,12 @@ Surfaced from S2-07 review but not decided in that step:
   the provenance prefix. Sealing an eligibility digest at `artifact-eligible`, or separating
   "eligibility no longer satisfies the historical evaluation" from artifact mismatch, is a governance
   decision that is not covered by YWAY-D003 or the Product Contracts and is left to a later step or a
-  new decision record.
+  new decision record. S2-09 sharpened this: `status`, `verification.status`,
+  `verification.verifiedOn`, and `occupations` are the gate-load-bearing fields, and
+  `evidenceReferences` is read by no gate at all, so it is schema-validated and otherwise
+  unconstrained. The occupation failure names the occupation; the others do not name the fixture. The
+  qualification policy now states the frozen-record rule and lists the sealing decision as a
+  follow-up.
 - Snapshot index ordering is lexical (code-unit), not numeric, so `10` sorts before `2`. This is
   deterministic and identical for every writer and reader, and is pinned by a test; it is recorded
   because a numeric expectation would be a silent behavioural trap for future maintainers.
@@ -730,37 +827,47 @@ Surfaced from S2-07 review but not decided in that step:
   analysis of `nextFork`. A structurally complete commitment-first negative Pack fixture is
   explicitly S2-08 scope; no structural `nextFork` analysis is claimed here.
 
-Surfaced follow-ups from S2-04 reviews (not decided in that step): founder/practitioner role
-overlap is not gate-enforced — independence in S2-04 means non-author only, and the role-overlap
-matrix remains S2-09; a consistent `fixtureOnly: false` relabeling of pack, governance records,
-and provenance together passes cross-record consistency (flag-based classification cannot
-authenticate intent while identity/authorization remain deferred under YWAY-D003) — an inverse
-`fixture-`-identity ⇒ `fixtureOnly` rule and qualification-policy wording are deferred to S2-09;
-the attestation `note` field remains unbounded free text for S2-09 privacy guidance.
+Surfaced follow-ups from S2-04 reviews. S2-09 has now stated all three in
+`docs/operations/PRACTITIONER-QUALIFICATION-POLICY.md`; none of them became a gate, a schema change,
+or a new product rule, and each remains an open follow-up for a later authorized step:
 
-Surfaced from S2-08 review and left for S2-09 or a later step (not decided in S2-08):
+- Founder/practitioner role overlap is not gate-enforced — independence in S2-04 means non-author of
+  that exact version only, and S2-04 also does not check the `localized` event actor. S2-09 records
+  the exact boundary and states the separation as policy in the role-overlap matrix. Making any of it
+  machine-checkable is a schema and gate change.
+- A consistent `fixtureOnly: false` relabeling of pack, governance records, and provenance together
+  passes cross-record consistency, because flag-based classification cannot authenticate intent while
+  identity and authorization remain deferred under YWAY-D003. S2-09 states the inverse rule
+  (`fixture-` identity ⇒ fixture-only) as policy, records that the relabelling is not detectable, and
+  lists an inverse gate rule as a follow-up.
+- The attestation `note` field is unbounded free text and is covered by no digest. S2-09 confirmed
+  empirically that a note-only edit is detected by nothing and records that as a known limit with
+  privacy guidance for the field, rather than implying a detection control that does not exist.
+
+Surfaced from S2-08 review. S2-09 answered the three items it owned and left the fourth alone:
 
 - The review-argument contract is built once in `tests/content-cli-fixtures.ts`
   (`fixtureReviewArgs`, `fixtureReviewActors`, `fixtureReviewOrder`) and used by the two
   repository-command fixture lifecycles, but `tests/content-release.test.ts` and
   `tests/content-cli-lifecycle.test.ts` still hand-write some attest argument vectors and
   hardcode the practitioner actor. Consolidating them onto the shared builder is a test-harness
-  refactor, not product or architecture authority, and is recorded rather than folded into S2-08.
+  refactor, not product or architecture authority, and remains open.
 - `content/accessibility.readingOrder` is not required to cover every authored section or
   experiment, so an accessibility approval can confirm a reading order that silently omits an
   experiment. The committed fixture's reading order is complete and is asserted as a fixture property
-  in both locales, but the gate still does not require it; making it a gate-level requirement is a
-  S2-09 accessibility-policy question.
+  in both locales, but the gate still does not require it. S2-09 recorded this as known limit 1 of
+  the runbook, told authors and reviewers to check coverage themselves, and left making it a
+  gate-level requirement a schema and product decision rather than answering it.
 - The attestation `note` field remains unbounded free text. S2-08 asserts that every committed
   fixture note is non-empty and carries a synthetic marker, which pins this fixture's privacy
-  posture but does not constrain a future non-fixture note. The S2-09 privacy guidance still owns
-  the bound.
+  posture but does not constrain a future non-fixture note. S2-09 supplied the missing bound as
+  guidance and confirmed there is no detection control behind it.
 - The localization-review `fluentBurmeseConfirmed` field reads as a real confirmation even for a
   fixture record; only the `fixture-` actor, the `fixture:` evidence reference, `classification:
   "fixture"`, and the note text mark it as synthetic. This extends the S2-07 unresolved question
   about a symmetric synthetic marker on `localizationApproved` to the attestation itself, and is
   recorded here with `artifacts/manifests/fixture-retail-assistant/2/manifest.json` as the reference
-  instance.
+  instance. S2-09 restates it as a runbook known limit and adds no marker.
 
 ## Progress checklist
 
@@ -777,7 +884,7 @@ Surfaced from S2-08 review and left for S2-09 or a later step (not decided in S2
 - [x] S2-06 localization/accessibility/sponsorship gates complete.
 - [x] S2-07 deterministic release/verification complete.
 - [x] S2-08 synthetic lifecycle fixture complete.
-- [ ] S2-09 operations documentation complete.
+- [x] S2-09 operations documentation complete.
 - [ ] S2-10 closure validation complete.
 
 ## Discoveries log
@@ -1001,6 +1108,40 @@ Surfaced from S2-08 review and left for S2-09 or a later step (not decided in S2
   `verifyRepository`'s wiring, and replaced with a non-redundant negative through the same
   production seam: a copy of the committed tree verifies, and a single whitespace change to the
   copied bundle does not.
+- 2026-09-27: S2-09 confirmed empirically that a note-only edit to an attestation file is detected by
+  nothing. `content:status` and `content:verify` both exit 0 after one, because no digest covers the
+  field: the artifact boundary excludes it and the provenance chain does not reference it. Only the
+  meaning-bearing attestation fields are bound (actor, instant, outcome, sequence, digests,
+  confirmations), and those are enforced through the event binding, the schema, and the re-evaluated
+  gate. This is the bound the S2-04 and S2-08 reviews left to S2-09 privacy guidance, and it is now
+  stated in the runbook's known limits rather than left implicit.
+- 2026-09-27: S2-09 found the inverse of the assumption S2-08 recorded about the eligibility record.
+  `evidenceReferences` is read by no gate — it is validated by schema and nothing else — so editing it
+  breaks no rebuild and is equally undetectable. Only `status`, `verification.status`,
+  `verification.verifiedOn`, and `occupations` are gate-load-bearing for historical verification. The
+  frozen-record rule therefore rests on governance, not on a detection control, and both the
+  qualification policy and the runbook now say so. The occupation-scope failure names the occupation;
+  the status and verification failures do not name the fixture.
+- 2026-09-27: `changes-requested` is not a dead end at the lifecycle level: `content/lifecycle.ts`
+  allows `changes-requested → founder-reviewed`, so a declined review can be retried on the same
+  content digest. The S2-09 runbook diagram originally omitted that edge and the prose wrongly said
+  `changes-requested` can follow any non-terminal state, which is false for `artifact-released`. Both
+  were corrected. In practice a content fix still needs a new version, because the localization
+  cannot be introduced after a `changes-requested` cycle.
+- 2026-09-27: A documentation deliverable whose entire value is being accurate against code needs a
+  drift guard, and `tests/content-operations-docs.test.ts` is that guard: it parses the documented
+  templates with the live strict schemas, runs the linked example lifecycle, checks documented shell
+  and transcript commands through the real argument parsers, checks that every documented `pnpm`
+  script exists, and flags obvious email or URL markers in documented free-text command values. It
+  was confirmed to fail on a mistyped flag and on a template literal that drifted from the schema.
+  This is a test-harness addition, not a schema, API, or product change, and it runs only against
+  `mkdtemp` roots. Human privacy review remains necessary.
+- 2026-09-27: S2-09 architecture review identified that canonical content digests cover parsed YAML
+  values, not comments, key order, or formatting. Value changes to registered sources are refused,
+  but the repository commands cannot detect comment-only or formatting-only edits. The guide and
+  runbook now require every registered source and localization file to remain unchanged by policy,
+  including those bytes, and direct any edit to a new version and fresh review. No new digest or
+  versioning mechanism was introduced in S2-09.
 
 ## Decision log
 
@@ -1034,6 +1175,9 @@ Surfaced from S2-08 review and left for S2-09 or a later step (not decided in S2
 | 2026-09-26 | Fix the snapshot index ordering to code-unit comparison and require every surface (release, retirement, repository verification, trusted snapshot) to accept only the canonical rendering | Review-driven determinism and fail-closed correction; a host collation or an anomalous committed index must not be normalized silently |
 | 2026-09-26 | Run `content:schemas:check` and `content:verify` inside `verify:full` and fail closed when the `test` script is missing | Review-driven governance-surface correction; verification must not pass while skipping the content control surface or the suite |
 | 2026-09-26 | Anchor the artifact-only provenance check on the release manifest's `releasedAt` and state in code that prefix completeness for earlier versions is not provable without the authoring sources | Review-driven honesty correction; a self-referential pin proves nothing and must not be reported as a control |
+| 2026-09-27 | Add `docs/operations/` content-operations guide, practitioner qualification policy with role-overlap matrix, and lifecycle runbook as operational documentation under ACCEPTED YWAY-D003 | Bounded S2-09 documentation of existing enforced behaviour; states deferred identity, real-qualification, and public-release authority as still deferred, and changes no product rule, schema, command, or public API |
+| 2026-09-27 | Add `tests/content-operations-docs.test.ts` as a documentation drift guard that parses the documented templates with the live schemas and checks every documented invocation against the real parsers | Bounded test-harness addition; verifies the S2-09 documentation instead of asserting it, touches no schema or command, and runs only against temporary roots |
+| 2026-09-27 | Record the S2-09 qualification-policy rules: enforced independence is non-authorship of that exact version; role separation, translator/reviewer separation, `fixture-` ⇒ fixture-only classification, and the frozen eligibility record are policy rather than gate enforcement | Operational statement of rules already authorized by issue #32 and enforced by ACCEPTED YWAY-D003; introduces no new product requirement and leaves identity and authorization deferred |
 
 ## Completion criteria
 
