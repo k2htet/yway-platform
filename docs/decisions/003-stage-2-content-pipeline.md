@@ -6,7 +6,7 @@
 - Date: 2026-09-21
 - Status: ACCEPTED
 - Owners: Yway engineering / product owner
-- Related ExecPlan: docs/exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md
+- Related ExecPlan: docs/exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md
 - Related Product Contracts: YWAY-P002, YWAY-P005, YWAY-P019, YWAY-P020, YWAY-P023, YWAY-P024, YWAY-E005
 
 ## Context
@@ -148,8 +148,8 @@ Migration must preserve all historical provenance and review scope; no migration
 
 - [x] S2-01 (#33): complete review and change this ADR to ACCEPTED, REJECTED, or DEFERRED.
 - [x] If accepted, reconcile the directly affected Content/Practitioner/Operations Architecture text and Stage 2 unresolved questions.
-- [ ] S2-02 through S2-09 implement and document the accepted semantics.
-- [ ] S2-10 validates the complete synthetic lifecycle and closes Stage 2 without activating Stage 3.
+- [x] S2-02 through S2-09 implement and document the accepted semantics.
+- [x] S2-10 validates the complete synthetic lifecycle and closes Stage 2 without activating Stage 3.
 
 ## Decision History
 

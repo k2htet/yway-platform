@@ -15,8 +15,8 @@ This policy is operational documentation. It is not product or architecture auth
 - Roles and responsibilities are split across the Content, Practitioner, and Operations/Safeguarding
   domains in [`docs/architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
 - Role separation for content review, and the fixture/real-world boundary, are operating
-  authorization from the Stage 2 kickoff issue #32, recorded in the active plan
-  [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/active/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
+  authorization from the Stage 2 kickoff issue #32, recorded in the completed plan
+  [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
 - Authoring and review command syntax is in
   [`CONTENT-OPERATIONS-GUIDE.md`](CONTENT-OPERATIONS-GUIDE.md); procedures are in
   [`CONTENT-LIFECYCLE-RUNBOOK.md`](CONTENT-LIFECYCLE-RUNBOOK.md).
