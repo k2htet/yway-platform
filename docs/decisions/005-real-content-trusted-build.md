@@ -270,7 +270,7 @@ false.
 | **A practitioner approves their own work**                                      | Mechanically refused for the exact version: "practitioner approver \"…\" authored … approval must come from an independent practitioner" (`content/practitioner-gate.ts:516-528`)                                                                                                 | Narrow by construction and stated as such: independence is **non-authorship of that exact version only**. Not enforced: separation from the founder role, authorship of the localization, authorship of an earlier version of the same Pack, translator-equals-fluency-reviewer, or connection to the Pack's sponsor. The owner-side record covers these (`docs/operations/PRACTITIONER-QUALIFICATION-POLICY.md:114-130,140-143`) |
 | **Someone authors a real Pack from fixture-authored content**                   | A real Pack requires a new Pack ID and fresh provenance history, and fixture Pack IDs are permanently fixture-classified, so no fixture _identity_ is reused                                                                                                                      | **The dangerous action is not eliminated, only narrowed.** Copying fixture scenario text under a new Pack ID with rewritten actor strings produces a different content digest, trips none of these controls, and is **not detectable by any repository mechanism**. Review-enforced only, and named as such                                                                                                                       |
 | **A real Pack carries synthetic evidence**                                      | Today: nothing. The `fixture:` evidence prefix is required _only_ when `fixtureOnly` is true (`content/schemas/practitioner-eligibility.ts:54-73`), and a positive test confirms a non-fixture record may use any reference (`tests/content-schemas.test.ts:603-614`)             | **Part A item 2 requires the inverse rules and assigns them to #60 as blocking checks.** Until #60 lands, a real Pack could cite `fixture:` evidence for its qualification and its Burmese fluency                                                                                                                                                                                                                                |
-| **Someone promotes a fixture Pack by relabelling it**                           | A real Pack requires a **new Pack ID**; fixture Pack IDs are permanently fixture-classified and are a verifier-side rule, not a repository-editable record; the bundle schema pins `classification`; the real path (#60) must refuse fixture-classified content for a pilot build | The **relabelling itself is not detected**; the _release_ of a relabelled fixture is impossible. Governance and review control                                                                                                                                                                                                                                                                                                    |
+| **Someone promotes a fixture Pack by relabelling it**                           | A real Pack requires a **new Pack ID**; fixture Pack IDs are permanently fixture-classified by a verifier-side rule rather than a content record; the bundle schema pins `classification`; the real path (#60) must refuse fixture-classified content for a pilot build | The **relabelling itself is not detected**; the _release_ of a relabelled fixture is refused by the approved verifier. A repository change to that rule requires review                                                                                                                                                                                                                                                           |
 | **Someone pins an older, still-valid commit**                                   | Nothing in Git. An older commit is a _valid_ trusted root, and a pre-retirement commit is internally consistent                                                                                                                                                                   | **Accepted and stated.** This is why the pin is an owner act and why clearance is re-taken per session against the current protected branch, not once per build                                                                                                                                                                                                                                                                   |
 | **Someone extracts Packs from a distributed APK**                               | Packs are content intended for the participant; the control is that the bundle must not overclaim                                                                                                                                                                                 | Actor handles and review instants are inside the bundle bytes, exactly as they are for the fixture. Real actor identifiers must therefore be opaque owner-issued handles, never names — a normative constraint in Part A, not a preference                                                                                                                                                                                        |
 | **Someone tampers with the installed APK**                                      | Post-install content integrity derives from `YWAY-D004`'s local APK signature and its pre-session artifact-hash check (`docs/decisions/004-android-delivery-local-state.md:114,347-351`)                                                                                          | A resigned or repackaged APK is **indistinguishable to the content layer**; both bundle and manifest digests are recomputable. The signing key is the trust anchor, and the two decisions are coupled                                                                                                                                                                                                                             |
@@ -551,8 +551,9 @@ reviewed, non-fixture Career Experience Pack content** on an offline device, suc
    permanently fixture-classified**, which is stronger than a flag: changing the classification of an
    existing fixture ID does not create a real Pack, it creates a Pack that no authorized path will
    release. The rule is **verifier-side** — a constant or a rule over the Pack-ID namespace — so that
-   the same writer who could relabel a record cannot also edit the rule that refuses it. It must also
-   cover fixture Packs added later, not only those existing today.
+   changing content records alone cannot change the refusal. The verifier code and its tests remain
+   editable through repository changes; repository review is the control for changes to the rule. It
+   must also cover fixture Packs added later, not only those existing today.
 5. **The scope of the fixture guarantee, stated precisely.** This closes Pack **identity** and
    **provenance** reuse. It does **not** eliminate the dangerous action; it narrows it. Copying
    fixture-authored scenario text under a new Pack ID with rewritten actor strings produces a
@@ -648,21 +649,29 @@ reviewed, non-fixture Career Experience Pack content** on an offline device, suc
     against, so a containment check would produce a stronger false assurance than the honest statement.
     The build record therefore carries the branch and remote ref name and the value the ref resolved to,
     as **provenance for audit**, explicitly not as a verified property.
-15. **The build runs from that exact clean checkout.** The checkout is at the pinned SHA; the tracked
-    tree and index show no uncommitted modification; and Git is invoked with the existing hardening,
-    which always passes `--no-replace-objects` and clears the nine `GIT_*` variables
-    (`content/snapshot-verify.ts:63-116`). A dirty checkout is a build failure, not a warning. Note
-    the limit: that hardening neutralizes **ref and object-store redirection**. `GIT_CONFIG_*` and
-    `GIT_NAMESPACE`-class inputs are not part of this claim.
+15. **The build runs from a fresh, isolated checkout at the pinned SHA.** The checkout is created in
+    an empty directory. Before dependency setup, its tracked tree and index show no uncommitted
+    modification and it contains no untracked or ignored files. Any untracked or ignored input later
+    used by the build must be produced by the prescribed build process from the pinned source and
+    frozen lockfile; otherwise the build fails. The tracked tree and index are checked again after
+    dependency setup, immediately before repository verification, and before packaging; any change
+    from the pinned commit fails the build. In particular, an app source, resource, or build
+    configuration file outside the pin cannot enter through Git's tracked-file clean check. Git is
+    invoked with the existing hardening, which always passes
+    `--no-replace-objects` and clears the nine `GIT_*` variables
+    (`content/snapshot-verify.ts:63-116`). That hardening neutralizes **ref and object-store
+    redirection**; `GIT_CONFIG_*` and `GIT_NAMESPACE`-class inputs are not part of this claim.
 16. **Verification order, all of it mandatory, and the last step fails closed:**
     1. The trusted root is a full commit SHA and resolves in this repository.
-    2. The checkout is clean and at exactly that commit.
-    3. **The repository verifier passes against the clean checkout, reading sources from the pinned
-       commit rather than from the working tree.** This is the step that supplies content authenticity
-       and provenance-prefix completeness within the pin, which the pinned-tree comparison cannot
-       supply. It already exists as `pnpm content:verify` and is already required by
-       `scripts/run-verification.ts:39-40`; the build must call it, and the ordering constraint — pinned
-       commit, not working tree — is part of the requirement, not an implementation detail.
+    2. The fresh, isolated checkout is at exactly that commit, has a clean tracked tree and index,
+       and contains no untracked or ignored files before dependency setup. After setup and immediately
+       before verification, its tracked tree and index are checked again against the pin. Any later
+       untracked or ignored build input satisfies item 15.
+    3. **The repository verifier passes against the clean checkout, reading sources from its working
+       tree after the tracked-file check against the pinned commit.** This is the step that supplies
+       content authenticity and provenance-prefix completeness within the pin, which the pinned-tree
+       comparison cannot supply. It already exists as `pnpm content:verify` and is already required by
+       `scripts/run-verification.ts:39-40`; the build must call it after the post-setup clean check.
     4. The snapshot verifies exhaustively in **both** directions against the pinned tree, for every file
        under `artifacts/`: every local file present in the pin, every pinned blob present locally and
        byte-identical, the index present, the index a canonical deterministic rendering, every pinned
@@ -684,7 +693,9 @@ reviewed, non-fixture Career Experience Pack content** on an offline device, suc
        never become a preference, popularity, or ranking signal (`YWAY-P025`), and a pilot build is
        expected to carry at least two distinct careers for the working try-another route
        (`YWAY-P013`) and the plan's two-Pack exit criterion.
-    8. **The build re-verifies its own output.** `verifyArtifactSnapshot` returns byte-verified buffers
+    8. **The build re-verifies its own output.** The tracked tree and index are checked once more
+       against the pin immediately before packaging; any change fails the build.
+       `verifyArtifactSnapshot` returns byte-verified buffers
        (`content/snapshot-verify.ts:323-344,406`), and **embedding consumes those buffers** rather than
        re-reading the working tree, closing the window between verification and packaging. After the
        APK is produced, it is opened again, its embedded asset set enumerated, each entry hashed, and
