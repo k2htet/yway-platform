@@ -221,6 +221,24 @@ screen-reader validation carried by #66. Its one check it could not run — that
 content schema and pipeline code, the regenerated `content/generated/` schemas, tests, and docs, and
 nothing under `artifacts/` or `content/packs/`.
 
+Independent architecture and test reviews on 2026-09-28 found no blocking item and confirmed the
+shared seam, the layering, and the fail-closed direction of the gate reordering. Their non-blocking
+findings were resolved in the same change: the parity module now derives its experiment type from
+`experimentSchema` instead of restating a hand-maintained subset, so a rename becomes a type error;
+the paired-content tests gained a multi-experiment fixture so experiment *reordering* and a defect on
+the second experiment are both exercised, which a single-experiment fixture could not detect; the
+version-reuse test now gives version 2 its own task text and asserts the released bundle carries it;
+the unknown-field test now asserts the exact rejection reason per case, so the prohibited-key scan is
+no longer satisfied by strict parsing alone; and the generated release-bundle schema is now compiled
+and validated for both polarities. One finding was **not** actioned and needs owner direction: this
+change shifted the fixture-isolation refusal that `YWAY-D005` cites by line number from
+`content/release-gates.ts:672-680` to `:660-668`, so the citation is now stale. The quoted message
+text is byte-identical, the refusal is still the first throw in `evaluateReleaseGates`, and the
+substantive `YWAY-D005` claim is unaffected, but correcting a line citation inside an `ACCEPTED`
+decision is a control-surface edit that `CONTRIBUTING.md` reserves for independent review and owner
+awareness, and Architecture forbids silently rewriting an accepted decision. It is therefore
+recorded here and left for the owner rather than edited in this change.
+
 One behaviour change beyond adding the field: `evaluateReleaseGates` now checks parity immediately
 after parsing the pair and before verifying the localized digest, so an out-of-parity pair is
 refused by naming the specific defect rather than only as a digest mismatch. An in-parity pair faces
@@ -254,12 +272,12 @@ Recorded limits, none of which this change resolves:
   releasable; that remains #60 and the accepted `YWAY-D005` path.
 
 Repository verification actually run on 2026-09-28 (Node 24.20.0, pnpm 11.24.0): focused schema,
-localization, paired-content, lifecycle, and release tests passed (115 tests in
+localization, paired-content, lifecycle, and release tests passed (117 tests in
 `tests/content-schemas.test.ts`, `tests/content-json-schema.test.ts`, and
 `tests/content-interactive-task.test.ts`); `pnpm agent:doctor` READY; `pnpm content:schemas:check`
 passed; `pnpm content:verify` passed with the committed retired fixture release unchanged;
 `pnpm verify:invariants` passed; `pnpm verify:fast` passed; `pnpm verify:full` passed (lint,
-typecheck, format check, verification-runner self-test, 460 tests passed / 0 failed / 0 skipped,
+typecheck, format check, verification-runner self-test, 462 tests passed / 0 failed / 0 skipped,
 generated-schema check, content verify, invariants, docs). All fixtures are synthetic; no test
 fixture claims a real practitioner approved anything, and the eligibility record used in these tests
 is the committed `fixture-` identity.

@@ -400,7 +400,7 @@ test("rejects a task that is missing a required field or carries a blank one", (
     );
   }
   for (const field of ["id", "text", "feedback"]) {
-    for (const blank of [undefined, ""]) {
+    for (const blank of [undefined, "", "   "]) {
       const task = validInteractiveTask();
       const [choice] = task["choices"] as Record<string, unknown>[];
       if (blank === undefined) {
@@ -449,31 +449,33 @@ test("rejects an interactive task with fewer than two choices", () => {
 });
 
 test("rejects an unknown field at the task or choice level", () => {
-  for (const [level, unknownField] of [
-    ["task", { score: 3 }],
-    ["task", { rank: 1 }],
-    ["task", { correctChoiceId: "greet-and-check-stock" }],
-    ["choice", { rank: 1 }],
-    ["choice", { answerKey: true }],
-    ["choice", { capabilityAssessment: "strong" }],
+  for (const [level, unknownField, reason] of [
+    // A score or ranking name is refused by the recursive prohibited-key scan
+    // (YWAY-P005, YWAY-E006) even inside a valid object, and must keep being.
+    ["task", { score: 3 }, "prohibited scoring or ranking field"],
+    ["task", { rank: 1 }, "prohibited scoring or ranking field"],
+    ["choice", { rank: 1 }, "prohibited scoring or ranking field"],
+    // A judgement-shaped name the scan does not match is refused only by strict
+    // parsing, because no such field exists to hold it.
+    ["task", { correctChoiceId: "greet-and-check-stock" }, "Unrecognized key"],
+    ["choice", { answerKey: true }, "Unrecognized key"],
+    ["choice", { capabilityAssessment: "strong" }, "Unrecognized key"],
   ] as const) {
     const task = validInteractiveTask();
     const target = level === "task" ? task : (task["choices"] as Record<string, unknown>[])[0]!;
     Object.assign(target, unknownField);
+    const name = Object.keys(unknownField)[0]!;
     const failure = expectStrictFailure(
       () =>
         strictParse(
           packSourceSchema,
           validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
         ),
-      Object.keys(unknownField)[0],
+      name,
     );
-    const fragment = Object.keys(unknownField)[0]!;
     assert.ok(
-      failure.message.includes("prohibited scoring") ||
-        failure.message.includes("Unrecognized key") ||
-        failure.message.includes("is not allowed"),
-      `expected a prohibited or unknown-field rejection for ${fragment}, received: ${failure.message}`,
+      failure.message.includes(reason),
+      `expected "${reason}" for ${level}-level ${name}, received: ${failure.message}`,
     );
   }
 });

@@ -281,7 +281,11 @@ fluency, not meaning, and must read the two languages' feedback for the same cho
 Choice order is declared authored reading order, but `accessibility.readingOrder` can reference only
 media identifiers and no schema or attestation field binds a task's choice order, so an approved
 accessibility review can confirm an order that never mentions the task; screen-reader validation of
-the task screen belongs to the youth-flow and device-validation issues. Recording what a young person
+the task screen belongs to the youth-flow and device-validation issues. The bundle schema now refuses
+a bundle whose two documents are not in parity, which is a tightening of validation on an immutable
+artifact: it is fail-closed, `schemaVersion` stays 1 because the field is optional, and any future
+rule added to bundle validation must be re-checked against every already-released bundle, which
+`pnpm content:verify` does by rebuilding historical artifacts. Recording what a young person
 chose is part of the later youth flow and is not implemented here, and the content model encodes no
 selection mode, so whether a task accepts one choice or several is an open owner product decision
 rather than something this pipeline settles.

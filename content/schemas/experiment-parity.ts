@@ -1,19 +1,17 @@
-import type { StrictValidationIssue } from "./common.js";
+import { z } from "zod";
+import { experimentSchema, type StrictValidationIssue } from "./common.js";
 
 /**
- * The part of an experiment that must match across two languages.
+ * The experiment shape, taken from the schema itself rather than restated here.
  *
- * This is deliberately structural rather than a `PackSource`/`LocalizedContent`
- * pair: every paired-content boundary — the source loader, the release gates,
- * and the release bundle schema — hands the same experiment lists to the same
- * check, so the rules cannot drift apart per boundary.
+ * Deriving it means renaming or removing `id` or `interactiveTask` becomes a
+ * type error at every boundary instead of silently excluding a field from
+ * comparison. It cannot express *which* new field has to be compared — only
+ * identifier and order-bearing fields are — so a later field that decides which
+ * response a recorded selection refers to must be added to the rules below and
+ * to the parity tests in the same change.
  */
-export interface ParityExperiment {
-  readonly id: string;
-  readonly interactiveTask?: {
-    readonly choices: readonly { readonly id: string }[];
-  };
-}
+export type ParityExperiment = z.infer<typeof experimentSchema>;
 
 function sameOrderedValues<T>(left: readonly T[], right: readonly T[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);

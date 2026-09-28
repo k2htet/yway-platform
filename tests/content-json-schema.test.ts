@@ -622,13 +622,15 @@ test("generated schemas reject a task that is missing, blank, too short, or unkn
       `${name} must reject a blank choice feedback`,
     );
 
-    const oneChoice = generatedInteractiveTask();
-    oneChoice["choices"] = [(task["choices"] as Record<string, unknown>[])[0]!];
-    assert.equal(
-      validate(withGeneratedInteractiveTask(base, oneChoice)),
-      false,
-      `${name} must require at least two choices`,
-    );
+    for (const choices of [[(task["choices"] as Record<string, unknown>[])[0]!], []]) {
+      const tooFew = generatedInteractiveTask();
+      tooFew["choices"] = choices;
+      assert.equal(
+        validate(withGeneratedInteractiveTask(base, tooFew)),
+        false,
+        `${name} must require at least two choices, not ${choices.length}`,
+      );
+    }
 
     for (const [level, unknownField] of [
       ["task", { score: 3 }],
@@ -657,6 +659,65 @@ test("generated schemas reject a task that is missing, blank, too short, or unkn
       );
     }
   }
+});
+
+function validGeneratedBundle(task: Record<string, unknown> | undefined): Record<string, unknown> {
+  const digest = "a".repeat(64);
+  const pack = withGeneratedInteractiveTask(runtimeValidPackFixture(), task);
+  const localized = withGeneratedInteractiveTask(runtimeValidLocalizedFixture(), task);
+  return {
+    schemaVersion: 1,
+    packId: "fixture-local-guide",
+    packVersion: 1,
+    contentDigest: digest,
+    localizedContentDigest: "b".repeat(64),
+    fixtureOnly: true,
+    classification: "fixture",
+    releasedAt: "2026-09-23T02:00:00Z",
+    pack,
+    localizedContent: localized,
+    provenance: {
+      schemaVersion: 1,
+      packId: "fixture-local-guide",
+      events: [
+        {
+          schemaVersion: 1,
+          packId: "fixture-local-guide",
+          packVersion: 1,
+          sequence: 1,
+          type: "artifact-released",
+          actorId: "fixture-operator-one",
+          fixtureOnly: true,
+          contentDigest: digest,
+          previousEventDigest: null,
+          eventDigest: "c".repeat(64),
+          recordedAt: "2026-09-23T02:00:00Z",
+        },
+      ],
+    },
+  };
+}
+
+test("the generated release bundle schema validates task-bearing and task-free bundles", () => {
+  const validate = compileGenerated("release-bundle");
+  assert.equal(
+    validate(validGeneratedBundle(generatedInteractiveTask())),
+    true,
+    firstValidationError(validate),
+  );
+  assert.equal(
+    validate(validGeneratedBundle(undefined)),
+    true,
+    "a bundle whose experiments carry no task must stay valid",
+  );
+
+  const malformed = validGeneratedBundle(
+    generatedInteractiveTask({ choices: [{ id: "greet", text: "Only one choice." }] }),
+  );
+  assert.equal(validate(malformed), false, "a one-choice task must be rejected in a bundle");
+
+  const withScore = validGeneratedBundle(generatedInteractiveTask({ score: 3 }));
+  assert.equal(validate(withScore), false, "a score field must be rejected in a bundle");
 });
 
 test("the generated schema cannot express what the runtime parity check enforces", () => {

@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { stringify } from "yaml";
 import {
+  StrictValidationError,
+  collectExperimentParityIssues,
   contentDigest,
   eligibilityPath,
   evaluateReleaseGates,
@@ -98,6 +100,15 @@ function canonicalExperiment(overrides: Record<string, unknown> = {}): Record<st
   return { ...canonicalExperimentBase, interactiveTask: canonicalTask(), ...overrides };
 }
 
+/**
+ * The Burmese side of the pair.
+ *
+ * The six required parts deliberately reuse the English base here: these tests
+ * are about identifier and order parity, which is blind to prose, and the
+ * per-language text difference is asserted on the task itself. Real localized
+ * content is authored in Burmese, as the worked template in the operations
+ * guide shows.
+ */
 function localizedExperiment(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return { ...canonicalExperimentBase, interactiveTask: localizedTask(), ...overrides };
 }
@@ -119,6 +130,32 @@ function makeTaskLocalization(
   );
 }
 
+/**
+ * A canonical document and its localization that are in full task parity.
+ *
+ * `experiments` overrides the experiment list on both sides, which is how a
+ * multi-experiment pack is built for the index-alignment tests.
+ */
+function validPairOf(
+  version: number,
+  experiments: {
+    readonly canonical: readonly Record<string, unknown>[];
+    readonly localized: readonly Record<string, unknown>[];
+  },
+): ContentPair {
+  const pack = strictParse(
+    packSourceSchema,
+    packSourceObject({ version, experiments: [...experiments.canonical] }),
+  );
+  return {
+    pack,
+    localized: strictParse(
+      localizedContentSchema,
+      localizedContentObject(pack, { experiments: [...experiments.localized] }),
+    ),
+  };
+}
+
 interface ContentPair {
   readonly pack: PackSource;
   readonly localized: LocalizedContent;
@@ -137,21 +174,35 @@ interface ParityViolation {
   readonly mutate: (pair: ContentPair) => ContentPair;
 }
 
+/** Replaces one experiment by its position, leaving every other position alone. */
 function withLocalizedExperiment(
   pair: ContentPair,
   experiment: Record<string, unknown>,
+  index = 0,
 ): ContentPair {
-  return {
-    ...pair,
-    localized: { ...pair.localized, experiments: [experiment] } as LocalizedContent,
-  };
+  const experiments = [...pair.localized.experiments];
+  experiments[index] = experiment as LocalizedContent["experiments"][number];
+  return { ...pair, localized: { ...pair.localized, experiments } };
 }
 
+/** Replaces one experiment by its position, leaving every other position alone. */
 function withCanonicalExperiment(
   pair: ContentPair,
   experiment: Record<string, unknown>,
+  index = 0,
 ): ContentPair {
-  return { ...pair, pack: { ...pair.pack, experiments: [experiment] } as PackSource };
+  const experiments = [...pair.pack.experiments];
+  experiments[index] = experiment as PackSource["experiments"][number];
+  return { ...pair, pack: { ...pair.pack, experiments } };
+}
+
+/** Swaps two experiments, which is an ordering defect rather than a membership one. */
+function withReorderedLocalizedExperiments(pair: ContentPair): ContentPair {
+  const [first, second] = pair.localized.experiments;
+  return {
+    ...pair,
+    localized: { ...pair.localized, experiments: [second!, first!] } as LocalizedContent,
+  };
 }
 
 /** Removes a key so the document stays canonicalizable, as a real edit would be. */
@@ -229,11 +280,18 @@ const parityViolations: readonly ParityViolation[] = [
   },
 ];
 
-function expectStrictFailure(run: () => unknown, fragment: string, label?: string): Error {
+function expectStrictFailure(
+  run: () => unknown,
+  fragment: string,
+  label?: string,
+): StrictValidationError {
   try {
     run();
   } catch (error) {
-    assert.ok(error instanceof Error, `expected an error, received ${String(error)}`);
+    assert.ok(
+      error instanceof StrictValidationError,
+      `expected StrictValidationError, received ${error instanceof Error ? error.message : String(error)}`,
+    );
     assert.ok(
       error.message.includes(fragment),
       `${label === undefined ? "" : `${label}: `}expected error to include "${fragment}", received: ${error.message}`,
@@ -310,6 +368,66 @@ test("the source loader refuses every task-parity violation", () => {
     expectExit(registered, 1);
     expectFailureMessage(registered, violation.fragment);
   }
+});
+
+test("parity aligns experiments by position, not by search", () => {
+  const taskFree = { ...canonicalExperimentBase, id: "exp-watch", title: "Watch a shift" };
+  const experiments = {
+    canonical: [taskFree, canonicalExperiment()],
+    localized: [{ ...taskFree, title: "Watch a shift (Myanmar)" }, localizedExperiment()],
+  };
+  const valid = validPairOf(1, experiments);
+  const root = makeRoot();
+  registerPair(root, valid);
+  expectExit(
+    runNewVersionCommand(["--pack", valid.pack.id, "--actor", "fixture-author-one"], options(root)),
+    0,
+  );
+
+  // Both experiments are present in both languages, so only their order differs.
+  const reordered = withReorderedLocalizedExperiments(valid);
+  assert.deepEqual(
+    reordered.localized.experiments.map((experiment) => experiment.id),
+    ["exp-talk-to-worker", "exp-watch"],
+    "the fixture must differ from the source by order alone",
+  );
+  const reorderedRoot = makeRoot();
+  registerPair(reorderedRoot, reordered);
+  expectStrictFailure(
+    () => loadPackState(reorderedRoot, reordered.pack.id),
+    "same ordered experiment IDs",
+    "reordered experiments",
+  );
+
+  // A task defect on the second experiment is caught even though the first is
+  // clean, which an implementation that only inspected position 0 would miss.
+  const secondOnly = withLocalizedExperiment(
+    valid,
+    omitKey(localizedExperiment(), "interactiveTask"),
+    1,
+  );
+  const issues = collectExperimentParityIssues(
+    secondOnly.pack.experiments,
+    secondOnly.localized.experiments,
+    "localized content",
+  );
+  assert.equal(issues.length, 1, "exactly the second experiment's task is reported");
+  assert.equal(JSON.stringify(issues[0]?.path), JSON.stringify([1, "interactiveTask"]));
+  assert.ok(
+    (issues[0]?.message ?? "").includes(
+      'experiment "exp-talk-to-worker" is missing the interactive task',
+    ),
+    `expected the second experiment's defect, received: ${issues[0]?.message ?? "no issue"}`,
+  );
+  assert.deepEqual(
+    collectExperimentParityIssues(
+      valid.pack.experiments,
+      valid.localized.experiments,
+      "localized content",
+    ),
+    [],
+    "the in-parity multi-experiment pair reports nothing",
+  );
 });
 
 test("the release gate refuses a directly supplied pair that is not in task parity", () => {
@@ -538,12 +656,30 @@ test("a new version cannot reuse the previous version's task reviews, and fresh 
   );
   approveReleaseReviews(root, first.pack.id, 1);
 
-  const second = validPair(2);
+  // Version 2 carries its own task text, so the released artifact can be shown
+  // to be the version 2 task under fresh review rather than version 1's.
+  const versionTwoFeedback = "A synthetic observation that only version 2 carries.";
+  const secondTask = canonicalTask({
+    choices: [{ ...firstChoice, feedback: versionTwoFeedback }, secondChoice],
+  });
+  const secondTaskBurmese = localizedTask({
+    choices: [
+      {
+        ...(localizedTask()["choices"] as Record<string, unknown>[])[0]!,
+        feedback: "ဒီသရုပ်မှတ်တမ်းသည် မူတန်း ၂ တွင်သာ ရှိပါသည်။",
+      },
+      (localizedTask()["choices"] as Record<string, unknown>[])[1]!,
+    ],
+  });
   const secondPack = makeTaskPack({
     version: 2,
     summary: "The same synthetic pack with revised prose.",
+    experiments: [canonicalExperiment({ interactiveTask: secondTask })],
   });
-  registerPair(root, { pack: secondPack, localized: second.localized });
+  const secondLocalized = makeTaskLocalization(secondPack, {
+    experiments: [localizedExperiment({ interactiveTask: secondTaskBurmese })],
+  });
+  registerPair(root, { pack: secondPack, localized: secondLocalized });
   expectExit(
     runNewVersionCommand(
       ["--pack", first.pack.id, "--actor", "fixture-author-one", "--from", "1"],
@@ -562,6 +698,10 @@ test("a new version cannot reuse the previous version's task reviews, and fresh 
     options(root),
   );
   expectExit(reused, 1);
+  expectFailureMessage(
+    reused,
+    "release requires standing practitioner-reviewed or artifact-eligible status",
+  );
 
   const state = loadPackState(root, first.pack.id);
   expectStrictFailure(
@@ -593,10 +733,16 @@ test("a new version cannot reuse the previous version's task reviews, and fresh 
 
   const bundle = JSON.parse(readFileSync(releaseBundlePath(root, first.pack.id, 2), "utf8")) as {
     pack: PackSource;
+    localizedContent: LocalizedContent;
   };
   assert.equal(
     bundle.pack.experiments[0]?.interactiveTask?.choices[0]?.feedback,
-    firstChoice["feedback"],
-    "the released task is the version 2 task under fresh review",
+    versionTwoFeedback,
+    "the released canonical task is the version 2 task under fresh review",
+  );
+  assert.equal(
+    bundle.localizedContent.experiments[0]?.interactiveTask?.choices[0]?.feedback,
+    "ဒီသရုပ်မှတ်တမ်းသည် မူတန်း ၂ တွင်သာ ရှိပါသည်။",
+    "the released Burmese task is the version 2 task, in its own language",
   );
 });
