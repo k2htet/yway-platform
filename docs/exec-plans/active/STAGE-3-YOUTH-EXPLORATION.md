@@ -230,14 +230,12 @@ the second experiment are both exercised, which a single-experiment fixture coul
 version-reuse test now gives version 2 its own task text and asserts the released bundle carries it;
 the unknown-field test now asserts the exact rejection reason per case, so the prohibited-key scan is
 no longer satisfied by strict parsing alone; and the generated release-bundle schema is now compiled
-and validated for both polarities. One finding was **not** actioned and needs owner direction: this
-change shifted the fixture-isolation refusal that `YWAY-D005` cites by line number from
-`content/release-gates.ts:672-680` to `:660-668`, so the citation is now stale. The quoted message
-text is byte-identical, the refusal is still the first throw in `evaluateReleaseGates`, and the
-substantive `YWAY-D005` claim is unaffected, but correcting a line citation inside an `ACCEPTED`
-decision is a control-surface edit that `CONTRIBUTING.md` reserves for independent review and owner
-awareness, and Architecture forbids silently rewriting an accepted decision. It is therefore
-recorded here and left for the owner rather than edited in this change.
+and validated for both polarities. One finding was deferred at the time: this change shifted the
+fixture-isolation refusal cited by `YWAY-D005` from `content/release-gates.ts:672-680` to `:660-668`.
+On 2026-09-28, the owner directed correction of the two citations in the accepted decision. Both now
+point to `:660-668`, and the correction is recorded in its Decision History. The quoted message is
+byte-identical, the refusal is still the first throw in `evaluateReleaseGates`, and the substantive
+`YWAY-D005` claim is unaffected.
 
 One behaviour change beyond adding the field: `evaluateReleaseGates` now checks parity immediately
 after parsing the pair and before verifying the localized digest, so an out-of-parity pair is
