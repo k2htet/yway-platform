@@ -4,18 +4,21 @@
 
 - ID: YWAY-D004
 - Date: 2026-09-28
-- Status: PROPOSED
+- Status: ACCEPTED
 - Owners: Yway engineering / product owner
+- Acceptance: 2026-09-28, by the project owner, with an explicit named residual-risk acceptance and
+  a distribution precondition recorded in Validation.
 - Related ExecPlan: docs/exec-plans/active/STAGE-3-YOUTH-EXPLORATION.md (S3-01, issue #57)
 - Related Product Contracts: YWAY-P010, YWAY-P011, YWAY-P012, YWAY-P013, YWAY-P014, YWAY-P018,
   YWAY-P022, YWAY-P023, YWAY-P024, YWAY-P025, YWAY-E001, YWAY-E003, YWAY-E004
 - Related decisions: YWAY-D001 (repository tooling), YWAY-D003 (Stage 2 content pipeline)
 - Evidence: docs/decisions/evidence/004-spike57-evidence.md
 
-Status note: this record is **PROPOSED** and must not be read as a settled boundary while it
-remains so. Independent architecture, security/privacy, product-integrity, and test reviews have run
-(see Validation); the representative-device precondition in the Stage 3 plan is **not** yet
-satisfied, so owner acceptance is being sought against a named, recorded risk.
+Status note: accepted 2026-09-28. Independent architecture, security/privacy, product-integrity, and
+test reviews ran before acceptance and their findings are resolved in this record. Three of them
+retained a blocking finding about unmet representative-device validation; the owner accepted that
+residual risk explicitly, with distribution — not implementation — gated on the device matrix
+recorded in Validation.
 
 ID reservation: this record reserves YWAY-D004 for issue #57 (S3-01). Issue #58 (S3-02, real-content
 and trusted-build) must use the next free ID, YWAY-D005.
@@ -375,12 +378,18 @@ app-local storage that:
 The later session schema, real content and trusted-build mechanisms, and the production erase
 implementation across all permitted system data paths remain undecided in their own issues.
 
-**Deliberately not decided here:** Architecture Section 11 records "Partial Pack download behavior"
-as a Stage 3 product-scope question that must be settled before any material delivery/storage ADR.
-This record settles the _runtime_ fact that the pilot performs no network fetch and therefore has
-no partial or streamed download path. Whether partial or streamed Pack delivery is acceptable
-product scope for a later stage remains **unresolved** and is not decided by this ADR; the owner
-should settle it explicitly before any ADR that would depend on it.
+**Partial Pack download — settled with this decision.** Architecture Section 11 recorded "Partial
+Pack download behavior" as a Stage 3 product-scope question that must be settled before any
+material delivery/storage ADR, because the decision below forecloses it. The owner delegated this
+call on 2026-09-28. **Settled: there is no partial or streamed Pack download.** Packs are complete
+in the installed artifact or absent. The reasoning, recorded so it is auditable: partial delivery
+would require a network fetch path in the app, which directly contradicts the accepted removal of
+`android.permission.INTERNET` and the offline-only first-value requirement in `YWAY-P011` and
+`YWAY-P022`; no product need for partial delivery has been identified for a supervised pilot on
+managed devices; and leaving the row open would force a later ADR to reopen a question the accepted
+no-network boundary already forecloses. This is a bounded Stage 3 decision, not a permanent product
+exclusion. Reopening it requires a separate ADR that also revisits the no-network constraint, and it
+must not be reopened inside an implementation task.
 
 ## Consequences
 
@@ -473,7 +482,7 @@ type. **No physical device and no second Android version were available.**
 | Erasure                   | Response absent from app-managed data paths; no recovery after relaunch or tested restore                          | **PARTIAL — PASS for the app-private store.** First attempt (row-level `DELETE` + `VACUUM`) **failed**: the app reported success while the sentinel remained in the `yway-spike57.db-wal` sidecar. Second attempt (file-level database deletion) passed: whole-tree scan 0 matches, and 0 matches after force-stop relaunch and after reboot relaunch. **Not exercised: restore**, because no transport accepted a backup.                                                                                                                                                                                                                                          |
 | Accessibility feasibility | Compact/large, 200% text, Burmese, and screen-reader results with no blocking defect                               | **PARTIAL — feasibility only, one open `YWAY-P024` defect.** 360 dp and 432 dp at font scale 1.0 and 2.0, light and dark. 200% text wrapped correctly. Burmese shaped correctly at both scales but **broke at arbitrary grapheme boundaries — an open `YWAY-P024` violation, not a cosmetic issue.** All interactive targets ≥ 48 dp. TalkBack traversal order matched visual order with tab selection state exposed. Reduced motion detected via `AccessibilityInfo`. **Not exercised: contrast ratios, screen-reader traversal of Burmese strings, 200% scale with the screen reader active.**                                                                    |
 | Managed delivery          | Reproducible hash, local installation, device inventory, removal/reset                                             | **PARTIAL.** Build, local signing, `adb install`, `pm clear`, `adb uninstall`, and reinstall of a hashed artifact all succeeded; hashes recorded. **No managed-device inventory and no reset runbook exist**, and removal/reset was exercised on the emulator only.                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Governance                | Independent reviews, explicit owner acceptance, Architecture reconciliation, passing PR Verify                     | **PARTIAL.** All four independent reviews have run and their findings are resolved in this record. Owner acceptance, Architecture reconciliation, and the PR `Verify` result are pending.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Governance                | Independent reviews, explicit owner acceptance, Architecture reconciliation, passing PR Verify                     | **PASS.** All four independent reviews ran on 2026-09-28 and their findings are resolved in this record. The owner accepted on 2026-09-28 with the residual device risk named below and distribution gated on the device matrix. Architecture reconciliation is recorded in `docs/architecture/ARCHITECTURE.md`. The PR `Verify` check passed.                                                                                                                                                                                                                                                                                                                      |
 
 **Overall result: the technology choice is supported; acceptance is not yet evidenced.** Three of
 the five technical gates are partial, and the Stage 3 plan makes representative device-risk
@@ -534,11 +543,20 @@ within the tested configuration. Offline/durability passes. Privacy, erasure, ac
 managed delivery are partial with named gaps. No gate **failed**, so the Kotlin/Compose fallback
 was **not** triggered and no evidence for it is claimed.
 
-**Residual risk the owner is being asked to accept:** the entire device matrix is one emulator on
-one Android version, with device-to-device transfer and backup/restore unexercised. Per the Stage 3
-plan, the compensating control — managed devices carry no cloud account and have cloud backup and
-device-to-device transfer disabled at the OS layer, recorded in the device inventory — must be in
-force before any supervised session, and no unverified device/OS combination may be used.
+**Owner risk acceptance, recorded 2026-09-28.** The owner accepted this decision with the following
+residual risk named and accepted, and with **distribution** rather than implementation gated on it:
+
+- The entire device matrix is one emulator on Android 16 / API 36. Device-to-device transfer,
+  backup/restore at runtime, and the pre-Android-12 `fullBackupContent` execution path were not
+  exercised. No **physical** managed device evidence exists.
+- Implementation in #62 and #63 may begin on this accepted boundary. **No supervised session may
+  use any device or OS combination that has not been exercised and inventoried**, and the
+  compensating control — managed devices carry no cloud account and have cloud backup and
+  device-to-device transfer disabled at the OS layer, recorded in the device inventory — must be in
+  force before the first session. The Stage 3 plan's supervised-session precondition is unchanged
+  and is not satisfied by this decision.
+- Architecture Section 11 "Partial Pack download behavior" is settled as decided-against in the
+  Decision section, on the reasoning recorded there.
 
 ## Reversibility
 
@@ -575,10 +593,10 @@ validation to run again in full.
 
 Owner-gated:
 
-- [ ] Owner explicitly accepts or rejects this ADR, including the named residual device risk.
-      Implementation in #62 and #63 stays blocked until then.
-- [ ] On acceptance, reconcile Architecture Sections 9, 10, and 11 against this record and record
-      which Section 11 rows remain open (partial Pack download scope is one of them).
+- [x] Owner explicitly accepts this ADR, including the named residual device risk. Accepted
+      2026-09-28, with distribution gated on the device matrix rather than implementation.
+- [x] On acceptance, reconcile Architecture Sections 6, 9, 10, and 11 against this record and record
+      which Section 11 rows remain open.
 
 Build and enforcement (owner: #62 unless noted):
 
@@ -630,8 +648,9 @@ Device matrix and pilot operations (owner: #66 for the device matrix, #67/#69 fo
 
 ## Decision History
 
-| Date       | Change                                                                                                                                                                                    | Reason                                                                                                                                                                                                                                      |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-28 | Initial record created, YWAY-D004 reserved for issue #57, status PROPOSED                                                                                                                 | Stage 3 S3-01 delivery and local-state decision required before #62/#63.                                                                                                                                                                    |
-| 2026-09-28 | Full option comparison, spike evidence, and proposed decision recorded                                                                                                                    | Expo/React Native + app-private SQLite passed every gate that could be exercised; no gate failed, so the Kotlin/Compose fallback was not triggered.                                                                                         |
-| 2026-09-28 | Independent architecture, security/privacy, product-integrity, and test reviews run; findings resolved; gate outcomes corrected to PARTIAL; security model added; status held at PROPOSED | No gate failed, so the technology choice is supported. Representative device-risk validation is incomplete because no physical device was available, so acceptance is escalated to the owner as a named risk rather than claimed as passed. |
+| Date       | Change                                                                                                                                                                                       | Reason                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-09-28 | Initial record created, YWAY-D004 reserved for issue #57, status PROPOSED                                                                                                                    | Stage 3 S3-01 delivery and local-state decision required before #62/#63.                                                                                                                                                                                                                                                                   |
+| 2026-09-28 | Full option comparison, spike evidence, and proposed decision recorded                                                                                                                       | Expo/React Native + app-private SQLite passed every gate that could be exercised; no gate failed, so the Kotlin/Compose fallback was not triggered.                                                                                                                                                                                        |
+| 2026-09-28 | Independent architecture, security/privacy, product-integrity, and test reviews run; findings resolved; gate outcomes corrected to PARTIAL; security model added                             | No gate failed, so the technology choice is supported. Representative device-risk validation is incomplete because no physical device was available, so acceptance could not be claimed as fully validated.                                                                                                                                |
+| 2026-09-28 | **ACCEPTED** by the owner with an explicit named residual-risk acceptance; Architecture Sections 6, 9, 10, and 11 reconciled; Stage 3 partial Pack download scope settled as decided-against | Owner decision 2026-09-28: accept the framework and local-state boundary now and gate **distribution**, not implementation, on the physical-device matrix. Implementation in #62 and #63 is unblocked; supervised sessions remain gated on the real device matrix and the no-cloud-account / backup-and-D2D-disabled compensating control. |

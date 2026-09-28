@@ -149,7 +149,7 @@ remote persisted/shared state
 
 Neither side is universally authoritative. Conflict resolution strategy and authority semantics remain a future architecture decision. Whether a particular conflict approach (including last-write-wins variants) satisfies the preservation requirement depends on the data model and conflict types — this must be validated per case, not universally pre-judged.
 
-No specific technology is selected for local storage, sync engine, remote database, or conflict resolution strategy.
+YWAY-D004 selects app-private SQLite as the durable local store for the Stage 3 Android pilot, with file-level database deletion as the validated erasure mechanism for that store, and no synchronization or remote persistence in Stage 3. No sync engine, remote database, or conflict-resolution strategy is selected. That decision is a bounded Stage 3 outcome: the local-state mechanism, its backup and transfer exclusions, and its guarantee that it cannot reach a server must be re-derived rather than inherited if a later stage adds synchronization, a Portfolio, or identity. (YWAY-P022, YWAY-D004)
 
 ### Authorization
 
@@ -212,24 +212,24 @@ These will be validated or rejected through future decision records. Do not writ
 
 **CANDIDATES — NOT ACCEPTED BY THIS DOCUMENT**
 
-These candidates originate from project analysis and Build Report recommendations. They are recorded here for future evaluation via decision records. None are adopted.
+These candidates originate from project analysis and Build Report recommendations. They are recorded here for future evaluation via decision records. None are adopted except where a row below states otherwise.
 
-| Capability                             | Candidates                         |
-| -------------------------------------- | ---------------------------------- |
-| Durable local storage                  | SQLite or equivalent               |
-| Conflict-aware synchronization         | PowerSync or alternative           |
-| Remote persisted state                 | PostgreSQL / Neon or alternative   |
-| Authentication and multi-role sessions | Better Auth or alternative         |
-| Schema validation                      | Zod or alternative                 |
-| Type-safe data access                  | Drizzle ORM or alternative         |
-| Mobile delivery                        | Expo + React Native or alternative |
-| Web surfaces                           | Next.js or alternative             |
-| Asset storage                          | Cloudflare R2 or alternative       |
-| Web hosting                            | Vercel or alternative              |
-| Mobile build/deploy/OTA                | EAS or alternative                 |
-| Design environment                     | pen.dev or alternative             |
+| Capability                             | Candidates                                                                                                                             |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Durable local storage                  | Resolved for the Stage 3 Android pilot: app-private SQLite, see YWAY-D004. Remote or shared local storage remains unselected.          |
+| Conflict-aware synchronization         | PowerSync or alternative                                                                                                               |
+| Remote persisted state                 | PostgreSQL / Neon or alternative                                                                                                       |
+| Authentication and multi-role sessions | Better Auth or alternative                                                                                                             |
+| Schema validation                      | Zod or alternative                                                                                                                     |
+| Type-safe data access                  | Drizzle ORM or alternative                                                                                                             |
+| Mobile delivery                        | Resolved for the Stage 3 Android pilot: Expo + React Native, see YWAY-D004. Web surfaces and any non-Android client remain unselected. |
+| Web surfaces                           | Next.js or alternative                                                                                                                 |
+| Asset storage                          | Cloudflare R2 or alternative                                                                                                           |
+| Web hosting                            | Vercel or alternative                                                                                                                  |
+| Mobile build/deploy/OTA                | Not selected. Stage 3 builds locally and installs by adb; EAS and OTA delivery remain unselected.                                      |
+| Design environment                     | pen.dev or alternative                                                                                                                 |
 
-No ranking is implied. No winner is recommended. Acceptance requires a future decision record following the template in `docs/decisions/000-TEMPLATE.md`.
+No ranking is implied. No winner is recommended for any unresolved row. Acceptance requires a future decision record following the template in `docs/decisions/000-TEMPLATE.md`.
 
 ---
 
@@ -237,12 +237,12 @@ No ranking is implied. No winner is recommended. Acceptance requires a future de
 
 This architecture does not decide:
 
-- Number of applications
-- Mobile/web implementation framework
+- Number of applications beyond the single Stage 3 Android pilot application resolved by YWAY-D004
+- Mobile/web implementation framework beyond that same Stage 3 pilot
 - Package boundaries
 - Monorepo physical layout
 - Service boundaries
-- Database topology
+- Database topology beyond app-private device-local storage for that pilot
 - Deployment topology
 - API protocol (REST, GraphQL, RPC, etc.)
 - Queue/event architecture
@@ -250,7 +250,7 @@ This architecture does not decide:
 - Auth provider
 - CMS or workflow engine
 
-Logical domains defined in this document must not be converted into directories, packages, or services simply because they appear here. Physical architecture will be decided later based on validated needs.
+Logical domains defined in this document must not be converted into directories, packages, or services simply because they appear here. Physical architecture will be decided later based on validated needs. The single Stage 3 application boundary accepted by YWAY-D004 is the first such boundary and does not imply the others.
 
 ---
 
@@ -258,18 +258,21 @@ Logical domains defined in this document must not be converted into directories,
 
 YWAY-D003 resolves the Stage 2 content authoring, versioning, review, fixture-practitioner eligibility, artifact, and repository-workflow choices. It does not resolve their production replacements or the remaining questions below.
 
-| Question                                                                                               | Disposition                                                                 | Decision trigger / preserved constraint                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production content authoring/workflow replacement, artifact distribution, and trusted-root acquisition | First post-Stage-2 stage that requires production delivery or operations    | YWAY-D003 governs Stage 2 only; any replacement must preserve provenance, exact review scope, fixture isolation, and fail-closed retirement semantics.    |
-| First physical application boundary and mobile delivery approach                                       | Stage 3                                                                     | Future delivery-architecture ADR before implementation; Android-first is binding, native/hybrid/web is not selected.                                      |
-| Partial Pack download behavior                                                                         | Stage 3                                                                     | Product scope remains unresolved and must be settled before any material delivery/storage ADR.                                                            |
-| Pack-content provenance to evidence-reference shape                                                    | Stage 4                                                                     | Future evidence/data ADR; source traceability must not strengthen evidence level or strip provenance.                                                     |
-| Local/server authority, conflict handling, synchronization, and server data ownership                  | Stage 5                                                                     | Future sync/data ADR backed by representative conflict scenarios; local youth work must not be destroyed.                                                 |
-| Authentication, authorization, consent persistence, Admin privileges, and access auditing              | Stage 6                                                                     | Future identity/consent/authorization ADR; private Portfolio, least-disclosure, and no-bypass outcomes remain binding and are hardened again in Stage 12. |
-| Broader practitioner identity, vetting operations, and accountability workflows                        | Stage 7                                                                     | Future practitioner-operations decision; payment cannot buy outcomes and participation does not certify capability.                                       |
-| Employer vetting and Yway ownership of Quest review/structuring                                        | Stage 8                                                                     | Future architecture/operations decision before Quest implementation; vetted employer and Yway review/structuring remain mandatory.                        |
-| Physical cross-domain communication, packages, services, APIs, deployment, and data topology           | Stage 10 or the first earlier implementation stage that requires the choice | Future physical-architecture ADR; logical domains do not determine physical boundaries.                                                                   |
-| Safeguarding architecture for a future 16–17 pathway                                                   | Outside the current 18+ scope                                               | The pathway cannot ship without separately approved safeguarding, consent, and access review; future design and ADR sequencing remain unresolved.         |
+YWAY-D004 resolves the Stage 3 Android application boundary, the app-private local-state mechanism, the backup/transfer/export/log boundaries for private youth records, and locally signed adb delivery on inventoried managed devices. It does not resolve synchronization, remote persistence, identity, content trust, or any non-Android client. Its privacy guarantees are bounded to that pilot and must be re-derived, not inherited, by any later stage that adds a Portfolio, identity, or synchronization.
+
+| Question                                                                                                               | Disposition                                                                 | Decision trigger / preserved constraint                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production content authoring/workflow replacement, artifact distribution, and trusted-root acquisition                 | First post-Stage-2 stage that requires production delivery or operations    | YWAY-D003 governs Stage 2 only; any replacement must preserve provenance, exact review scope, fixture isolation, and fail-closed retirement semantics. YWAY-D004 bounds the Stage 3 runtime to offline Packs already in the installed artifact and does not decide embedding or build trust. |
+| First physical application boundary and mobile delivery approach                                                       | Resolved for Stage 3 by YWAY-D004                                           | One Android application at `apps/youth` built with Expo + React Native on a stable SDK, delivered as a locally signed adb-installed APK. Android-first remains binding; the decision is bounded to this pilot and does not commit to a workspace, package, or service topology.              |
+| Partial Pack download behavior                                                                                         | Settled in Stage 3 by YWAY-D004 — no partial or streamed download           | Packs are complete in the installed artifact or absent. Reopening requires a separate ADR that also revisits the accepted no-network constraint; it must not be reopened inside an implementation task.                                                                                      |
+| Pack-content provenance to evidence-reference shape                                                                    | Stage 4                                                                     | Future evidence/data ADR; source traceability must not strengthen evidence level or strip provenance.                                                                                                                                                                                        |
+| Local/server authority, conflict handling, synchronization, and server data ownership                                  | Stage 5                                                                     | Future sync/data ADR backed by representative conflict scenarios; local youth work must not be destroyed.                                                                                                                                                                                    |
+| Authentication, authorization, consent persistence, Admin privileges, and access auditing                              | Stage 6                                                                     | Future identity/consent/authorization ADR; private Portfolio, least-disclosure, and no-bypass outcomes remain binding and are hardened again in Stage 12.                                                                                                                                    |
+| Broader practitioner identity, vetting operations, and accountability workflows                                        | Stage 7                                                                     | Future practitioner-operations decision; payment cannot buy outcomes and participation does not certify capability.                                                                                                                                                                          |
+| Employer vetting and Yway ownership of Quest review/structuring                                                        | Stage 8                                                                     | Future architecture/operations decision before Quest implementation; vetted employer and Yway review/structuring remain mandatory.                                                                                                                                                           |
+| Physical cross-domain communication, packages, services, APIs, deployment, and data topology                           | Stage 10 or the first earlier implementation stage that requires the choice | Future physical-architecture ADR; logical domains do not determine physical boundaries.                                                                                                                                                                                                      |
+| Non-Android client surfaces, and any later-stage change to the YWAY-D004 no-network, local-state, or delivery boundary | First stage that requires a non-Android client or any network capability    | Any of those changes supersedes or reopens YWAY-D004 and needs its own ADR. Until then the accepted boundary stands.                                                                                                                                                                         |
+| Safeguarding architecture for a future 16–17 pathway                                                                   | Outside the current 18+ scope                                               | The pathway cannot ship without separately approved safeguarding, consent, and access review; future design and ADR sequencing remain unresolved.                                                                                                                                            |
 
 Classification does not answer these questions. Do not decide them in implementation code before their stated trigger and required decision process.
 

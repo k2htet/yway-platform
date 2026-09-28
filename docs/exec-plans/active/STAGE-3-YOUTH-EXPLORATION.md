@@ -94,7 +94,8 @@ Product integrity and architecture reviewers found no material issue. Security/p
 ## S3-01 verification (2026-09-28)
 
 Device evidence for S3-01 is recorded in `docs/decisions/evidence/004-spike57-evidence.md`, with the
-decision itself in `docs/decisions/004-android-delivery-local-state.md` (`YWAY-D004`, PROPOSED).
+decision itself in `docs/decisions/004-android-delivery-local-state.md` (`YWAY-D004`, ACCEPTED
+2026-09-28, with Architecture Sections 6, 9, 10, and 11 reconciled against it).
 The spike source, keystores, and APKs were held outside this repository. All data was synthetic.
 
 Device results: offline/durability PASS on a standalone JS-bundled release APK in airplane mode
@@ -108,8 +109,13 @@ not triggered.
 
 Independent reviews: architecture, security/privacy, product-integrity, and test reviewers all ran
 on 2026-09-28 and their findings are resolved in the ADR. Three of them retained a blocking finding
-about unmet acceptance preconditions and unexercised device-to-device transfer; those are escalated
-to the owner as a named residual risk rather than recorded as passed.
+about unmet acceptance preconditions and unexercised device-to-device transfer. The owner accepted
+the decision on 2026-09-28 with that residual risk explicitly named, gating **distribution rather
+than implementation** on the device matrix: no supervised session may use a device or OS
+combination that has not been exercised and inventoried, and managed devices must carry no cloud
+account with cloud backup and device-to-device transfer disabled at the OS layer, recorded in the
+device inventory. Architecture Section 11 "Partial Pack download behavior" was settled as
+decided-against on the same date.
 
 Repository verification actually run on 2026-09-28 (Node 24.20.0, pnpm 11.24.0): `pnpm
 agent:doctor` READY; `pnpm verify:docs` passed; `pnpm verify:invariants` passed; `pnpm verify:fast`
@@ -122,9 +128,8 @@ privacy, or accessibility evidence above, and they did not cover any application
 - [x] Owner explicitly activated Stage 3 and approved the bounded plan on 2026-09-27.
 - [x] Kickoff issue #56 and S3-01 through S3-13 published and mapped here on 2026-09-27.
 - [x] Roadmap and stage index activation merged in PR #70 on 2026-09-27 after required review and CI.
-- [ ] S3-01–S3-02 accepted and Architecture reconciled. S3-01 ADR drafted 2026-09-28
-      (`YWAY-D004`, PROPOSED); independent reviews run; owner acceptance and Architecture
-      reconciliation outstanding.
+- [ ] S3-01–S3-02 accepted and Architecture reconciled. S3-01 accepted 2026-09-28
+      (`YWAY-D004`) and Architecture reconciled; S3-02 (#58, `YWAY-D005`) outstanding.
 - [ ] S3-03–S3-06 content and real review gates complete.
 - [ ] S3-07–S3-11 youth flow and device validation complete.
 - [ ] S3-12 moderated pilot evidence complete and critical findings resolved.
@@ -149,7 +154,7 @@ privacy, or accessibility evidence above, and they did not cover any application
 | 2026-09-27 | Activate Stage 3 and target a private moderated Android pilot on managed devices. | Explicit owner selection in kickoff conversation; does not authorize public release or accept an architecture ADR. |
 | 2026-09-27 | Bundle complete Packs and keep pilot responses device-only, with no login or telemetry. | Owner-approved Stage 3 planning direction; storage and delivery mechanisms still require accepted ADRs. |
 | 2026-09-27 | Start with a real retail assistant Pack and a second owner-selected career Pack; require real practitioner and fluent Burmese review. | Owner-approved scope; exact second occupation and reviewer eligibility are gated before authoring/release. |
-| 2026-09-28 | S3-01: propose Expo/React Native with app-private `expo-sqlite` as the Android delivery and device-only local state boundary, with `adb`-installed locally signed builds on inventoried managed devices. Recorded as `docs/decisions/004-android-delivery-local-state.md` with status **PROPOSED**. | Four of five technical gates are partial because no physical managed device was available. Status held at PROPOSED pending explicit owner acceptance of the named residual device risk; #62 and #63 stay blocked until then. YWAY-D004 is reserved for #57, so #58 uses YWAY-D005. |
+| 2026-09-28 | S3-01: accept Expo/React Native with app-private `expo-sqlite` as the Android delivery and device-only local state boundary, with `adb`-installed locally signed builds on inventoried managed devices. Recorded as `docs/decisions/004-android-delivery-local-state.md` (`YWAY-D004`, **ACCEPTED**); Architecture Sections 6, 9, 10, and 11 reconciled. | Explicit owner acceptance on 2026-09-28 of the named residual risk, gating **distribution rather than implementation** on the physical-device matrix. Architecture Section 11 "Partial Pack download behavior" settled as decided-against on the same date. #62 and #63 are unblocked; supervised sessions remain gated on the real device matrix. YWAY-D004 is reserved for #57, so #58 uses YWAY-D005. |
 
 ## Completion criteria
 
