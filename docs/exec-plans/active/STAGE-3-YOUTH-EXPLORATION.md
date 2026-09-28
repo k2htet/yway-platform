@@ -91,12 +91,45 @@ After the focused review edits, `pnpm verify:docs`, Prettier check of changed fi
 
 Product integrity and architecture reviewers found no material issue. Security/privacy review identified a missing backup, shared-storage, export, and diagnostic-log boundary for private youth responses; the plan and issues #57/#68 now make exclusion and erase verification explicit, and the same reviewer confirmed the finding resolved. Test review identified that S3-08 could not satisfy its two-Pack build criterion before S3-05 and S3-06; the plan and issue #63 now state those dependencies, and the same reviewer confirmed resolution. No material review finding remained. The owner authorized merging PR #70 after the required GitHub `Verify` check passed; PR #70 merged on 2026-09-27.
 
+## S3-01 verification (2026-09-28)
+
+Device evidence for S3-01 is recorded in `docs/decisions/evidence/004-spike57-evidence.md`, with the
+decision itself in `docs/decisions/004-android-delivery-local-state.md` (`YWAY-D004`, ACCEPTED
+2026-09-28, with Architecture Sections 6, 9, 10, and 11 reconciled against it).
+The spike source, keystores, and APKs were held outside this repository. All data was synthetic.
+
+Device results: offline/durability PASS on a standalone JS-bundled release APK in airplane mode
+(save, force-stop recovery, reboot recovery). Privacy, erasure, accessibility feasibility, and
+managed delivery are PARTIAL. Erasure first FAILED with a row-level `DELETE` that left the sentinel
+in the `-wal` sidecar and passed only with file-level database deletion. Device-to-device transfer,
+backup/restore at runtime, any pre-Android-12 execution path, contrast ratios, screen-reader
+traversal of Burmese strings, any physical device, and any OS version other than Android 16 /
+API 36 were not exercised and are not claimed. No gate failed, so the Kotlin/Compose fallback was
+not triggered.
+
+Independent reviews: architecture, security/privacy, product-integrity, and test reviewers all ran
+on 2026-09-28 and their findings are resolved in the ADR. Three of them retained a blocking finding
+about unmet acceptance preconditions and unexercised device-to-device transfer. The owner accepted
+the decision on 2026-09-28 with that residual risk explicitly named, gating **distribution rather
+than implementation** on the device matrix: no supervised session may use a device or OS
+combination that has not been exercised and inventoried, and managed devices must carry no cloud
+account with cloud backup and device-to-device transfer disabled at the OS layer, recorded in the
+device inventory. Architecture Section 11 "Partial Pack download behavior" was settled as
+decided-against on the same date.
+
+Repository verification actually run on 2026-09-28 (Node 24.20.0, pnpm 11.24.0): `pnpm
+agent:doctor` READY; `pnpm verify:docs` passed; `pnpm verify:invariants` passed; `pnpm verify:fast`
+passed; `pnpm verify:full` passed (lint, typecheck, format check, repository tests, content schema
+check, content verify, invariants, docs). These structural checks do not substitute for the device,
+privacy, or accessibility evidence above, and they did not cover any application behavior.
+
 ## Progress checklist
 
 - [x] Owner explicitly activated Stage 3 and approved the bounded plan on 2026-09-27.
 - [x] Kickoff issue #56 and S3-01 through S3-13 published and mapped here on 2026-09-27.
 - [x] Roadmap and stage index activation merged in PR #70 on 2026-09-27 after required review and CI.
-- [ ] S3-01–S3-02 accepted and Architecture reconciled.
+- [ ] S3-01–S3-02 accepted and Architecture reconciled. S3-01 accepted 2026-09-28
+      (`YWAY-D004`) and Architecture reconciled; S3-02 (#58, `YWAY-D005`) outstanding.
 - [ ] S3-03–S3-06 content and real review gates complete.
 - [ ] S3-07–S3-11 youth flow and device validation complete.
 - [ ] S3-12 moderated pilot evidence complete and critical findings resolved.
@@ -108,6 +141,11 @@ Product integrity and architecture reviewers found no material issue. Security/p
 | --- | --- | --- |
 | 2026-09-27 | Stage 2 release artifacts and verifier are fixture-only; the retail example is synthetic. | Stage 3 needs a separately authorized non-fixture path and genuinely reviewed Packs before any youth pilot. |
 | 2026-09-27 | Stage 3 has no prior GitHub issues or active ExecPlan. | Create one kickoff issue, this plan, and bounded child issues; do not duplicate existing work. |
+| 2026-09-28 | The #57 device spike could exercise only one emulator on one OS version (Android 16 / API 36); no physical managed device was available, and device-to-device transfer, backup/restore, and any pre-Android-12 path could not be run. | The S3-01 ADR records four of five technical gates as partial. Representative device-risk validation remains open, and no unverified device/OS combination may be used in a session. |
+| 2026-09-28 | An in-app SQL `DELETE` followed by `VACUUM` reports erase success while the response text remains in the SQLite `-wal` sidecar. Erasure by deleting the database file removed it. | Erase must be file-level database deletion including `-wal`/`-shm`, and must be proven by byte-level sentinel absence, never by the app's own success message. Assigned to #68 with a required regression test. |
+| 2026-09-28 | The default Expo build ships `INTERNET`, `SYSTEM_ALERT_WINDOW`, and legacy storage permissions; removing them via `tools:node="remove"` left a working offline build. | Pilot builds must strip these so the no-network property is OS-enforced, and a packaged-manifest assertion is required in #62. |
+| 2026-09-28 | Burmese line breaking breaks at arbitrary grapheme boundaries because Burmese has no inter-word spaces. | An open YWAY-P024 violation, not a polish item. Burmese content is not cleared for the private pilot until fixed; remediation #62, verification #66. |
+| 2026-09-28 | Expo SDK 58 exists only as `58.0.0-preview.7` on npm tag `next`, with react-native 0.88.0-rc.1. | The spike is feasibility evidence only. The accepted build must use a stable SDK line, and any SDK change must re-run the packaged-manifest checks because autolinking can change merged permissions. |
 
 ## Decision log
 
@@ -116,6 +154,7 @@ Product integrity and architecture reviewers found no material issue. Security/p
 | 2026-09-27 | Activate Stage 3 and target a private moderated Android pilot on managed devices. | Explicit owner selection in kickoff conversation; does not authorize public release or accept an architecture ADR. |
 | 2026-09-27 | Bundle complete Packs and keep pilot responses device-only, with no login or telemetry. | Owner-approved Stage 3 planning direction; storage and delivery mechanisms still require accepted ADRs. |
 | 2026-09-27 | Start with a real retail assistant Pack and a second owner-selected career Pack; require real practitioner and fluent Burmese review. | Owner-approved scope; exact second occupation and reviewer eligibility are gated before authoring/release. |
+| 2026-09-28 | S3-01: accept Expo/React Native with app-private `expo-sqlite` as the Android delivery and device-only local state boundary, with `adb`-installed locally signed builds on inventoried managed devices. Recorded as `docs/decisions/004-android-delivery-local-state.md` (`YWAY-D004`, **ACCEPTED**); Architecture Sections 6, 9, 10, and 11 reconciled. | Explicit owner acceptance on 2026-09-28 of the named residual risk, gating **distribution rather than implementation** on the physical-device matrix. Architecture Section 11 "Partial Pack download behavior" settled as decided-against on the same date. #62 and #63 are unblocked; supervised sessions remain gated on the real device matrix. YWAY-D004 is reserved for #57, so #58 uses YWAY-D005. |
 
 ## Completion criteria
 
