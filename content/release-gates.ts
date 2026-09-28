@@ -11,6 +11,7 @@ import { reviewEventTypes } from "./governance.js";
 import { assertFixtureOnlyProvenance, requireFixtureIsolation } from "./store.js";
 import {
   StrictValidationError,
+  collectExperimentParityIssues,
   contentAccessibilitySchema,
   dateTimeSchema,
   localizedContentSchema,
@@ -265,18 +266,6 @@ function assertLocalizationGate(
       issues,
       ["localizedContent", "fixtureOnly"],
       `localized content fixtureOnly ${localizedContent.fixtureOnly} does not match source fixtureOnly ${pack.fixtureOnly}`,
-    );
-  }
-  const sourceExperimentIds = pack.experiments.map((experiment) => experiment.id);
-  const localizedExperimentIds = localizedContent.experiments.map((experiment) => experiment.id);
-  if (
-    sourceExperimentIds.length !== localizedExperimentIds.length ||
-    sourceExperimentIds.some((id, index) => id !== localizedExperimentIds[index])
-  ) {
-    addIssue(
-      issues,
-      ["localizedContent", "experiments"],
-      "localized content must cover the same ordered experiment IDs as the canonical source",
     );
   }
 
@@ -682,6 +671,21 @@ export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult
     input.localizedContent === undefined
       ? undefined
       : strictParse(localizedContentSchema, input.localizedContent);
+  // Checked before the digest binding so that a pair which is not in parity is
+  // refused as such, naming the specific defect, instead of being reported only
+  // as a localized digest mismatch. A pair in parity still faces the digest,
+  // version-scope, and review gates below.
+  if (localizedContent !== undefined) {
+    const parityIssues = collectExperimentParityIssues(
+      pack.experiments,
+      localizedContent.experiments,
+      "localized content",
+      ["localizedContent", "experiments"],
+    );
+    if (parityIssues.length > 0) {
+      throw new StrictValidationError(parityIssues);
+    }
+  }
   const sourceDigest = contentDigest(pack);
   const scope: VersionScope = {
     packId: pack.id,

@@ -167,6 +167,123 @@ passed; `pnpm verify:full` passed (lint, typecheck, format check, repository tes
 check, content verify, invariants, docs). These structural checks do not substitute for the device,
 privacy, or accessibility evidence above, and they did not cover any application behavior.
 
+## S3-03 implementation and verification (2026-09-28)
+
+Issue #59 changes content modeling and validation only. It adds no youth-facing task flow, no
+response storage, and no app code, and it does not touch the retired
+`fixture-retail-assistant` release or any committed artifact. The combined S3-03–S3-06 milestone is
+**not** marked complete: the content model is in place, but the real practitioner and fluent Burmese
+reviewers, the real retail assistant Pack, and the second Pack are all still absent.
+
+What exists now:
+
+- `content/schemas/common.ts` carries an optional `interactiveTask` on the shared experiment schema:
+  `scenario`, `actionPrompt`, and at least two ordered `choices`, each with `id`, `text`, and
+  qualitative `feedback`. Every field is non-blank and every object is strict; choice IDs are unique
+  safe identifiers. There is no field for an answer key, a correct choice, a score, a rank, or a
+  capability assessment, and a field named like a score or ranking concept is still rejected by the
+  existing prohibited-key scan. All six parts stay required and an experiment without a task stays
+  valid.
+- `content/schemas/experiment-parity.ts` holds the single shared paired-content check for ordered
+  experiment IDs, task presence, and ordered choice IDs. It is used at all three boundaries:
+  `loadPackState` in `content/store.ts`, `evaluateReleaseGates` in `content/release-gates.ts`, and
+  `releaseBundleSchema` in `content/schemas/release-bundle.ts`. The two hand-written experiment-ID
+  comparisons that previously existed in the loader and the release gate were removed in favour of
+  it, so the rule exists once.
+- Schema version stays 1 because the field is optional, and the strict pack-source,
+  localized-content, and release-bundle JSON Schemas were regenerated. The generated `$comment` now
+  also names cross-document identifier and order parity as a rule only runtime validation can
+  enforce, because one document's schema cannot compare identifiers with another document.
+- Governance is unchanged and no parallel mechanism was added. The task rides the existing canonical
+  and localized content digests, the existing provenance events, and the existing version-scoped
+  founder, practitioner, localization, and accessibility reviews. An edit to the scenario, prompt,
+  choice text, or feedback under a registered version fails that version's digest check, and a new
+  version cannot reuse the old review records.
+- `docs/operations/CONTENT-OPERATIONS-GUIDE.md` documents the task shape, the choice-ID matching rule
+  and authored reading order, the qualitative-feedback review expectation, and the new-version
+  requirement, and states the limits below. Its worked template now carries the task in both
+  languages, with an exploration-only limitation naming a task response in each language, and the
+  documentation test registers, approves, releases, and verifies that template.
+
+Independent product-integrity review on 2026-09-28 returned **COMPATIBLE** with no blocking finding
+and required no product-semantics change: `YWAY-P001`, `YWAY-P002`, `YWAY-P004`, `YWAY-P005`,
+`YWAY-P006`, `YWAY-P007`, `YWAY-P019`, `YWAY-P022`, `YWAY-P023`, `YWAY-P024`, `YWAY-E002`,
+`YWAY-E005`, and `YWAY-E006` were checked; no verdict, score, rank, or capability field is
+representable, no evidence-level field is added, the task is inside both content digests so all four
+version-scoped reviews bind it, all six experiment parts stay required, and no privacy, consent, or
+employer-facing surface is touched. Its four non-blocking findings were resolved as follows: the
+single-versus-multiple response question is now recorded as an open owner product decision for #65
+rather than as a settled limit; both worked templates gained an exploration-only limitation naming a
+task response; the cross-language feedback-meaning limit is now stated in the guide and the plan;
+and choice-order reading order is now listed as a property no schema or attestation binds, with
+screen-reader validation carried by #66. Its one check it could not run — that no path outside
+`content/`, `tests/`, and `docs/` is modified — was confirmed afterwards: `git status` shows only
+content schema and pipeline code, the regenerated `content/generated/` schemas, tests, and docs, and
+nothing under `artifacts/` or `content/packs/`.
+
+Independent architecture and test reviews on 2026-09-28 found no blocking item and confirmed the
+shared seam, the layering, and the fail-closed direction of the gate reordering. Their non-blocking
+findings were resolved in the same change: the parity module now derives its experiment type from
+`experimentSchema` instead of restating a hand-maintained subset, so a rename becomes a type error;
+the paired-content tests gained a multi-experiment fixture so experiment *reordering* and a defect on
+the second experiment are both exercised, which a single-experiment fixture could not detect; the
+version-reuse test now gives version 2 its own task text and asserts the released bundle carries it;
+the unknown-field test now asserts the exact rejection reason per case, so the prohibited-key scan is
+no longer satisfied by strict parsing alone; and the generated release-bundle schema is now compiled
+and validated for both polarities. One finding was deferred at the time: this change shifted the
+fixture-isolation refusal cited by `YWAY-D005` from `content/release-gates.ts:672-680` to `:660-668`.
+On 2026-09-28, the owner directed correction of the two citations in the accepted decision. Both now
+point to `:660-668`, and the correction is recorded in its Decision History. The quoted message is
+byte-identical, the refusal is still the first throw in `evaluateReleaseGates`, and the substantive
+`YWAY-D005` claim is unaffected.
+
+One behaviour change beyond adding the field: `evaluateReleaseGates` now checks parity immediately
+after parsing the pair and before verifying the localized digest, so an out-of-parity pair is
+refused by naming the specific defect rather than only as a digest mismatch. An in-parity pair faces
+the same digest, version-scope, and review gates as before. This was found while testing: the
+digest binding threw first and made the required direct-call check unreachable.
+
+Recorded limits, none of which this change resolves:
+
+- The content model encodes no selection mode, and nothing here stores a response. Whether a task
+  accepts one selected choice or several, and what a response then means, is an **open owner product
+  question** for #65, not something this issue or this plan settles. Recording a response, and any
+  screen-reader behaviour of the task screen, belong to the later youth UI issues (#63, #65, #66).
+- Array order supplies content reading order only. No runtime, device, or screen-reader behaviour is
+  implemented or tested here, and no schema or attestation field binds a task's choice order, so
+  screen-reader validation of the task screen is carried by #66.
+- Generated JSON Schema validates each document's own shape. It cannot compare identifiers across
+  two documents and cannot enforce uniqueness by an object property, so the runtime paired-content
+  check is the only place those rules live, and a tool validating a single document against a
+  generated schema alone is weaker than the pipeline.
+- Parity stops at identifiers and order. Nothing binds the Burmese feedback for a choice ID to the
+  canonical feedback for that same ID. The localization reviewer attests Burmese fluency, not
+  cross-language meaning, so reviewers must read both languages' feedback for the same choice ID
+  together. This is a human review obligation the repository cannot check.
+- No schema check can establish that a feedback line is genuinely contextual rather than a verdict.
+  That remains a human review obligation for the founder, practitioner, and localization reviewers,
+  in the language they review. The task is digest-bound and version-scoped like the rest of the
+  content, so `YWAY-P019` and `YWAY-E005` are satisfied by the existing mechanism; whether the
+  practitioner review should additionally carry an explicit task-feedback confirmation is a further
+  **open owner product question** and is not decided here.
+- The task rides the fixture-only Stage 2 release path. It does not make non-fixture content
+  releasable; that remains #60 and the accepted `YWAY-D005` path.
+
+Repository verification actually run on 2026-09-28 (Node 24.20.0, pnpm 11.24.0): focused schema,
+localization, paired-content, lifecycle, and release tests passed (117 tests in
+`tests/content-schemas.test.ts`, `tests/content-json-schema.test.ts`, and
+`tests/content-interactive-task.test.ts`); `pnpm agent:doctor` READY; `pnpm content:schemas:check`
+passed; `pnpm content:verify` passed with the committed retired fixture release unchanged;
+`pnpm verify:invariants` passed; `pnpm verify:fast` passed; `pnpm verify:full` passed (lint,
+typecheck, format check, verification-runner self-test, 462 tests passed / 0 failed / 0 skipped,
+generated-schema check, content verify, invariants, docs). All fixtures are synthetic; no test
+fixture claims a real practitioner approved anything, and the eligibility record used in these tests
+is the committed `fixture-` identity.
+
+These are structural repository checks on a content-model and validation change. They do not
+establish that any real feedback is contextual, that any real practitioner or fluent Burmese reviewer
+has reviewed a task, or that the later youth flow can present a task accessibly.
+
 ## Progress checklist
 
 - [x] Owner explicitly activated Stage 3 and approved the bounded plan on 2026-09-27.
@@ -197,6 +314,7 @@ privacy, or accessibility evidence above, and they did not cover any application
 | 2026-09-28 | A `fixtureOnly: false` record may use any eligibility evidence reference and any fluency evidence reference, and a transliterated name or a numeric identifier passes both the evidence and actor-ID schemas. The existing negative test cannot isolate the character class, because its fixture record is `fixtureOnly: true` and the `fixture:` rule could equally reject the input. | Name and credential exclusion in Git is **review-enforced, not mechanical**, and the repository has no secret or personal-data scanner. `YWAY-D005` requires the inverse `fixture-`/`fixture:` rules in #60, opaque owner-issued actor handles, and the `YWAY-D004` secret-scan check before the first real reviewer record. |
 | 2026-09-28 | Stage 2's only released version, `fixture-retail-assistant@2`, is retired, and the artifact tree is shared across all Packs and reflects what has *ever* been released. | The allowlist is load-bearing for a stronger reason than "a fixture is sitting in the tree": any released non-retired Pack would otherwise be embeddable. Allowlist granularity is `(packId, packVersion)`, unordered, and must never become a preference or ranking signal. See `docs/decisions/005-real-content-trusted-build.md`. |
 | 2026-09-28 | Retirement preserves the historical bundle and manifest, and the repository is public. | Retirement cannot retract published content. The `YWAY-D005` response is a distribution control over inventoried devices; the corpus stays permanently readable. Stated plainly so no later report implies a recall that does not exist. |
+| 2026-09-28 | `evaluateReleaseGates` verified the localized digest before any content-parity rule, so a pair with a mismatched interactive task was reported only as a digest mismatch, and the required direct-call check could not be exercised. | The gate now checks parity right after parsing, naming the specific defect. A digest mismatch is still the second line of defence, not the first, and neither check weakens the other. |
 
 ## Decision log
 

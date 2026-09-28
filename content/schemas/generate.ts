@@ -4,7 +4,7 @@ import { generatedSchemas, type GeneratedSchema } from "./index.js";
 export const generatedSchemaDirectory = "content/generated";
 
 const runtimeOnlyRulesComment =
-  "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.";
+  "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.";
 
 type JsonObject = Record<string, unknown>;
 

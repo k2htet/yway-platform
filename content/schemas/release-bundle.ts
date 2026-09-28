@@ -8,6 +8,7 @@ import {
 } from "./common.js";
 import { localizedContentSchema } from "./localized-content.js";
 import { packSourceSchema } from "./pack-source.js";
+import { collectExperimentParityIssues } from "./experiment-parity.js";
 import { provenanceEventLogSchema } from "./provenance-event.js";
 
 /**
@@ -80,6 +81,14 @@ export const releaseBundleSchema = z
         path: ["localizedContent", "fixtureOnly"],
         message: `bundle localized content fixtureOnly ${value.localizedContent.fixtureOnly} does not match bundle fixtureOnly ${value.fixtureOnly} (fixture isolation must be consistent across the release boundary)`,
       });
+    }
+    for (const issue of collectExperimentParityIssues(
+      value.pack.experiments,
+      value.localizedContent.experiments,
+      "bundle localized content",
+      ["localizedContent", "experiments"],
+    )) {
+      context.addIssue({ code: "custom", path: [...issue.path], message: issue.message });
     }
     if (value.provenance.packId !== value.packId) {
       context.addIssue({
