@@ -16,6 +16,7 @@ export * from "./yaml.js";
 export * from "./accessibility.js";
 export * from "./pack-source.js";
 export * from "./localized-content.js";
+export * from "./experiment-parity.js";
 export * from "./practitioner-eligibility.js";
 export * from "./review-attestation.js";
 export * from "./provenance-event.js";

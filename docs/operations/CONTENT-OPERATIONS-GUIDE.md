@@ -16,7 +16,8 @@ This guide is operational documentation. It is not product or architecture autho
 - Stage 2 execution evidence is recorded in the completed plan
   [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
 
-Contracts this pipeline touches: `YWAY-P002` (six-part experiment structure), `YWAY-P005` and
+Contracts this pipeline touches: `YWAY-P002` (six-part experiment structure), `YWAY-P004`
+(trial output is a clue, not a verdict), `YWAY-P005` and
 `YWAY-E006` (no scoring or ranking), `YWAY-P019` and `YWAY-E005` (cumulative provenance plus
 qualified-practitioner review over the exact content), `YWAY-P020` (sponsorship disclosure),
 `YWAY-P023` (Simple English canonical content and Burmese release gates), and `YWAY-P024`
@@ -53,9 +54,10 @@ endorsement, real qualification, real young-person comprehension, or public-rele
 Runtime validation is authoritative. The generated JSON Schema files are a portable rendering of the
 expressible subset of the same rules, regenerated with `pnpm content:schemas` and drift-checked with
 `pnpm content:schemas:check`. Each generated file carries a `$comment` naming the rules that only
-runtime validation enforces — cross-array identifier uniqueness, cross-field equality, date-window
-ordering, and the recursive prohibited-key scan. A tool that validates against a generated schema
-alone is therefore weaker than the pipeline; use the runtime schemas.
+runtime validation enforces — cross-array identifier uniqueness, cross-field equality, cross-document
+identifier and order parity between a canonical document and its localization, date-window ordering,
+and the recursive prohibited-key scan. A tool that validates against a generated schema alone is
+therefore weaker than the pipeline; use the runtime schemas.
 
 | Record                           | Runtime schema                                                                                     | Generated schema                                                                                                                                                                                                           |
 | -------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -107,6 +109,8 @@ Canonical authoring language is Simple English. Every identified experiment carr
 structure required by `YWAY-P002`: question, action, timebox, what to notice, reflection, and next
 fork. Each next fork must increase real-world exposure before it increases commitment; that is a
 human review obligation confirmed on the review attestation, not a text check the pipeline performs.
+An experiment may additionally carry one optional interactive task; the six parts are still
+required and the task never replaces one.
 
 ```yaml
 # content/packs/<pack-id>/<version>.yaml
@@ -137,7 +141,7 @@ preview:
 limitations:
   - "This is a synthetic fixture pack. No real practitioner wrote, reviewed, or endorsed it."
   - "It does not tell you whether the work suits you, and it does not score, rank, or compare careers."
-  - "Anything written in a reflection is exploration, not practice evidence or verified assessment."
+  - "Choosing a response in a short task, and anything written in a reflection, are exploration. They are not practice evidence, not a verified assessment, and not a statement about what you are good at."
 experiments:
   - # Lowercase kebab-case, 64 characters maximum, unique within the pack.
     id: exp-watch-a-busy-counter
@@ -156,6 +160,31 @@ experiments:
     nextFork: >-
       Watch a second workplace at a different time of day, then ask one worker what a first week is
       like. Do that before you pay for any course or promise any shifts.
+    # Optional. One short interactive task, attached to this identified
+    # experiment. It adds to the six parts above; it never replaces one. Each
+    # language writes its own scenario, prompt, choice text, and feedback, so
+    # the canonical and Burmese text differ by design — but the choice IDs and
+    # their order must match exactly. See the interactive-task section below.
+    interactiveTask:
+      scenario: "One customer is waiting at the counter and the queue behind them is growing."
+      # What the young person is being asked to do right now.
+      actionPrompt: "Choose what you say first."
+      # At least two choices. Array order is the authored display order, and the
+      # IDs are the cross-language join key: safe, unique, and never edited
+      # without a new version.
+      choices:
+        - id: check-the-shelf-first
+          text: "Greet the customer and check the shelf for what they asked for."
+          # Qualitative and contextual: what this choice creates in the
+          # situation, not a verdict on the person or on the outcome.
+          feedback: >-
+            Checking first can take longer, and the customer can see that you noticed what they
+            needed. Both are worth noticing about this part of the work.
+        - id: ask-what-they-need
+          text: "Tell the customer there is a wait and ask what they need."
+          feedback: >-
+            Asking what they need first keeps the wait short and moves the queue on. Notice how
+            much of the job is deciding what to do before you act.
 # Required before an accessibility approval and required for release. Content scope only.
 accessibility:
   scope: content
@@ -207,6 +236,56 @@ authoredAt: 2026-09-27T00:00:00Z
 - Do not add fields the schema does not define. Strict parsing rejects them, and a field named like a
   score or ranking concept is rejected even when the surrounding object is valid.
 
+### Optional interactive task
+
+An identified experiment may carry one optional `interactiveTask`: a short realistic situation, an
+action prompt, and at least two ordered response choices. The task is an addition to the six-part
+structure, never a replacement for it — `question`, `action`, `timebox`, `whatToNotice`,
+`reflection`, and `nextFork` all stay required. An experiment without a task stays valid.
+
+- `scenario`, `actionPrompt`, every `text`, and every `feedback` must contain at least one
+  non-whitespace character. Unknown fields are rejected at the task level and at the choice level.
+- `choices` needs at least two entries, and choice IDs must be unique, lowercase kebab-case, and at
+  most 64 characters.
+- There is no field for an answer key, a correct choice, a score, a rank, or a capability
+  assessment, and no such field may be added: an unknown key is rejected, and a key named like a
+  score or ranking concept is rejected by name as well (`YWAY-P005`, `YWAY-E006`).
+- **Choice order is authored display order.** The array order is what a young person reads and the
+  order a screen reader must traverse, so it is content, not presentation (`YWAY-P024`).
+- **Choice IDs are the cross-language join key.** The canonical and Burmese documents must carry the
+  same task on the same experiment, with the same choice IDs in the same order. Text and feedback
+  are language-specific and always differ. A task present in only one language, a choice added or
+  removed in one language, a renamed ID, or a reordered choice is refused at every paired-content
+  boundary: `content:new-version` and `content:status` through the source loader, `evaluateReleaseGates`
+  on a directly supplied pair, and the release bundle schema. See the limits below.
+- **Feedback is qualitative and contextual.** It describes what the selected action created in the
+  situation and what is worth noticing about that part of the work. It must not rank choices, declare
+  a winner, tell a young person which choice reveals their strengths, or imply a career or
+  capability verdict. No schema check can establish that meaning, so reviewers must read every
+  feedback line: a founder, practitioner, and localization reviewer, in the language they review.
+  The screen-reader behaviour of the task screen is not established by any check here.
+- **A task or feedback edit requires a new version.** The scenario, prompt, choice text, and feedback
+  are all part of the version's content digest, so changing any of them under a registered version
+  number fails the digest check. Author the change in the next version and collect fresh
+  version-scoped founder, practitioner, localization, and accessibility reviews; an earlier
+  version's reviews cannot be reused. This is the same frozen-record rule as the rest of the source,
+  not a separate mechanism.
+
+Known limits: the generated JSON Schemas validate each document's own shape and cannot compare
+identifiers across two documents, so a tool that validates one document against a generated schema
+alone will not catch a parity defect — use the runtime validators. The pipeline cannot decide whether
+a feedback line is genuinely contextual, so a green release gate is not evidence that the feedback
+avoids a verdict. Parity also stops at identifiers and order: nothing binds the Burmese feedback for
+a choice ID to the canonical feedback for that same ID, so the localization reviewer is asked about
+fluency, not meaning, and must read the two languages' feedback for the same choice ID side by side.
+Choice order is declared authored reading order, but `accessibility.readingOrder` can reference only
+media identifiers and no schema or attestation field binds a task's choice order, so an approved
+accessibility review can confirm an order that never mentions the task; screen-reader validation of
+the task screen belongs to the youth-flow and device-validation issues. Recording what a young person
+chose is part of the later youth flow and is not implemented here, and the content model encodes no
+selection mode, so whether a task accepts one choice or several is an open owner product decision
+rather than something this pipeline settles.
+
 ### Accessibility content
 
 The accessibility gate checks content structure only, under `YWAY-P024`:
@@ -242,9 +321,11 @@ will be released. `content:new-version` seals a `localized` provenance event whe
 `content/packs/<pack-id>/localizations/<version>.yaml` is present at registration time, and every
 later review and release event inherits that `localizedContentDigest`.
 
-The localization must cover the same ordered experiment IDs as the canonical source. Its parsed
-values are bound to the registered version's digest; changes to those values fail closed. The
-registered file, including comments and formatting, must remain unchanged under the policy above.
+The localization must cover the same ordered experiment IDs as the canonical source, and it must
+carry the same optional interactive task: same choice IDs, same order, its own scenario, prompt,
+choice text, and feedback. Its parsed values are bound to the registered version's digest; changes
+to those values fail closed. The registered file, including comments and formatting, must remain
+unchanged under the policy above.
 
 ```yaml
 # content/packs/<pack-id>/localizations/<version>.yaml
@@ -271,7 +352,7 @@ limitations:
   - "ဤသရုပ်ဖွဲ့စည်းမှု ထုပ်ပိုးမှုသည် စနစ်ကို စမ်းသပ်ရန်သာ ဖြစ်ပါသည်။ အမှန်တကယ် အလုပ်သမားတစ်ယောက်ကလည်း မရေးသားပါ၊ အတည်ပြုခြင်းလည်း မလုပ်ထားပါ။ လူငယ်များထံ မဝေငှပါ။"
   - "ဤထုပ်ပိုးမှုတွင် အမှန်တကယ် ဆိုင်၊ အလုပ်ရှင်၊ ပံ့ပိုးသူ သို့မဟုတ် အလုပ်ခေါ်ချင်း မပါဝင်ပါ။"
   - "ဤထုပ်ပိုးမှုသည် အလုပ်က သင့်လားဆိုသည်ကို မပြောပါ။ ဘယ်အလုပ်ကို ဦးစားပေး၊ နှိုင်းယှဉ်ချက်၊ အမှတ်အသား မပေးပါ။"
-  - "ဤနေရာတွင် ရေးသားသည့် အရာများသည် ရှာဖွေနေမှုသာ ဖြစ်ပါသည်။ လေ့ကျင့်ရေးကို သက်သေပြုသည့် အထောက်အပံ့ မဟုတ်ပါ၊ အတည်ပြုထားသော စမ်းသပ်မှုလည်း မဟုတ်ပါ။"
+  - "ဤနေရာတွင် တစ်ခုချင်းကို ရွေးခြင်းနှင့် ရေးသားသည့် အရာများသည် ရှာဖွေနေမှုသာ ဖြစ်ပါသည်။ လေ့ကျင့်ရေးကို သက်သေပြုသည့် အထောက်အပံ့ မဟုတ်ပါ၊ အတည်ပြုထားသော စမ်းသပ်မှုလည်း မဟုတ်ပါ၊ သင့်ရည်စွမ်းကို သိမှတ်စေသည့် အချက်လည်း မဟုတ်ပါ။"
   - "ဤထုပ်ပိုးမှုကို ပံ့ပိုးသည်ဟု ဆိုသော ကုန်ရှင်သည် လုံးဝမရှိသော ခေတ်မီတုံး သရုပ်ဖွဲ့လိုက်ပါသည်။ ပံ့ပိုးမှုအတွက် ငွေ၊ ပစ္စည်း၊ ဝန်ဆောင်မှု မရှိပါ၊ လူငယ်သူ၏ အချက်အလက်ကို မည်သူမျိး မရရှိနိုင်ပါ။ ပံ့ပိုးသူသည် ထုပ်ပိုးမှု၏ စာသားကို ပြောင်းလဲ၍ မရပါ၊ စမ်းသပ်ချက်များ၏ အစဉ်ကို ပြောင်းလဲ၍ မရပါ။"
   - "ဤမြန်မာဘာသာစကားသည် သရုပ်ဖွဲ့စည်းမှု ဘာသာပြန်ပါသည်။ မြန်မာစာ နားလည်သူ လူငယ်များနှင့် စမ်းသပ်ခြင်း မလုပ်ရသေးပါ။"
   - "မြန်မာစာ အကောင်းအစားရေးဖွံ့ဖြန်မှုသည် စာသားဖွဲ့စည်းပုံကိုသာ စစ်ဆေးပါသည်။ စက်ဖဝဲဖြင့် ဖတ်ခြင်း၊ စာလုံးအရွယ်အစား၊ မြန်မာစာ ကျော်လွှတ်ခြင်းနှင့် စက်ဖဝဲ အမူအနှစ်ကို သီးခြား မစမ်းသပ်ရသေးပါ။"
@@ -285,6 +366,20 @@ experiments:
     whatToNotice: "မည်သည့်အချိန်များတွင် ပင်ပန်မှု ရှိသလဲ၊ မည်သည့်အချိန်များတွင် စိတ်ပြေသလဲ၊ မိမိမသိသော ကျွမ်းကျင်မှု လိုအပ်ခဲ့သလဲ သတိထားပါ။"
     reflection: "မိမိကြည့်ခဲ့သည့် အချက်သုံးချက်ကို ရေးသားပါ။"
     nextFork: "ကျောက်ချိန်နှင့် မတူညီသည့် အချိန်တွင် ဆိုင်တစ်ခုကို ထပ်မံကြည့်ရှုပါ။ ပြီးလျှင် အလုပ်သမားတစ်ယောက်အား ပထမဆုတ် အလုပ်အခါအခဲ့ကို မေးမြန်းပါ။ လေ့ကျင့်ကို မဝယယူခင်၊ အလုပ်ခေါ်ချင်းမပေးခင် ဒီအတွေကို လုပ်ပါ။"
+    # Optional, and the same task the canonical source carries: the same choice
+    # IDs in the same order, every field written in Burmese. The prose differs
+    # from the canonical file by design; the IDs and their order do not.
+    interactiveTask:
+      scenario: "ကောင်းတစ်ခုတွင် လူရှာသူတစ်ယောက် စောင့်နေပြီး နောက်ကျွန်တော်တွေ ပိုးတိုက်နေသည်။"
+      actionPrompt: "သင့်အလိုတိုင်း ပြောမယ်ကို ရွေးပါ။"
+      # The same two choice IDs, in the same order as the canonical source.
+      choices:
+        - id: check-the-shelf-first
+          text: "ကြိုဆိုပြီး သူတောင်းခဲ့တာကို ပစ္စည်းတိုထဲမှာ ရှိမှာ စစ်ပါ။"
+          feedback: "ပိုးတိုက်ရန် များလိုနိုင်ပါသည်။ လူရှာသူက သင့်အာရုံစိတ်ထားမှုကို သိရှိနိုင်ပါသည်။ ဒီအလုပ်အပိုင်းအတွက် ဂရုစိတ်ထားသင့်သော အချက်များကို သတိထားပါ။"
+        - id: ask-what-they-need
+          text: "စောင့်ရှိကြောင်း ပြောပြီး ဘာလိုအပ်သလဲဆိုတာ မေးပါ။"
+          feedback: "လိုအပ်ချင်းကို ဦးစားမေးခြင်းက စောင့်ချိန်ကို လျှောင်းပေးပြီး တန်းစီကို ရွှေ့ပါသည်။ လုပ်ဖို့မလုပ်ခင် ဘာလုပ်မည်ကို ဆုံးဖြတ်ရခြင်းက ဒီအလုပ်၏ ကြီးပွားချက်တစ်ခု ဖြစ်သည်ကို သတိထားပါ။"
 # Optional localized accessibility metadata, checked with the same content-only rules.
 accessibility:
   scope: content

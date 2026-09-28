@@ -257,6 +257,13 @@ export interface ReviewSetupOptions {
   /** Drives every release-readiness review except sponsorship disclosure. */
   readonly omitSponsorshipReview?: boolean;
   readonly pack?: PackSource;
+  /**
+   * Registers this localization instead of deriving one from the Pack.
+   *
+   * Use it when the two documents must differ in a way `makeLocalizedContent`
+   * cannot express, such as per-language interactive task text.
+   */
+  readonly localizedContent?: LocalizedContent;
 }
 
 export interface ReleasedFixture {
@@ -403,7 +410,7 @@ export function driveToReleaseReady(root: string, options_: ReviewSetupOptions =
   const pack = options_.pack ?? makePack(packOverrides(options_.sponsored ?? false));
   const version = pack.version;
   writePackSource(root, pack);
-  writeLocalizedContent(root, makeLocalizedContent(pack));
+  writeLocalizedContent(root, options_.localizedContent ?? makeLocalizedContent(pack));
   expectExit(
     runNewVersionCommand(
       ["--pack", pack.id, "--actor", "fixture-author-one"],

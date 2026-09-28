@@ -7,6 +7,7 @@ import addFormats from "ajv-formats";
 import type { ErrorObject, ValidateFunction } from "ajv";
 import {
   generatedSchemas,
+  packSourceSchema,
   retirementNoticeSchema,
   retirementRecordSchema,
   strictParse,
@@ -510,6 +511,188 @@ test("generated pack source schema rejects non-independent sponsorship", () => {
     },
   };
   assert.equal(validate(sponsored), false, "sponsored content must remain editorially independent");
+});
+
+function generatedInteractiveTask(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    scenario: "A synthetic queue has reached the counter and one customer is waiting.",
+    actionPrompt: "Choose what you say first.",
+    choices: [
+      {
+        id: "greet-and-check-stock",
+        text: "Greet the customer and check the shelf.",
+        feedback: "Checking first can take longer, and it shows what you noticed.",
+      },
+      {
+        id: "explain-the-wait",
+        text: "Tell the customer there is a wait and ask what they need.",
+        feedback: "Asking first keeps the wait short.",
+      },
+    ],
+    ...overrides,
+  };
+}
+
+function withGeneratedInteractiveTask(
+  fixture: Record<string, unknown>,
+  task: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  const experiments = fixture["experiments"] as Record<string, unknown>[];
+  return { ...fixture, experiments: [{ ...experiments[0], interactiveTask: task }] };
+}
+
+test("generated schemas accept a valid task and existing task-free content", () => {
+  for (const name of ["pack-source", "localized-content"] as const) {
+    const validate = compileGenerated(name);
+    const base =
+      name === "pack-source" ? runtimeValidPackFixture() : runtimeValidLocalizedFixture();
+    assert.equal(
+      validate(withGeneratedInteractiveTask(base, generatedInteractiveTask())),
+      true,
+      firstValidationError(validate),
+    );
+    assert.equal(validate(base), true, `${name} must keep an experiment without a task valid`);
+  }
+});
+
+test("the generated release bundle inlines the optional task in both documents", () => {
+  const rendered = renderAllGeneratedSchemas().get("release-bundle.schema.json");
+  assert.ok(rendered !== undefined);
+  const parsed = JSON.parse(rendered) as {
+    properties?: Record<
+      string,
+      {
+        properties?: {
+          experiments?: {
+            items?: { required?: string[]; properties?: Record<string, unknown> };
+          };
+        };
+      }
+    >;
+  };
+  for (const document of ["pack", "localizedContent"]) {
+    const experiment = parsed.properties?.[document]?.properties?.experiments?.items;
+    assert.ok(experiment !== undefined, `bundle ${document} must inline experiment items`);
+    assert.ok(
+      experiment.properties?.["interactiveTask"] !== undefined,
+      `bundle ${document} must declare the interactive task`,
+    );
+    assert.equal(
+      (experiment.required ?? []).includes("interactiveTask"),
+      false,
+      `bundle ${document} must keep the task optional, so schema version 1 stays valid`,
+    );
+  }
+});
+
+test("generated schemas reject a task that is missing, blank, too short, or unknown", () => {
+  for (const name of ["pack-source", "localized-content"] as const) {
+    const validate = compileGenerated(name);
+    const base =
+      name === "pack-source" ? runtimeValidPackFixture() : runtimeValidLocalizedFixture();
+    const task = generatedInteractiveTask();
+    assert.equal(
+      validate(withGeneratedInteractiveTask(base, task)),
+      true,
+      firstValidationError(validate),
+    );
+
+    for (const field of ["scenario", "actionPrompt"]) {
+      const missing = generatedInteractiveTask();
+      delete missing[field];
+      assert.equal(
+        validate(withGeneratedInteractiveTask(base, missing)),
+        false,
+        `${name} must require task field ${field}`,
+      );
+      assert.equal(
+        validate(withGeneratedInteractiveTask(base, generatedInteractiveTask({ [field]: "   " }))),
+        false,
+        `${name} must reject a blank task field ${field}`,
+      );
+    }
+
+    const blankChoice = generatedInteractiveTask();
+    (blankChoice["choices"] as Record<string, unknown>[])[0]!["feedback"] = "  ";
+    assert.equal(
+      validate(withGeneratedInteractiveTask(base, blankChoice)),
+      false,
+      `${name} must reject a blank choice feedback`,
+    );
+
+    const oneChoice = generatedInteractiveTask();
+    oneChoice["choices"] = [(task["choices"] as Record<string, unknown>[])[0]!];
+    assert.equal(
+      validate(withGeneratedInteractiveTask(base, oneChoice)),
+      false,
+      `${name} must require at least two choices`,
+    );
+
+    for (const [level, unknownField] of [
+      ["task", { score: 3 }],
+      ["task", { rank: 1 }],
+      ["choice", { answerKey: true }],
+      ["choice", { correct: true }],
+    ] as const) {
+      const withUnknown = generatedInteractiveTask();
+      const target =
+        level === "task" ? withUnknown : (withUnknown["choices"] as Record<string, unknown>[])[0]!;
+      Object.assign(target, unknownField);
+      assert.equal(
+        validate(withGeneratedInteractiveTask(base, withUnknown)),
+        false,
+        `${name} must reject the unknown ${level} field ${Object.keys(unknownField)[0]}`,
+      );
+    }
+
+    for (const malformedId of ["Greet", "greet and check", "1-greet", "greet_check", "-greet"]) {
+      const withBadId = generatedInteractiveTask();
+      (withBadId["choices"] as Record<string, unknown>[])[0]!["id"] = malformedId;
+      assert.equal(
+        validate(withGeneratedInteractiveTask(base, withBadId)),
+        false,
+        `${name} must reject the malformed choice ID "${malformedId}"`,
+      );
+    }
+  }
+});
+
+test("the generated schema cannot express what the runtime parity check enforces", () => {
+  const rendered = renderAllGeneratedSchemas().get("pack-source.schema.json");
+  assert.ok(rendered !== undefined);
+  const parsed = JSON.parse(rendered) as { $comment?: string };
+  assert.match(
+    parsed.$comment ?? "",
+    /cross-document identifier and order parity/,
+    "the generated schema must name the cross-document rules only runtime validation enforces",
+  );
+
+  // Two choice IDs can repeat across two documents, and choice order can differ
+  // between them; both are accepted by one document's schema and refused only
+  // by the runtime paired-content check.
+  const validate = compileGenerated("pack-source");
+  const duplicatedAcrossDocuments = withGeneratedInteractiveTask(
+    runtimeValidPackFixture(),
+    generatedInteractiveTask({
+      choices: [
+        { id: "greet", text: "First choice.", feedback: "A clue." },
+        { id: "greet", text: "Second choice.", feedback: "Another clue." },
+      ],
+    }),
+  );
+  assert.equal(
+    validate(duplicatedAcrossDocuments),
+    true,
+    "uniqueness is a runtime-only rule, as the generated $comment states",
+  );
+  assert.throws(
+    () => strictParse(packSourceSchema, duplicatedAcrossDocuments),
+    StrictValidationError,
+    "runtime must reject duplicate choice IDs within one document",
+  );
+  assert.equal(validate(runtimeValidPackFixture()), true, firstValidationError(validate));
 });
 
 test("generated schemas reject whitespace-only nonblank fields", () => {

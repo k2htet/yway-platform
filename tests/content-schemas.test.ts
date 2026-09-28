@@ -320,6 +320,234 @@ test("rejects a blank six-part experiment field", () => {
   );
 });
 
+function validInteractiveTask(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    scenario: "A synthetic queue has reached the counter and one customer is waiting.",
+    actionPrompt: "Choose what you say first.",
+    choices: [
+      {
+        id: "greet-and-check-stock",
+        text: "Greet the customer and check the shelf for what they asked for.",
+        feedback: "Checking first can take longer, and it shows the customer what you noticed.",
+      },
+      {
+        id: "explain-the-wait",
+        text: "Tell the customer there is a wait and ask what they need.",
+        feedback: "Asking what they need first keeps the wait short, and it moves the queue on.",
+      },
+    ],
+    ...overrides,
+  };
+}
+
+test("accepts an identified experiment carrying an optional interactive task", () => {
+  const parsed = strictParse(
+    packSourceSchema,
+    validPack({ experiments: [validExperiment({ interactiveTask: validInteractiveTask() })] }),
+  );
+  const task = parsed.experiments[0]?.interactiveTask;
+  assert.equal(task?.choices.length, 2);
+  assert.equal(task?.choices[0]?.id, "greet-and-check-stock");
+  assert.equal(task?.choices[1]?.id, "explain-the-wait");
+});
+
+test("an experiment without an interactive task stays valid", () => {
+  const parsed = strictParse(packSourceSchema, validPack());
+  assert.equal(parsed.experiments[0]?.interactiveTask, undefined);
+  const localized = strictParse(
+    localizedContentSchema,
+    validLocalizedContent({
+      experiments: [{ ...(validLocalizedContent().experiments as Record<string, unknown>[])[0]! }],
+    }),
+  );
+  assert.equal(localized.experiments[0]?.interactiveTask, undefined);
+});
+
+test("every six-part experiment field stays required alongside a task", () => {
+  for (const field of sixPartFields) {
+    const experiment = validExperiment({ interactiveTask: validInteractiveTask() });
+    delete experiment[field];
+    expectStrictFailure(
+      () => strictParse(packSourceSchema, validPack({ experiments: [experiment] })),
+      field,
+    );
+  }
+});
+
+test("rejects a task that is missing a required field or carries a blank one", () => {
+  for (const field of ["scenario", "actionPrompt"]) {
+    const task = validInteractiveTask();
+    delete task[field];
+    expectStrictFailure(
+      () =>
+        strictParse(
+          packSourceSchema,
+          validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+        ),
+      field,
+    );
+    expectStrictFailure(
+      () =>
+        strictParse(
+          packSourceSchema,
+          validPack({
+            experiments: [
+              validExperiment({ interactiveTask: validInteractiveTask({ [field]: "  " }) }),
+            ],
+          }),
+        ),
+      "must not be blank",
+    );
+  }
+  for (const field of ["id", "text", "feedback"]) {
+    for (const blank of [undefined, ""]) {
+      const task = validInteractiveTask();
+      const [choice] = task["choices"] as Record<string, unknown>[];
+      if (blank === undefined) {
+        delete choice![field];
+      } else {
+        choice![field] = blank;
+      }
+      expectStrictFailure(
+        () =>
+          strictParse(
+            packSourceSchema,
+            validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+          ),
+        field,
+      );
+    }
+  }
+});
+
+test("rejects an interactive task with fewer than two choices", () => {
+  const task = validInteractiveTask();
+  task["choices"] = [
+    {
+      id: "greet-and-check-stock",
+      text: "Greet the customer.",
+      feedback: "A clue, not a verdict.",
+    },
+  ];
+  expectStrictFailure(
+    () =>
+      strictParse(
+        packSourceSchema,
+        validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+      ),
+    "choices",
+  );
+  task["choices"] = [];
+  expectStrictFailure(
+    () =>
+      strictParse(
+        packSourceSchema,
+        validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+      ),
+    "choices",
+  );
+});
+
+test("rejects an unknown field at the task or choice level", () => {
+  for (const [level, unknownField] of [
+    ["task", { score: 3 }],
+    ["task", { rank: 1 }],
+    ["task", { correctChoiceId: "greet-and-check-stock" }],
+    ["choice", { rank: 1 }],
+    ["choice", { answerKey: true }],
+    ["choice", { capabilityAssessment: "strong" }],
+  ] as const) {
+    const task = validInteractiveTask();
+    const target = level === "task" ? task : (task["choices"] as Record<string, unknown>[])[0]!;
+    Object.assign(target, unknownField);
+    const failure = expectStrictFailure(
+      () =>
+        strictParse(
+          packSourceSchema,
+          validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+        ),
+      Object.keys(unknownField)[0],
+    );
+    const fragment = Object.keys(unknownField)[0]!;
+    assert.ok(
+      failure.message.includes("prohibited scoring") ||
+        failure.message.includes("Unrecognized key") ||
+        failure.message.includes("is not allowed"),
+      `expected a prohibited or unknown-field rejection for ${fragment}, received: ${failure.message}`,
+    );
+  }
+});
+
+test("rejects a malformed interactive task choice identifier", () => {
+  for (const id of [
+    "Greet",
+    "greet and check",
+    "1-greet",
+    "-greet",
+    "greet--check",
+    "greet_check",
+    "",
+  ]) {
+    const task = validInteractiveTask();
+    (task["choices"] as Record<string, unknown>[])[0]!["id"] = id;
+    expectStrictFailure(
+      () =>
+        strictParse(
+          packSourceSchema,
+          validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+        ),
+      "choices",
+    );
+  }
+});
+
+test("rejects duplicate interactive task choice identifiers", () => {
+  const task = validInteractiveTask();
+  const choices = task["choices"] as Record<string, unknown>[];
+  choices[1]!["id"] = choices[0]!["id"];
+  expectStrictFailure(
+    () =>
+      strictParse(
+        packSourceSchema,
+        validPack({ experiments: [validExperiment({ interactiveTask: task })] }),
+      ),
+    "duplicate interactive task choice ID",
+  );
+});
+
+test("accepts a localized interactive task whose text and feedback are its own", () => {
+  const localizedExperiment = (
+    validLocalizedContent().experiments as Record<string, unknown>[]
+  )[0]!;
+  const parsed = strictParse(
+    localizedContentSchema,
+    validLocalizedContent({
+      experiments: [
+        {
+          ...localizedExperiment,
+          interactiveTask: {
+            scenario: "သရုပ်ဖွဲ့စည်းမှု အခြေအနေ။",
+            actionPrompt: "သင့်အလိုတိုင်း တစ်ခုချင်း ပြောမယ်။",
+            choices: [
+              {
+                id: "greet-and-check-stock",
+                text: "ကြိုဆိုပြီး ပစ္စည်းရှိမှာ စစ်မည်။",
+                feedback: "သရုပ်ဖွဲ့စည်းမှု အကြံပြုချက် ဖြစ်ပါသည်။",
+              },
+              {
+                id: "explain-the-wait",
+                text: "စောင့်ရှိမည်ကို ပြောပြီး လိုအပ်ချင်း မေးမြန်းမည်။",
+                feedback: "သရုပ်ဖွဲ့စည်းမှု အကြံပြုချက် ဖြစ်ပါသည်။",
+              },
+            ],
+          },
+        },
+      ],
+    }),
+  );
+  assert.equal(parsed.experiments[0]?.interactiveTask?.choices[0]?.id, "greet-and-check-stock");
+});
+
 test("rejects a whitespace-only pack title", () => {
   expectStrictFailure(
     () => strictParse(packSourceSchema, validPack({ title: "   " })),

@@ -15,6 +15,7 @@ import { verifyProvenanceLog } from "./provenance.js";
 import {
   StrictValidationError,
   assertUniquePackVersions,
+  collectExperimentParityIssues,
   localizedContentSchema,
   packSourceSchema,
   parseStrictYaml,
@@ -454,18 +455,14 @@ export function loadPackState(repositoryRoot: string, packId: string): PackState
         },
       ]);
     }
-    const sourceExperimentIds = source.experiments.map((experiment) => experiment.id);
-    const localizedExperimentIds = localized.experiments.map((experiment) => experiment.id);
-    if (
-      sourceExperimentIds.length !== localizedExperimentIds.length ||
-      sourceExperimentIds.some((id, index) => id !== localizedExperimentIds[index])
-    ) {
-      throw new StrictValidationError([
-        {
-          path: ["localizedContent", "experiments"],
-          message: `localized content for ${packId} version ${source.version} must cover the same ordered experiment IDs as the canonical source`,
-        },
-      ]);
+    const parityIssues = collectExperimentParityIssues(
+      source.experiments,
+      localized.experiments,
+      `localized content for ${packId} version ${source.version}`,
+      ["localizedContent", "experiments"],
+    );
+    if (parityIssues.length > 0) {
+      throw new StrictValidationError(parityIssues);
     }
     localizedContentByVersion.set(source.version, localized);
   }
