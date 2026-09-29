@@ -6,6 +6,7 @@ import {
   type ReleaseAuthorizationScope,
 } from "./classification.js";
 import { contentDigest, sha256Hex } from "./digest.js";
+import { sameReleasePolicy } from "./release-policy.js";
 import { releaseGateManifestFields } from "./release-gates.js";
 import { buildSnapshotIndexEntry, canonicalArtifactPath } from "./snapshot-index.js";
 import { formatRecord } from "./store.js";
@@ -315,6 +316,45 @@ export function assertBundleBindings(input: {
       path: ["gates", "localizedContentDigest"],
       message: `release manifest localized digest does not match the bundle localized digest ${bundle.localizedContentDigest}`,
     });
+  }
+  if (manifest.gates.releasePolicy !== undefined) {
+    const versionEvents = bundle.provenance.events.filter(
+      (event) => event.packVersion === bundle.packVersion,
+    );
+    const cycleBoundary =
+      versionEvents.filter((event) => event.type === "changes-requested").at(-1)?.sequence ?? 0;
+    const currentCycle = versionEvents.filter((event) => event.sequence > cycleBoundary);
+    const owner = currentCycle.filter((event) => event.type === "owner-approved").at(-1);
+    if (
+      owner === undefined ||
+      !sameReleasePolicy(owner.releasePolicy, manifest.gates.releasePolicy) ||
+      owner.contentDigest !== bundle.contentDigest ||
+      owner.localizedContentDigest !== bundle.localizedContentDigest
+    ) {
+      issues.push({
+        path: ["gates", "releasePolicy"],
+        message:
+          "policy-aware manifest must bind the exact owner-approved event and content digests in the bundle",
+      });
+    }
+    const ai = currentCycle.filter((event) => event.type === "ai-reviewed").at(-1);
+    if (ai === undefined || (owner !== undefined && ai.sequence >= owner.sequence))
+      issues.push({
+        path: ["gates", "aiReviewed"],
+        message: "AI review must precede owner approval in policy-aware bundle",
+      });
+    if (
+      manifest.gates.practitionerApproved !==
+      currentCycle.some(
+        (event) =>
+          event.type === "practitioner-reviewed" &&
+          (owner === undefined || event.sequence < owner.sequence),
+      )
+    )
+      issues.push({
+        path: ["gates", "practitionerApproved"],
+        message: "practitioner assurance claim must match the release provenance prefix",
+      });
   }
   if (manifest.gates.runtimeAccessibilityDeferred !== true) {
     issues.push({

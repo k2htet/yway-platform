@@ -191,7 +191,7 @@ test("the practitioner independence and version-scope refusals hold on the real 
     commandOptions(stale),
   );
   expectExit(afterRelease, 1);
-  expectFailureMessage(afterRelease, 'current status "artifact-released"');
+  expectFailureMessage(afterRelease, '"artifact-released" → "practitioner-reviewed"');
   // Offering version 1's approval records against version 2 is refused on scope.
   const copied = attestationFilePath(stale, second.id, 2, 2, "founder-review");
   const versionOneAttestation = JSON.parse(
@@ -707,10 +707,12 @@ test("a sponsored real Pack is refused because the Burmese text carries no discl
   registerRealPack(root, pack);
   recordRealReviews(root, pack, [
     "founder-review",
+    "ai-review",
     "practitioner-review",
     "localization-review",
     "accessibility-review",
     "sponsorship-disclosure",
+    "owner-approval",
   ]);
   const refused = runReleaseCommand(realReleaseArgs(pack.id, 1), commandOptions(root));
   expectExit(refused, 1);
@@ -762,15 +764,14 @@ test("a changed localization, a stale digest, and forged artifact bytes are all 
   expectFailureMessage(forgedResult, "does not match the bytes regenerated");
 });
 
-test("a real release missing any shared gate is refused and writes nothing", () => {
+test("a real release without the policy and shared review gates is refused and writes nothing", () => {
   const root = makeRoot();
   const pack = makeRealPack();
   registerRealPack(root, pack);
   recordRealReviews(root, pack, ["founder-review", "practitioner-review"]);
   const result = runReleaseCommand(realReleaseArgs(pack.id, 1), commandOptions(root));
   expectExit(result, 1);
-  expectFailureMessage(result, "fluent Burmese localization review is required");
-  expectFailureMessage(result, "content accessibility review is required");
+  expectFailureMessage(result, "new releases require selected ai-owner or human-assured policy");
   assert.equal(existsSync(bundlePath(root, pack.id, 1)), false);
   assert.equal(existsSync(snapshotIndexPath(root)), false);
 });

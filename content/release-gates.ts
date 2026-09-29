@@ -1,5 +1,11 @@
 import { contentDigest } from "./digest.js";
 import {
+  requireReleasePolicy,
+  requiresPractitioner,
+  sameReleasePolicy,
+  type ReleasePolicySelection,
+} from "./release-policy.js";
+import {
   evidenceReferenceClassificationIssue,
   packIdClassificationIssue,
   requireClassificationIsolation,
@@ -10,7 +16,10 @@ import {
   selectVersionScopedEvents,
   type VersionScope,
 } from "./lifecycle.js";
-import { verifyRecordedPractitionerApproval } from "./practitioner-gate.js";
+import {
+  assertPolicyPractitionerEligibility,
+  verifyRecordedPractitionerApproval,
+} from "./practitioner-gate.js";
 import { appendProvenanceEvent, verifyProvenanceLog } from "./provenance.js";
 import { reviewEventTypes } from "./governance.js";
 import { assertFixtureOnlyProvenance } from "./store.js";
@@ -40,7 +49,8 @@ export interface ReleaseGateInput {
   readonly localizedContent?: LocalizedContent;
   readonly provenanceLog: ProvenanceEventLog;
   readonly attestations: readonly ReviewAttestation[];
-  readonly practitionerEligibility: PractitionerEligibility;
+  readonly practitionerEligibility?: PractitionerEligibility;
+  readonly releasePolicy?: ReleasePolicySelection;
   readonly evaluateAt: string;
   readonly expectedHeadEventDigest?: string;
 }
@@ -167,7 +177,9 @@ function attestationMatchesEvent(
     attestation.actorId !== event.actorId ||
     attestation.recordedAt !== event.recordedAt ||
     attestation.reviewEventSequence !== event.sequence ||
-    attestation.localizedContentDigest !== event.localizedContentDigest
+    attestation.localizedContentDigest !== event.localizedContentDigest ||
+    (event.type === "owner-approved" &&
+      !sameReleasePolicy(attestation.ownerApproval?.releasePolicy, event.releasePolicy))
   ) {
     return false;
   }
@@ -179,6 +191,10 @@ function attestationMatchesEvent(
   switch (event.type) {
     case "founder-reviewed":
       return attestation.kind === "founder-review" && attestation.outcome === "approved";
+    case "ai-reviewed":
+      return attestation.kind === "ai-review" && attestation.outcome === "approved";
+    case "owner-approved":
+      return attestation.kind === "owner-approval" && attestation.outcome === "approved";
     case "practitioner-reviewed":
       return attestation.kind === "practitioner-review" && attestation.outcome === "approved";
     case "localization-reviewed":
@@ -672,6 +688,186 @@ function assertPractitionerGate(
   }
 }
 
+function assertPolicyReviewGate(
+  pack: PackSource,
+  events: readonly ProvenanceEvent[],
+  attestations: readonly ReviewAttestation[],
+  eligibility: PractitionerEligibility | undefined,
+  localizedDigest: string | undefined,
+  evaluateAt: string,
+  selected: ReleasePolicySelection,
+  issues: StrictValidationIssue[],
+): boolean {
+  const policy = requireReleasePolicy(selected, pack.fixtureOnly);
+  const boundary = reviewCycleBoundary(events);
+  const ai = latestEventInCycle(events, "ai-reviewed", boundary);
+  const owner = latestEventInCycle(events, "owner-approved", boundary);
+  const practitioner = latestEventInCycle(events, "practitioner-reviewed", boundary);
+  const eligible = firstEventInCycle(events, "artifact-eligible", boundary);
+  const scope = { packId: pack.id, packVersion: pack.version, contentDigest: contentDigest(pack) };
+  const aiAttestation =
+    ai === undefined
+      ? undefined
+      : boundApprovedAttestation("ai-review", ai, attestations, scope, localizedDigest);
+  const ownerAttestation =
+    owner === undefined
+      ? undefined
+      : boundApprovedAttestation("owner-approval", owner, attestations, scope, localizedDigest);
+  if (
+    ai === undefined ||
+    aiAttestation?.aiReview === undefined ||
+    aiAttestation.localizedContentDigest !== localizedDigest ||
+    aiAttestation.aiReview.reviewCycle !== boundary
+  ) {
+    addIssue(
+      issues,
+      ["ai-review"],
+      "completed AI review of exact content and current review cycle is missing",
+    );
+  }
+  const localization = latestEventInCycle(events, "localization-reviewed", boundary);
+  const localizationAttestation =
+    localization === undefined
+      ? undefined
+      : boundApprovedAttestation(
+          "localization-review",
+          localization,
+          attestations,
+          scope,
+          localizedDigest,
+        );
+  if (localizationAttestation !== undefined) {
+    const authorOrTranslator = events
+      .filter((event) => event.type === "authored" || event.type === "localized")
+      .some((event) => event.actorId === localizationAttestation.actorId);
+    const relationship = localizationAttestation.localizationReview?.reviewerRelationship;
+    if (relationship !== (authorOrTranslator ? "owner-fluent-self-review" : "independent"))
+      addIssue(
+        issues,
+        ["localization-review", "reviewerRelationship"],
+        "policy-aware Burmese review must truthfully state owner fluent/self-review or independent review",
+      );
+  }
+  if (
+    owner === undefined ||
+    ownerAttestation?.ownerApproval === undefined ||
+    ownerAttestation.localizedContentDigest !== localizedDigest ||
+    ownerAttestation.ownerApproval.reviewCycle !== boundary ||
+    !sameReleasePolicy(ownerAttestation.ownerApproval.releasePolicy, policy) ||
+    !sameReleasePolicy(owner?.releasePolicy, policy)
+  ) {
+    addIssue(
+      issues,
+      ["owner-approval"],
+      "owner approval of exact content, policy ID/version, scope, and current review cycle is missing or mismatched",
+    );
+  }
+  if (
+    ai !== undefined &&
+    owner !== undefined &&
+    (ai.sequence >= owner.sequence || Date.parse(ai.recordedAt) > Date.parse(owner.recordedAt))
+  ) {
+    addIssue(issues, ["owner-approval"], "owner approval must follow completed AI review");
+  }
+  if (owner !== undefined) {
+    for (const requiredType of [
+      "localization-reviewed",
+      "accessibility-reviewed",
+      ...(pack.sponsorship === undefined ? [] : ["sponsorship-disclosed"]),
+    ]) {
+      const priorReview = latestEventInCycle(
+        events,
+        requiredType as ProvenanceEvent["type"],
+        boundary,
+      );
+      if (
+        priorReview === undefined ||
+        priorReview.sequence >= owner.sequence ||
+        Date.parse(priorReview.recordedAt) > Date.parse(owner.recordedAt)
+      )
+        addIssue(issues, ["owner-approval"], `owner approval must follow ${requiredType} evidence`);
+    }
+  }
+  if (owner !== undefined) addEventOrderIssue(issues, owner, eligible, "owner-approved");
+  if (practitioner !== undefined) {
+    const attestation = boundApprovedAttestation(
+      "practitioner-review",
+      practitioner,
+      attestations,
+      scope,
+      localizedDigest,
+    );
+    if (attestation === undefined || attestation.localizedContentDigest !== localizedDigest)
+      addIssue(
+        issues,
+        ["practitioner-review"],
+        "practitioner review does not bind exact localized content",
+      );
+    const authored = events.find((event) => event.type === "authored");
+    if (authored?.actorId === practitioner.actorId)
+      addIssue(issues, ["practitioner-review"], "practitioner cannot review their authored Pack");
+    if (
+      eligibility === undefined ||
+      eligibility.actorId !== practitioner.actorId ||
+      eligibility.fixtureOnly !== pack.fixtureOnly ||
+      eligibility.status !== "active" ||
+      eligibility.verification.status !== "verified" ||
+      pack.occupations.some((occupation) => !eligibility.occupations.includes(occupation)) ||
+      eligibility.verification.verifiedOn > practitioner.recordedAt.slice(0, 10) ||
+      eligibility.validFrom > practitioner.recordedAt.slice(0, 10) ||
+      eligibility.validUntil < evaluateAt.slice(0, 10)
+    ) {
+      addIssue(
+        issues,
+        ["practitioner-review"],
+        "practitioner eligibility, qualification, occupation coverage, or validity is missing or invalid",
+      );
+    }
+    if (
+      attestation !== undefined &&
+      eligibility !== undefined &&
+      authored !== undefined &&
+      localizedDigest !== undefined
+    ) {
+      try {
+        assertPolicyPractitionerEligibility({
+          pack,
+          attestation,
+          eligibility,
+          authoredActorId: authored.actorId,
+          evaluateAt,
+          localizedContentDigest: localizedDigest,
+        });
+      } catch (error) {
+        if (error instanceof StrictValidationError)
+          issues.push(
+            ...error.issues.map((issue) => ({
+              path: ["practitioner-review", ...issue.path],
+              message: issue.message,
+            })),
+          );
+        else throw error;
+      }
+    }
+    if (
+      ai !== undefined &&
+      (practitioner.sequence <= ai.sequence ||
+        Date.parse(practitioner.recordedAt) < Date.parse(ai.recordedAt))
+    )
+      addIssue(issues, ["practitioner-review"], "practitioner review must follow AI review");
+    if (owner !== undefined && practitioner.sequence >= owner.sequence)
+      addIssue(issues, ["practitioner-review"], "practitioner review must precede owner approval");
+    addEventOrderIssue(issues, practitioner, eligible, "practitioner-reviewed");
+  } else if (requiresPractitioner(policy)) {
+    addIssue(
+      issues,
+      ["practitioner-review"],
+      "human-assured policy requires qualified practitioner review",
+    );
+  }
+  return practitioner !== undefined;
+}
+
 export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult {
   const pack = strictParse(packSourceSchema, input.pack);
   // The version, digest, review-cycle, practitioner-independence, localization,
@@ -730,10 +926,10 @@ export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult
   const attestations = input.attestations.map((attestation) =>
     strictParse(reviewAttestationSchema, attestation),
   );
-  const parsedEligibility = strictParse(
-    practitionerEligibilitySchema,
-    input.practitionerEligibility,
-  );
+  const parsedEligibility =
+    input.practitionerEligibility === undefined
+      ? undefined
+      : strictParse(practitionerEligibilitySchema, input.practitionerEligibility);
   assertReviewAttestationBindings(events, attestations, scope, issues);
 
   const evaluateAt = strictParse(dateTimeSchema, input.evaluateAt);
@@ -741,6 +937,8 @@ export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult
     [
       "localized",
       "founder-reviewed",
+      "ai-reviewed",
+      "owner-approved",
       "practitioner-reviewed",
       "localization-reviewed",
       "accessibility-reviewed",
@@ -768,16 +966,40 @@ export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult
   );
   assertAccessibilityGate(pack, localizedContent, events, attestations, issues);
   const sponsorship = assertSponsorshipGate(pack, events, attestations, issues);
-  assertPractitionerGate(
-    pack,
-    events,
-    attestations,
-    provenanceLog,
-    parsedEligibility,
-    evaluateAt,
-    input.expectedHeadEventDigest,
-    issues,
-  );
+  const selectedPolicy =
+    input.releasePolicy ??
+    [...attestations]
+      .reverse()
+      .find(
+        (attestation) =>
+          attestation.kind === "owner-approval" &&
+          attestation.outcome === "approved" &&
+          attestation.ownerApproval !== undefined,
+      )?.ownerApproval?.releasePolicy;
+  const practitionerApproved =
+    selectedPolicy === undefined
+      ? true
+      : assertPolicyReviewGate(
+          pack,
+          events,
+          attestations,
+          parsedEligibility,
+          localizedContentDigest,
+          evaluateAt,
+          selectedPolicy,
+          issues,
+        );
+  if (selectedPolicy === undefined)
+    assertPractitionerGate(
+      pack,
+      events,
+      attestations,
+      provenanceLog,
+      parsedEligibility,
+      evaluateAt,
+      input.expectedHeadEventDigest,
+      issues,
+    );
 
   if (localizedDigest === undefined) {
     if (issues.length === 0) {
@@ -808,8 +1030,14 @@ export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult
     contentDigest: sourceDigest,
     localizedContentDigest: localizedDigest!,
     fixtureOnly: pack.fixtureOnly,
-    founderApproved: true,
-    practitionerApproved: true,
+    founderApproved:
+      selectedPolicy === undefined
+        ? true
+        : events.some((event) => event.type === "founder-reviewed"),
+    practitionerApproved,
+    ...(selectedPolicy === undefined
+      ? {}
+      : { aiReviewed: true, ownerApproved: true, releasePolicy: selectedPolicy }),
     localizationApproved: true,
     accessibilityApproved: true,
     sponsorship,
@@ -819,8 +1047,11 @@ export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult
 }
 
 export function releaseGateManifestFields(result: ReleaseGateResult): {
-  readonly founderApproved: true;
-  readonly practitionerApproved: true;
+  readonly founderApproved: boolean;
+  readonly practitionerApproved: boolean;
+  readonly aiReviewed?: true;
+  readonly ownerApproved?: true;
+  readonly releasePolicy?: ReleasePolicySelection;
   readonly localizationApproved: true;
   readonly accessibilityApproved: true;
   readonly sponsorship: "disclosed" | "not-applicable";
@@ -831,6 +1062,13 @@ export function releaseGateManifestFields(result: ReleaseGateResult): {
   return {
     founderApproved: result.founderApproved,
     practitionerApproved: result.practitionerApproved,
+    ...(result.releasePolicy === undefined
+      ? {}
+      : {
+          aiReviewed: true as const,
+          ownerApproved: true as const,
+          releasePolicy: result.releasePolicy,
+        }),
     localizationApproved: result.localizationApproved,
     accessibilityApproved: result.accessibilityApproved,
     sponsorship: result.sponsorship,
@@ -872,11 +1110,14 @@ export function appendArtifactEligibilityEvent(
     input.actorId,
   );
   const status = deriveVersionLifecycleStatus(input.provenanceLog, result.packVersion);
-  if (status.currentStatus !== "practitioner-reviewed") {
+  if (
+    status.currentStatus !==
+    (result.releasePolicy === undefined ? "practitioner-reviewed" : "owner-approved")
+  ) {
     throw new StrictValidationError([
       {
         path: ["provenanceLog"],
-        message: `artifact eligibility requires standing practitioner-reviewed status for ${result.packId} version ${result.packVersion}`,
+        message: `artifact eligibility requires standing ${result.releasePolicy === undefined ? "practitioner-reviewed" : "owner-approved"} status for ${result.packId} version ${result.packVersion}`,
       },
     ]);
   }

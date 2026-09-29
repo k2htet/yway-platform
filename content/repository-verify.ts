@@ -207,8 +207,22 @@ export function verifyRepository(input: {
       assertNoLocalizedContent(verified.localizedContent);
       const localized = verified.localizedContent;
 
-      const approver = approvingPractitioner(verified.status.history);
-      const eligibility = loadEligibility(repositoryRoot, approver.actorId);
+      const policy = verified.releaseManifest?.gates.releasePolicy;
+      if (policy === undefined && !verified.source.fixtureOnly) {
+        throw new StrictValidationError([
+          {
+            path: ["releaseManifest", "gates", "releasePolicy"],
+            message: `real release ${packId}@${version} requires a recorded release policy; policyless compatibility is limited to historical fixture artifacts`,
+          },
+        ]);
+      }
+      const approver = [...verified.status.history]
+        .reverse()
+        .find((event) => event.type === "practitioner-reviewed");
+      if (policy === undefined && approver === undefined)
+        approvingPractitioner(verified.status.history);
+      const eligibility =
+        approver === undefined ? undefined : loadEligibility(repositoryRoot, approver.actorId);
       const provenancePrefix = provenancePrefixThrough(verified.provenanceLog, releaseEvent);
       const gates = evaluateReleaseGates({
         pack: verified.source,
@@ -216,6 +230,7 @@ export function verifyRepository(input: {
         provenanceLog: provenancePrefix,
         attestations: verified.attestations,
         practitionerEligibility: eligibility,
+        ...(policy === undefined ? {} : { releasePolicy: policy }),
         evaluateAt: releaseEvent.recordedAt,
         expectedHeadEventDigest: releaseEvent.eventDigest,
       });

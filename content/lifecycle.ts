@@ -8,7 +8,9 @@ import {
 export const lifecycleStatusSchemaValues = [
   "authored",
   "founder-reviewed",
+  "ai-reviewed",
   "practitioner-reviewed",
+  "owner-approved",
   "artifact-eligible",
   "artifact-released",
   "changes-requested",
@@ -20,7 +22,9 @@ export type LifecycleStatus = (typeof lifecycleStatusSchemaValues)[number];
 const statusByEventType: Readonly<Partial<Record<ProvenanceEventType, LifecycleStatus>>> = {
   authored: "authored",
   "founder-reviewed": "founder-reviewed",
+  "ai-reviewed": "ai-reviewed",
   "practitioner-reviewed": "practitioner-reviewed",
+  "owner-approved": "owner-approved",
   "artifact-eligible": "artifact-eligible",
   "artifact-released": "artifact-released",
   "changes-requested": "changes-requested",
@@ -28,12 +32,14 @@ const statusByEventType: Readonly<Partial<Record<ProvenanceEventType, LifecycleS
 };
 
 const allowedTransitions: Readonly<Record<LifecycleStatus, readonly LifecycleStatus[]>> = {
-  authored: ["founder-reviewed", "changes-requested", "retired"],
-  "founder-reviewed": ["practitioner-reviewed", "changes-requested", "retired"],
-  "practitioner-reviewed": ["artifact-eligible", "changes-requested", "retired"],
+  authored: ["founder-reviewed", "ai-reviewed", "changes-requested", "retired"],
+  "founder-reviewed": ["practitioner-reviewed", "ai-reviewed", "changes-requested", "retired"],
+  "ai-reviewed": ["practitioner-reviewed", "owner-approved", "changes-requested", "retired"],
+  "practitioner-reviewed": ["owner-approved", "artifact-eligible", "changes-requested", "retired"],
+  "owner-approved": ["artifact-eligible", "changes-requested", "retired"],
   "artifact-eligible": ["artifact-released", "changes-requested", "retired"],
   "artifact-released": ["retired"],
-  "changes-requested": ["founder-reviewed", "retired"],
+  "changes-requested": ["founder-reviewed", "ai-reviewed", "retired"],
   retired: [],
 };
 

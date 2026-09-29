@@ -246,7 +246,11 @@ describe("content operations documentation", () => {
     writeFileSync(join(packDir, `${pack.version}.yaml`), packYaml);
     writeFileSync(join(packDir, "localizations", `${pack.version}.yaml`), localizedYaml);
     writeFileSync(join(eligibilityDir, `${eligibility.actorId}.json`), eligibilityJson);
-    const options = { repositoryRoot: root, now: () => "2026-09-27T06:00:00Z" };
+    const options = {
+      repositoryRoot: root,
+      now: () => "2026-09-27T06:00:00Z",
+      legacyReleaseForTests: true as const,
+    };
     const commands = documentedInvocations(guide);
     const register = commands.find((item) => item.argv[0] === "content:new-version")!;
     assert.equal(runNewVersionCommand(register.argv.slice(1), options).exitCode, 0);

@@ -65,12 +65,51 @@
       "type": "object",
       "properties": {
         "founderApproved": {
+          "type": "boolean"
+        },
+        "practitionerApproved": {
+          "type": "boolean"
+        },
+        "aiReviewed": {
           "type": "boolean",
           "const": true
         },
-        "practitionerApproved": {
+        "ownerApproved": {
           "type": "boolean",
           "const": true
+        },
+        "releasePolicy": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
+                "ai-owner",
+                "human-assured"
+              ]
+            },
+            "version": {
+              "type": "number",
+              "const": 1
+            },
+            "applicability": {
+              "type": "string",
+              "enum": [
+                "fixture-test",
+                "pilot"
+              ]
+            },
+            "authorizationScope": {
+              "type": "string",
+              "const": "pilot"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "applicability"
+          ],
+          "additionalProperties": false
         },
         "localizationApproved": {
           "type": "boolean",

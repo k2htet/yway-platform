@@ -271,8 +271,12 @@ export interface ReleasedFixture {
   readonly releaseSequence: number;
 }
 
-export function commandOptions(root: string): { repositoryRoot: string; now: () => string } {
-  return { repositoryRoot: root, now: commandClock };
+export function commandOptions(root: string): {
+  repositoryRoot: string;
+  now: () => string;
+  legacyReleaseForTests: true;
+} {
+  return { repositoryRoot: root, now: commandClock, legacyReleaseForTests: true };
 }
 
 export function releaseArgs(packId: string, version: number, actor = "fixture-operator-one") {
@@ -282,6 +286,8 @@ export function releaseArgs(packId: string, version: number, actor = "fixture-op
 /** The synthetic reviewer identity the fixture lifecycles approve each review kind. */
 export const fixtureReviewActors: Readonly<Record<AttestationKind, string>> = {
   "founder-review": "fixture-founder-one",
+  "ai-review": "fixture-ai-reviewer-one",
+  "owner-approval": "fixture-owner-one",
   "practitioner-review": "fixture-practitioner-one",
   "localization-review": "fixture-localizer-one",
   "accessibility-review": "fixture-accessibility-reviewer-one",

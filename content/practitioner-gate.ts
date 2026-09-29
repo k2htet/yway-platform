@@ -357,6 +357,44 @@ function assertEligibility(
   }
 }
 
+/** Policy-aware practitioner path retains D003's substantive eligibility and independence checks. */
+export function assertPolicyPractitionerEligibility(input: {
+  readonly pack: PackSource;
+  readonly attestation: ReviewAttestation;
+  readonly eligibility: PractitionerEligibility;
+  readonly authoredActorId: string;
+  readonly evaluateAt: string;
+  readonly localizedContentDigest: string;
+}): void {
+  const pack = strictParse(packSourceSchema, input.pack);
+  const attestation = strictParse(reviewAttestationSchema, input.attestation);
+  const eligibility = strictParse(practitionerEligibilitySchema, input.eligibility);
+  const issues: StrictValidationIssue[] = [];
+  if (attestation.kind !== "practitioner-review" || attestation.outcome !== "approved")
+    pushIssue(issues, ["attestation"], "qualified practitioner approval is required");
+  captureIssues(issues, () =>
+    assertVersionScoped(
+      attestation,
+      { packId: pack.id, packVersion: pack.version, contentDigest: contentDigest(pack) },
+      "practitioner attestation",
+    ),
+  );
+  if (attestation.fixtureOnly !== pack.fixtureOnly || eligibility.fixtureOnly !== pack.fixtureOnly)
+    pushIssue(issues, ["fixtureOnly"], "practitioner records must match source classification");
+  if (attestation.localizedContentDigest !== input.localizedContentDigest)
+    pushIssue(
+      issues,
+      ["localizedContentDigest"],
+      "practitioner review must cover the exact Burmese localization",
+    );
+  if (attestation.actorId !== eligibility.actorId)
+    pushIssue(issues, ["actorId"], "practitioner attestation and eligibility actor must match");
+  if (attestation.actorId === input.authoredActorId)
+    pushIssue(issues, ["actorId"], "practitioner may not approve authored content");
+  assertEligibility(eligibility, attestation, pack, input.evaluateAt, issues);
+  if (issues.length > 0) throw new StrictValidationError(issues);
+}
+
 function runPractitionerApprovalGate(
   input: PractitionerApprovalGateInput,
   mode: GateMode,

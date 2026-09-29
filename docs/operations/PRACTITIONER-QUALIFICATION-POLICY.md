@@ -9,8 +9,8 @@ This policy is operational documentation. It is not product or architecture auth
 
 - `YWAY-P019` and `YWAY-E005` require exact-content review under a recorded release policy, with
   cumulative provenance preserved. `human-assured` additionally requires a qualified practitioner;
-  `ai-owner` does not. YWAY-D006 authorizes that future policy-aware path, while the current commands
-  still require practitioner review.
+  `ai-owner` does not. The policy-aware pilot commands now support both paths; historical releases
+  remain under their recorded founder/practitioner sequence.
 - `YWAY-D003` in
   [`docs/decisions/003-stage-2-content-pipeline.md`](../decisions/003-stage-2-content-pipeline.md)
   governs the Stage 2 eligibility record and the fixture-practitioner boundary.
@@ -97,8 +97,8 @@ The committed example is
   window, in either direction;
 - the gate evaluation time precedes the practitioner approval;
 - `occupations` does not cover every occupation on the Pack;
-- no approved founder-review event and attestation exist for that exact version and digest, or the
-  founder checkpoint does not precede the approval — the founder attestation's `reviewEventSequence`
+- on the legacy path, no approved founder-review event and attestation exist for that exact version
+  and digest, or the founder checkpoint does not precede the approval — the founder attestation's `reviewEventSequence`
   must bind the founder event, and the founder actor, instant, and sequence must line up with it;
 - the standing version status is not `founder-reviewed` at approval time, or not
   `practitioner-reviewed`, `artifact-eligible`, or `artifact-released` at evaluation time, so a
@@ -139,6 +139,10 @@ The role matrix below is how the unmechanical part is handled.
 Roles are the distinct jobs one person could hold in a single Pack's lifecycle. "Enforced" means the
 commands refuse the overlap; "Policy" means a human must not record a confirmation that the overlap
 would make false.
+
+The founder checkpoint requirement in the founder row describes legacy releases. Under
+`human-assured@1`, a completed AI review precedes the qualified practitioner review, and owner
+approval follows it. Founder review remains optional historical content provenance on that path.
 
 | Role                            | Records                                                                                                                                                                                      | Must not also be                                           | Enforced overlap rules                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -17,6 +17,8 @@ export interface CommandOptions {
   readonly repositoryRoot?: string;
   readonly now?: () => string;
   readonly onBeforeWrite?: (path: string) => void;
+  /** Only synthetic legacy compatibility tests may request this. CLI never exposes it. */
+  readonly legacyReleaseForTests?: true;
 }
 
 export interface FlagSpec {
