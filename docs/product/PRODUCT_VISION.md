@@ -164,10 +164,26 @@ AI is not a verified practitioner and does not certify workplace reality.
 Content provenance must distinguish:
 
 - AI-assisted work
+- AI-reviewed work
 - founder-reviewed work
+- owner-approved work
 - practitioner-reviewed work
 
-A qualified practitioner remains the final content-quality gate for a production-quality Career Experience Pack.
+These are distinct, cumulative facts. AI assistance is not AI review; owner approval is final release
+authorization, not a claim of independent domain expertise; and neither may be presented as qualified
+human practitioner review. A Pack must disclose when it has not received practitioner review.
+
+The current AI-and-owner release path requires recorded AI domain/content review followed by explicit
+project-owner approval of the exact Pack version. A separate qualified practitioner review remains a
+supported higher-assurance gate. It is mandatory when the selected release policy requires human
+assurance, and it applies only to the content the practitioner actually reviewed. Release policy may
+require this gate as risk, business maturity, regulation, or an explicit owner decision warrants; lack
+of a practitioner does not by itself block the AI-and-owner path. No release path may imply that AI or
+owner approval certifies workplace reality.
+
+Fluent Burmese review may be performed by the project owner. If the owner also authored or translated
+the text, record that review as owner fluent/self-review, not independent localization review. This
+does not replace target-user comprehension validation or runtime accessibility release gates.
 
 ---
 

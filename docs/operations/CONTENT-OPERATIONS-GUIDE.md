@@ -14,7 +14,9 @@ This guide is operational documentation. It is not product or architecture autho
   The real-content path, the private pilot, and the release authorization scope are governed by the
   ACCEPTED decision
   [`docs/decisions/005-real-content-trusted-build.md`](../decisions/005-real-content-trusted-build.md).
-  Both are reconciled into the Content, Practitioner, and Operations sections of
+  [`docs/decisions/006-policy-governed-pack-review.md`](../decisions/006-policy-governed-pack-review.md)
+  authorizes a later AI-and-owner policy path but does not change these commands yet.
+  These decisions are reconciled into the Content, Practitioner, and Operations sections of
   [`docs/architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
 - Stage 2 execution evidence is recorded in the completed plan
   [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
@@ -22,7 +24,7 @@ This guide is operational documentation. It is not product or architecture autho
 Contracts this pipeline touches: `YWAY-P002` (six-part experiment structure), `YWAY-P004`
 (trial output is a clue, not a verdict), `YWAY-P005` and
 `YWAY-E006` (no scoring or ranking), `YWAY-P019` and `YWAY-E005` (cumulative provenance plus
-qualified-practitioner review over the exact content), `YWAY-P020` (sponsorship disclosure),
+the selected exact-content review policy; current commands still require a qualified practitioner), `YWAY-P020` (sponsorship disclosure),
 `YWAY-P023` (Simple English canonical content and Burmese release gates), and `YWAY-P024`
 (content-level accessibility only). This pipeline implements only the content-level subset of each:
 `YWAY-P002`'s exposure-before-commitment rule is enforced through a reviewer's attested confirmation
