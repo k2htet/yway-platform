@@ -107,6 +107,7 @@ function requireAuthorizationScope(
  */
 const releasableStatuses: ReadonlySet<string> = new Set([
   "practitioner-reviewed",
+  "owner-approved",
   "artifact-eligible",
 ]);
 
@@ -238,11 +239,33 @@ export function runReleaseCommand(
         },
       ]);
     }
+    const ownerAttestation = [...attestations]
+      .reverse()
+      .find(
+        (attestation) =>
+          attestation.kind === "owner-approval" && attestation.outcome === "approved",
+      );
+    const selectedPolicy = ownerAttestation?.ownerApproval?.releasePolicy;
+    if (
+      selectedPolicy === undefined &&
+      !(source.fixtureOnly && options.legacyReleaseForTests === true)
+    ) {
+      throw new StrictValidationError([
+        {
+          path: ["releasePolicy"],
+          message:
+            "new releases require selected ai-owner or human-assured policy, completed AI review, and subsequent owner approval; legacy records are verification-only",
+        },
+      ]);
+    }
     if (!releasableStatuses.has(status.currentStatus)) {
       throw new StrictValidationError([
         {
           path: ["version"],
-          message: `release requires standing practitioner-reviewed or artifact-eligible status for ${packId} version ${version} (current status "${status.currentStatus}")`,
+          message:
+            status.currentStatus === "ai-reviewed"
+              ? `release requires owner-approved status after AI review for ${packId} version ${version} (current status "${status.currentStatus}")`
+              : `release requires standing practitioner-reviewed or artifact-eligible status for ${packId} version ${version} (current status "${status.currentStatus}")`,
         },
       ]);
     }
@@ -309,7 +332,18 @@ export function runReleaseCommand(
     const practitionerEvent = [...status.history]
       .reverse()
       .find((event) => event.type === "practitioner-reviewed");
-    if (practitionerEvent === undefined) {
+    if (selectedPolicy !== undefined && selectedPolicy.authorizationScope !== authorizationScope)
+      throw new StrictValidationError([
+        {
+          path: ["releasePolicy", "authorizationScope"],
+          message:
+            "owner-approved policy authorization scope does not match release authorization scope",
+        },
+      ]);
+    if (
+      practitionerEvent === undefined &&
+      (selectedPolicy === undefined || selectedPolicy.id === "human-assured")
+    ) {
       throw new StrictValidationError([
         {
           path: ["provenanceLog", "practitioner-reviewed"],
@@ -317,13 +351,16 @@ export function runReleaseCommand(
         },
       ]);
     }
-    const eligibility = strictParse(
-      practitionerEligibilitySchema,
-      readJsonFile(
-        eligibilityPath(repositoryRoot, practitionerEvent.actorId),
-        "practitioner eligibility",
-      ),
-    );
+    const eligibility =
+      practitionerEvent === undefined
+        ? undefined
+        : strictParse(
+            practitionerEligibilitySchema,
+            readJsonFile(
+              eligibilityPath(repositoryRoot, practitionerEvent.actorId),
+              "practitioner eligibility",
+            ),
+          );
 
     const gateInput = {
       pack: source,
@@ -335,7 +372,7 @@ export function runReleaseCommand(
     };
 
     const eligibleLog =
-      status.currentStatus === "practitioner-reviewed"
+      status.currentStatus === "practitioner-reviewed" || status.currentStatus === "owner-approved"
         ? appendArtifactEligibilityEvent({ ...gateInput, actorId, recordedAt: releasedAt })
         : log;
 
@@ -386,7 +423,7 @@ export function runReleaseCommand(
     );
 
     const appendedEligibility =
-      status.currentStatus === "practitioner-reviewed"
+      status.currentStatus === "practitioner-reviewed" || status.currentStatus === "owner-approved"
         ? `; recorded artifact-eligible at sequence ${headOf(eligibleLog).sequence}`
         : "";
     const scopeSuffix =

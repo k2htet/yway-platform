@@ -169,6 +169,7 @@ test("history stays cumulative across status changes on the same version", () =>
 test("changes-requested can return to founder review or retire", () => {
   assert.deepEqual(allowedLifecycleTransitions("changes-requested"), [
     "founder-reviewed",
+    "ai-reviewed",
     "retired",
   ]);
   const log = buildLog([

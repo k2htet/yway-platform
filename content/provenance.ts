@@ -8,6 +8,7 @@ import {
 } from "./schemas/index.js";
 import { canonicalJson } from "./canonical.js";
 import { sha256Hex } from "./digest.js";
+import type { ReleasePolicySelection } from "./release-policy.js";
 import {
   assertLifecycleTransition,
   assertLifecycleTransitions,
@@ -23,6 +24,7 @@ export interface ProvenanceEventDraft {
   readonly fixtureOnly: boolean;
   readonly contentDigest: string;
   readonly localizedContentDigest?: string;
+  readonly releasePolicy?: ReleasePolicySelection;
   readonly recordedAt: string;
 }
 
@@ -95,6 +97,7 @@ export function createGenesisProvenanceEvent(draft: ProvenanceEventDraft): Prove
     ...(draft.localizedContentDigest === undefined
       ? {}
       : { localizedContentDigest: draft.localizedContentDigest }),
+    ...(draft.releasePolicy === undefined ? {} : { releasePolicy: draft.releasePolicy }),
     previousEventDigest: null,
     recordedAt: draft.recordedAt,
   });
@@ -128,6 +131,11 @@ export function collectProvenanceIssues(
   for (let index = 0; index < log.events.length; index += 1) {
     const event = log.events[index]!;
     const prior = index === 0 ? undefined : log.events[index - 1]!;
+    if ((event.type === "owner-approved") !== (event.releasePolicy !== undefined))
+      issues.push({
+        path: ["events", index, "releasePolicy"],
+        message: "only owner-approved events must carry a release policy",
+      });
 
     if (event.sequence !== index + 1) {
       issues.push({
@@ -418,6 +426,7 @@ export function appendProvenanceEvent(
     fixtureOnly: draft.fixtureOnly,
     contentDigest: draft.contentDigest,
     ...(localizedContentDigest === undefined ? {} : { localizedContentDigest }),
+    ...(draft.releasePolicy === undefined ? {} : { releasePolicy: draft.releasePolicy }),
     previousEventDigest,
     recordedAt: draft.recordedAt,
   });

@@ -704,6 +704,14 @@ export function inspectPilotSnapshotVersion(
       },
     ]);
   }
+  if (entry.manifest.gates.releasePolicy === undefined) {
+    throw new StrictValidationError([
+      {
+        path: ["releasePolicy"],
+        message: `${packId} version ${packVersion} has no recorded release policy and cannot be embedded in a pilot build`,
+      },
+    ]);
+  }
   if (entry.retired) {
     throw new StrictValidationError([
       {

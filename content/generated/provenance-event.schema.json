@@ -27,6 +27,8 @@
         "authored",
         "localized",
         "founder-reviewed",
+        "ai-reviewed",
+        "owner-approved",
         "practitioner-reviewed",
         "localization-reviewed",
         "accessibility-reviewed",
@@ -52,6 +54,39 @@
     "localizedContentDigest": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
+    },
+    "releasePolicy": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": [
+            "ai-owner",
+            "human-assured"
+          ]
+        },
+        "version": {
+          "type": "number",
+          "const": 1
+        },
+        "applicability": {
+          "type": "string",
+          "enum": [
+            "fixture-test",
+            "pilot"
+          ]
+        },
+        "authorizationScope": {
+          "type": "string",
+          "const": "pilot"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "applicability"
+      ],
+      "additionalProperties": false
     },
     "previousEventDigest": {
       "anyOf": [

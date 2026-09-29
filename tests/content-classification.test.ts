@@ -198,7 +198,7 @@ interface PackState {
   readonly log: ProvenanceEventLog;
 }
 
-test("the relabelled record set is internally consistent: under a new identifier it releases", () => {
+test("the relabelled record set is internally consistent but cannot use the historical release path", () => {
   const root = makeRoot();
   const { pack, log } = writeRelabelledRecordSet(root, "relabelled-guide");
   assert.equal(isFixturePackId(pack.id), false);
@@ -214,14 +214,15 @@ test("the relabelled record set is internally consistent: under a new identifier
   );
   assert.match(status.stdout ?? "", /practitioner-reviewed/);
 
-  // And it passes every shared release gate and produces a pilot-scoped release.
-  expectExit(runReleaseCommand(realReleaseArgs(pack.id, 1), commandOptions(root)), 0);
+  // Classification alone cannot grant the policy-aware release authority.
+  const refused = runReleaseCommand(realReleaseArgs(pack.id, 1), commandOptions(root));
+  expectExit(refused, 1);
+  expectFailureMessage(refused, "new releases require selected ai-owner or human-assured policy");
   expectExit(runVerifyCommand([], commandOptions(root)), 0);
-  const manifest = JSON.parse(
-    readFileSync(join(root, "artifacts", "manifests", pack.id, "1", "manifest.json"), "utf8"),
-  ) as Record<string, unknown>;
-  assert.equal(manifest["classification"], "real");
-  assert.equal(manifest["authorizationScope"], "pilot");
+  assert.equal(
+    existsSync(join(root, "artifacts", "manifests", pack.id, "1", "manifest.json")),
+    false,
+  );
 });
 
 test("the same relabelled record set is refused at the Pack-ID rule and nowhere else", () => {

@@ -24,6 +24,8 @@
       "type": "string",
       "enum": [
         "founder-review",
+        "ai-review",
+        "owner-approval",
         "practitioner-review",
         "localization-review",
         "accessibility-review",
@@ -81,6 +83,89 @@
       ],
       "additionalProperties": false
     },
+    "aiReview": {
+      "type": "object",
+      "properties": {
+        "reviewerSystem": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "\\S"
+        },
+        "criteria": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "\\S"
+        },
+        "findingsReference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "\\S"
+        },
+        "reviewCycle": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "reviewerSystem",
+        "criteria",
+        "findingsReference",
+        "reviewCycle"
+      ],
+      "additionalProperties": false
+    },
+    "ownerApproval": {
+      "type": "object",
+      "properties": {
+        "releasePolicy": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
+                "ai-owner",
+                "human-assured"
+              ]
+            },
+            "version": {
+              "type": "number",
+              "const": 1
+            },
+            "applicability": {
+              "type": "string",
+              "enum": [
+                "fixture-test",
+                "pilot"
+              ]
+            },
+            "authorizationScope": {
+              "type": "string",
+              "const": "pilot"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "applicability"
+          ],
+          "additionalProperties": false
+        },
+        "reviewCycle": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "releasePolicy",
+        "reviewCycle"
+      ],
+      "additionalProperties": false
+    },
     "localizationReview": {
       "type": "object",
       "properties": {
@@ -91,6 +176,13 @@
           "type": "string",
           "maxLength": 128,
           "pattern": "\\S"
+        },
+        "reviewerRelationship": {
+          "type": "string",
+          "enum": [
+            "independent",
+            "owner-fluent-self-review"
+          ]
         }
       },
       "required": [

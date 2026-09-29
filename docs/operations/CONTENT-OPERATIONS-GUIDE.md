@@ -3,6 +3,10 @@
 How a contributor authors, registers, and reviews a repository-native Career Experience Pack under
 the Stage 2 content pipeline.
 
+The Stage 2 founder/practitioner command examples below document the sealed legacy format and its
+historical verification. New releases use the D006 `ai-owner@1` or `human-assured@1` procedure in
+the [lifecycle runbook](CONTENT-LIFECYCLE-RUNBOOK.md#policy-aware-pilot-review-yway-d006).
+
 ## Scope and authority
 
 This guide is operational documentation. It is not product or architecture authority.
@@ -15,7 +19,7 @@ This guide is operational documentation. It is not product or architecture autho
   ACCEPTED decision
   [`docs/decisions/005-real-content-trusted-build.md`](../decisions/005-real-content-trusted-build.md).
   [`docs/decisions/006-policy-governed-pack-review.md`](../decisions/006-policy-governed-pack-review.md)
-  authorizes a later AI-and-owner policy path but does not change these commands yet.
+  governs the implemented policy-aware pilot path alongside the sealed legacy fixture releases.
   These decisions are reconciled into the Content, Practitioner, and Operations sections of
   [`docs/architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
 - Stage 2 execution evidence is recorded in the completed plan
@@ -24,7 +28,7 @@ This guide is operational documentation. It is not product or architecture autho
 Contracts this pipeline touches: `YWAY-P002` (six-part experiment structure), `YWAY-P004`
 (trial output is a clue, not a verdict), `YWAY-P005` and
 `YWAY-E006` (no scoring or ranking), `YWAY-P019` and `YWAY-E005` (cumulative provenance plus
-the selected exact-content review policy; current commands still require a qualified practitioner), `YWAY-P020` (sponsorship disclosure),
+the selected exact-content review policy), `YWAY-P020` (sponsorship disclosure),
 `YWAY-P023` (Simple English canonical content and Burmese release gates), and `YWAY-P024`
 (content-level accessibility only). This pipeline implements only the content-level subset of each:
 `YWAY-P002`'s exposure-before-commitment rule is enforced through a reviewer's attested confirmation

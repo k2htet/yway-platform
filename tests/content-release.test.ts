@@ -850,6 +850,7 @@ test("content:release refuses a release timestamp that precedes the eligibility 
     runReleaseCommand(releaseArgs(pack.id, 1), {
       repositoryRoot: root,
       now: () => "2026-09-24T05:00:00Z",
+      legacyReleaseForTests: true,
     }),
     0,
   );
@@ -893,6 +894,7 @@ test("content:release refuses a release timestamp that precedes the eligibility 
   const earlier = runReleaseCommand(releaseArgs(second.id, 2), {
     repositoryRoot: root,
     now: () => "2026-09-24T05:30:00Z",
+    legacyReleaseForTests: true,
   });
   expectExit(earlier, 1);
   expectFailureMessage(earlier, "must not precede");

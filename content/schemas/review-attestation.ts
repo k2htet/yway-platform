@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { releasePolicySelectionSchema } from "../release-policy.js";
 import {
   actorClassificationIssue,
   attestationNoteIssue,
@@ -19,6 +20,8 @@ import {
 
 export const attestationKindSchema = z.enum([
   "founder-review",
+  "ai-review",
+  "owner-approval",
   "practitioner-review",
   "localization-review",
   "accessibility-review",
@@ -50,6 +53,7 @@ export const localizationReviewConfirmationSchema = z
   .object({
     fluentBurmeseConfirmed: z.boolean(),
     fluentReviewEvidence: fluentReviewEvidenceSchema,
+    reviewerRelationship: z.enum(["independent", "owner-fluent-self-review"]).optional(),
   })
   .strict();
 
@@ -84,6 +88,22 @@ export const reviewAttestationSchema = z
     locale: localeSchema.optional(),
     localizedContentDigest: sha256DigestSchema.optional(),
     contentReview: contentReviewConfirmationSchema.optional(),
+    aiReview: z
+      .object({
+        reviewerSystem: nonBlankStringSchema.max(128),
+        criteria: nonBlankStringSchema.max(128),
+        findingsReference: nonBlankStringSchema.max(128),
+        reviewCycle: z.number().int().nonnegative(),
+      })
+      .strict()
+      .optional(),
+    ownerApproval: z
+      .object({
+        releasePolicy: releasePolicySelectionSchema,
+        reviewCycle: z.number().int().nonnegative(),
+      })
+      .strict()
+      .optional(),
     localizationReview: localizationReviewConfirmationSchema.optional(),
     accessibilityReview: accessibilityReviewConfirmationSchema.optional(),
     sponsorshipReview: sponsorshipReviewConfirmationSchema.optional(),
@@ -122,6 +142,69 @@ export const reviewAttestationSchema = z
         path: ["contentReview"],
         message: `${value.kind} attestations require contentReview confirming six-part structure and exposure before commitment`,
       });
+    }
+    if (
+      value.kind === "ai-review" &&
+      value.outcome === "approved" &&
+      value.aiReview === undefined
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["aiReview"],
+        message:
+          "completed AI review requires reviewer system, criteria, findings reference, and review cycle",
+      });
+    }
+    if (value.kind !== "ai-review" && value.aiReview !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["aiReview"],
+        message: "AI review metadata belongs only to ai-review",
+      });
+    }
+    if (
+      value.kind === "owner-approval" &&
+      value.outcome === "approved" &&
+      value.ownerApproval === undefined
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["ownerApproval"],
+        message: "owner approval requires policy and review cycle",
+      });
+    }
+    if (value.kind !== "owner-approval" && value.ownerApproval !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["ownerApproval"],
+        message: "owner approval metadata belongs only to owner-approval",
+      });
+    }
+    if (
+      (value.kind === "ai-review" || value.kind === "owner-approval") &&
+      value.localizedContentDigest === undefined
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["localizedContentDigest"],
+        message: `${value.kind} requires exact localized content digest`,
+      });
+    }
+    if (value.aiReview !== undefined) {
+      const issue = evidenceReferenceClassificationIssue(
+        value.fixtureOnly,
+        value.aiReview.findingsReference,
+        ["aiReview", "findingsReference"],
+        "AI findings reference",
+      );
+      if (issue !== undefined)
+        context.addIssue({ code: "custom", path: [...issue.path], message: issue.message });
+      if (!value.fixtureOnly && !opaqueReferencePattern.test(value.aiReview.findingsReference))
+        context.addIssue({
+          code: "custom",
+          path: ["aiReview", "findingsReference"],
+          message: "real AI findings reference must be opaque",
+        });
     }
     if (!requiresContentReview && value.contentReview !== undefined) {
       context.addIssue({

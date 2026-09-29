@@ -12,9 +12,8 @@ contracts it protects are `YWAY-P002`, `YWAY-P005`/`YWAY-E006`, `YWAY-P019`/`YWA
 real-content path, the private pilot, the release authorization scope, and the retirement response
 are governed by the ACCEPTED decision
 [`docs/decisions/005-real-content-trusted-build.md`](../decisions/005-real-content-trusted-build.md).
-YWAY-D006 authorizes a later policy-aware AI-and-owner path and narrowly amends D003/D005; this
-runbook documents the current practitioner-required commands until that path is implemented. Do not
-use these instructions to claim an AI-and-owner release has passed.
+YWAY-D006 governs the policy-aware pilot path and narrowly amends D003/D005. The legacy
+practitioner-required sequence below remains verifiable for historical releases.
 
 Authoring syntax is in [`CONTENT-OPERATIONS-GUIDE.md`](CONTENT-OPERATIONS-GUIDE.md); reviewer
 eligibility and role separation are in
@@ -23,7 +22,7 @@ eligibility and role separation are in
 Lifecycle status is a projection of cumulative history, not a stored field. Nothing in this runbook
 edits, reorders, or deletes a provenance event.
 
-The current executable happy path is
+The historical executable happy path is
 `authored → founder-reviewed → practitioner-reviewed → artifact-eligible → artifact-released`. The
 complete set of legal transitions is:
 
@@ -41,9 +40,40 @@ complete set of legal transitions is:
 provenance-only: they add history without changing status, and they are refused before the
 `authored` start and after `artifact-released` or `retired`.
 
-So a `changes-requested` version has exactly one way forward — a fresh `founder-reviewed` event on the
+For a legacy release, a `changes-requested` version continues with a fresh `founder-reviewed` event on the
 _same_ content digest, which starts a new review cycle. Anything that changes the content needs a new
 version instead.
+
+## Policy-aware pilot review (YWAY-D006)
+
+The repository-governed policy catalog currently has `ai-owner@1` and `human-assured@1`, each
+scoped to a fixture exercise or a real private pilot. A Pack source cannot select or weaken its
+policy. The owner records the selection in a separate `owner-approval` attestation and sealed
+`owner-approved` event; the release manifest repeats the exact policy ID, version, policy
+applicability, and owner-granted authorization scope where present. Fixture tests carry no release
+authorization scope.
+`public` remains ungrantable. The owner's identity is an opaque repository actor handle, so the
+private owner record and the fresh D005 session clearance remain necessary human checks.
+
+For `ai-owner`, record fluent Burmese and content accessibility review as applicable, then a
+completed `ai-review` with `--reviewer-system`, `--review-criteria`, and an opaque
+`--findings-reference`. Use `content:attest --kind owner-approval --release-policy ai-owner
+--policy-version 1 --policy-applicability pilot --authorization-scope pilot` for real content,
+or `--policy-applicability fixture-test` with no authorization scope for synthetic tests.
+The owner approval follows AI review and binds the same immutable source and localization digests.
+`content:release` then evaluates all gates and records eligibility and release. The
+`human-assured` path additionally records a qualified `practitioner-review` after AI review and
+before owner approval. The existing eligibility record, occupation coverage, and non-authorship
+checks remain required. Founder review is historical content provenance where present, not owner
+approval. `content:status` reports the policy, review facts, and blocked reasons separately.
+
+For Burmese review, `--reviewer-relationship owner-fluent-self-review` truthfully labels an owner
+who authored or translated the text; `independent` labels a different reviewer. The command derives
+and checks the relationship against recorded author/translator actor handles. Fluent review does
+not claim target-user comprehension. The pilot release manifest continues to say that public
+comprehension and runtime accessibility validation are deferred; D004's Burmese rendering
+restriction and D005's pin, allowlist, packaged-byte, device, retirement, and per-session controls
+still govern distribution.
 
 ## Review scope is the exact version and digest
 

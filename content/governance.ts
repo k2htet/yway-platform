@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { authorizationScopeIssue, contentClassification } from "./classification.js";
 import { contentDigest } from "./digest.js";
+import { sameReleasePolicy } from "./release-policy.js";
 import {
   assertVersionScoped,
   deriveVersionLifecycleStatus,
@@ -38,6 +39,8 @@ import {
 
 export const reviewEventTypes: ReadonlySet<ProvenanceEvent["type"]> = new Set([
   "founder-reviewed",
+  "ai-reviewed",
+  "owner-approved",
   "practitioner-reviewed",
   "localization-reviewed",
   "accessibility-reviewed",
@@ -55,10 +58,27 @@ export function attestationBindsEvent(
   if (attestation.localizedContentDigest !== event.localizedContentDigest) {
     return false;
   }
+  if (
+    event.type === "owner-approved" &&
+    !sameReleasePolicy(attestation.ownerApproval?.releasePolicy, event.releasePolicy)
+  )
+    return false;
   switch (event.type) {
     case "founder-reviewed":
       return (
         attestation.kind === "founder-review" &&
+        attestation.outcome === "approved" &&
+        attestation.reviewEventSequence === event.sequence
+      );
+    case "ai-reviewed":
+      return (
+        attestation.kind === "ai-review" &&
+        attestation.outcome === "approved" &&
+        attestation.reviewEventSequence === event.sequence
+      );
+    case "owner-approved":
+      return (
+        attestation.kind === "owner-approval" &&
         attestation.outcome === "approved" &&
         attestation.reviewEventSequence === event.sequence
       );
@@ -192,6 +212,25 @@ export function verifyVersionGovernance(
           message: `attestation ${attestation.kind} by ${attestation.actorId} declares fixtureOnly ${attestation.fixtureOnly} but the source declares fixtureOnly ${source.fixtureOnly}`,
         },
       ]);
+    }
+    if (
+      attestation.kind === "localization-review" &&
+      attestation.localizationReview?.reviewerRelationship !== undefined
+    ) {
+      const authorOrTranslator = status.history
+        .filter((event) => event.type === "authored" || event.type === "localized")
+        .some((event) => event.actorId === attestation.actorId);
+      if (
+        attestation.localizationReview.reviewerRelationship !==
+        (authorOrTranslator ? "owner-fluent-self-review" : "independent")
+      )
+        throw new StrictValidationError([
+          {
+            path: ["attestations", "localizationReview", "reviewerRelationship"],
+            message:
+              "Burmese reviewer relationship does not match authorship/translation provenance",
+          },
+        ]);
     }
   }
 

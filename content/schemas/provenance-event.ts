@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { releasePolicySelectionSchema } from "../release-policy.js";
 import {
   actorIdSchema,
   dateTimeSchema,
@@ -14,6 +15,8 @@ export const provenanceEventTypeSchema = z.enum([
   "authored",
   "localized",
   "founder-reviewed",
+  "ai-reviewed",
+  "owner-approved",
   "practitioner-reviewed",
   "localization-reviewed",
   "accessibility-reviewed",
@@ -35,6 +38,7 @@ export const provenanceEventSchema = z
     fixtureOnly: fixtureOnlySchema,
     contentDigest: sha256DigestSchema,
     localizedContentDigest: sha256DigestSchema.optional(),
+    releasePolicy: releasePolicySelectionSchema.optional(),
     previousEventDigest: sha256DigestSchema.nullable(),
     eventDigest: sha256DigestSchema,
     recordedAt: dateTimeSchema,

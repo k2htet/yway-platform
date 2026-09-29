@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { releasePolicySelectionSchema } from "../release-policy.js";
 import {
   authorizationScopeIssue,
   contentClassification,
@@ -17,8 +18,11 @@ import {
 
 export const releaseGatesSchema = z
   .object({
-    founderApproved: z.literal(true),
-    practitionerApproved: z.literal(true),
+    founderApproved: z.boolean(),
+    practitionerApproved: z.boolean(),
+    aiReviewed: z.literal(true).optional(),
+    ownerApproved: z.literal(true).optional(),
+    releasePolicy: releasePolicySelectionSchema.optional(),
     localizationApproved: z.literal(true),
     accessibilityApproved: z.literal(true),
     sponsorship: z.enum(["disclosed", "not-applicable"]),
@@ -51,8 +55,11 @@ export const releaseGateResultSchema = z
     contentDigest: sha256DigestSchema,
     localizedContentDigest: sha256DigestSchema,
     fixtureOnly: fixtureOnlySchema,
-    founderApproved: z.literal(true),
-    practitionerApproved: z.literal(true),
+    founderApproved: z.boolean(),
+    practitionerApproved: z.boolean(),
+    aiReviewed: z.literal(true).optional(),
+    ownerApproved: z.literal(true).optional(),
+    releasePolicy: releasePolicySelectionSchema.optional(),
     localizationApproved: z.literal(true),
     accessibilityApproved: z.literal(true),
     sponsorship: z.enum(["disclosed", "not-applicable"]),
@@ -103,6 +110,43 @@ export const releaseManifestSchema = z
         code: "custom",
         path: [...scopeIssue.path],
         message: scopeIssue.message,
+      });
+    }
+    const policy = value.gates.releasePolicy;
+    if (policy !== undefined) {
+      if (
+        policy.applicability !== (value.fixtureOnly ? "fixture-test" : "pilot") ||
+        policy.authorizationScope !== value.authorizationScope
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["gates", "releasePolicy", "applicability"],
+          message:
+            "policy applicability or authorization scope does not match release classification and scope",
+        });
+      if (value.gates.aiReviewed !== true || value.gates.ownerApproved !== true)
+        context.addIssue({
+          code: "custom",
+          path: ["gates"],
+          message: "policy release requires AI review and owner approval",
+        });
+      if (policy.id === "human-assured" && value.gates.practitionerApproved !== true)
+        context.addIssue({
+          code: "custom",
+          path: ["gates", "practitionerApproved"],
+          message: "human-assured requires practitioner approval",
+        });
+    } else if (
+      value.gates.founderApproved !== true ||
+      value.gates.practitionerApproved !== true ||
+      value.gates.aiReviewed !== undefined ||
+      value.gates.ownerApproved !== undefined
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["gates"],
+        message:
+          "legacy release requires founderApproved and practitionerApproved without policy claims",
       });
     }
   });

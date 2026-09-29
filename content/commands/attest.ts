@@ -2,7 +2,11 @@ import { existsSync } from "node:fs";
 import { requireClassificationIsolation } from "../classification.js";
 import { contentDigest } from "../digest.js";
 import { appendProvenanceEvent } from "../provenance.js";
-import { validateProposedPractitionerApproval } from "../practitioner-gate.js";
+import {
+  assertPolicyPractitionerEligibility,
+  validateProposedPractitionerApproval,
+} from "../practitioner-gate.js";
+import { releasePolicyIdSchema, requireReleasePolicy } from "../release-policy.js";
 import {
   StrictValidationError,
   attestationKindSchema,
@@ -43,7 +47,7 @@ import {
 } from "./args.js";
 
 const usage =
-  "Usage: pnpm content:attest -- --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested> [--note <text>] [--locale my] [--fluent-burmese-confirmed <true|false>] [--fluent-review-evidence <text>] [--reading-order-confirmed <true|false>] [--media-alternatives-confirmed <true|false>] [--runtime-validation-deferred] [--disclosure-confirmed <true|false>] [--editorial-control-preserved <true|false>] [--ordering-influence none] [--six-part-confirmed <true|false>] [--exposure-before-commitment-confirmed <true|false>]";
+  "Usage: pnpm content:attest -- --pack <id> --version <n> --kind <kind> --actor <id> --outcome <approved|changes-requested> [--release-policy <ai-owner|human-assured> --policy-version 1 --policy-applicability <fixture-test|pilot> --authorization-scope pilot (real only)] [--reviewer-system <id> --review-criteria <id> --findings-reference <ref>] [--reviewer-relationship <independent|owner-fluent-self-review>] [kind-specific review flags]";
 
 function requireKind(raw: string): AttestationKind {
   const parsed = attestationKindSchema.safeParse(raw);
@@ -73,6 +77,10 @@ function eventTypeFor(
   switch (kind) {
     case "founder-review":
       return "founder-reviewed";
+    case "ai-review":
+      return "ai-reviewed";
+    case "owner-approval":
+      return "owner-approved";
     case "practitioner-review":
       return "practitioner-reviewed";
     case "localization-review":
@@ -107,6 +115,14 @@ export function runAttestCommand(
       "ordering-influence": { type: "string" },
       "six-part-confirmed": { type: "string" },
       "exposure-before-commitment-confirmed": { type: "string" },
+      "reviewer-system": { type: "string" },
+      "review-criteria": { type: "string" },
+      "findings-reference": { type: "string" },
+      "release-policy": { type: "string" },
+      "policy-version": { type: "string" },
+      "policy-applicability": { type: "string" },
+      "authorization-scope": { type: "string" },
+      "reviewer-relationship": { type: "string" },
     });
 
     const packId = requirePackId(values);
@@ -115,6 +131,27 @@ export function runAttestCommand(
     const kind = requireKind(requireFlagString(values, "kind"));
     const outcome = requireOutcome(requireFlagString(values, "outcome"));
     const note = optionalFlagString(values, "note");
+    const policyId = optionalFlagString(values, "release-policy");
+    const policyVersion = optionalFlagString(values, "policy-version");
+    const policyApplicability = optionalFlagString(values, "policy-applicability");
+    const authorizationScope = optionalFlagString(values, "authorization-scope");
+    if (
+      kind !== "owner-approval" &&
+      (policyId !== undefined ||
+        policyVersion !== undefined ||
+        policyApplicability !== undefined ||
+        authorizationScope !== undefined)
+    )
+      throw new UsageError("policy and authorization scope flags belong only to owner-approval");
+    if (
+      kind !== "ai-review" &&
+      (values["reviewer-system"] !== undefined ||
+        values["review-criteria"] !== undefined ||
+        values["findings-reference"] !== undefined)
+    )
+      throw new UsageError("AI reviewer flags belong only to ai-review");
+    if (kind !== "localization-review" && values["reviewer-relationship"] !== undefined)
+      throw new UsageError("--reviewer-relationship belongs only to localization-review");
 
     const requiresContentReview = kind === "founder-review" || kind === "practitioner-review";
     let contentReview:
@@ -159,7 +196,12 @@ export function runAttestCommand(
     }
 
     let localizationReview:
-      { fluentBurmeseConfirmed: boolean; fluentReviewEvidence: string } | undefined;
+      | {
+          fluentBurmeseConfirmed: boolean;
+          fluentReviewEvidence: string;
+          reviewerRelationship?: "independent" | "owner-fluent-self-review";
+        }
+      | undefined;
     const fluentRaw = optionalFlagString(values, "fluent-burmese-confirmed");
     const fluentEvidence = optionalFlagString(values, "fluent-review-evidence");
     if (kind === "localization-review") {
@@ -178,6 +220,14 @@ export function runAttestCommand(
           fluentBurmeseConfirmed: parseBooleanString(fluentRaw, "fluent-burmese-confirmed"),
           fluentReviewEvidence: fluentEvidence,
         };
+        const relationship = optionalFlagString(values, "reviewer-relationship");
+        if (relationship !== undefined) {
+          if (relationship !== "independent" && relationship !== "owner-fluent-self-review")
+            throw new UsageError(
+              "--reviewer-relationship must be independent or owner-fluent-self-review",
+            );
+          localizationReview.reviewerRelationship = relationship;
+        }
       }
     } else if (fluentRaw !== undefined || fluentEvidence !== undefined) {
       throw new UsageError(
@@ -302,6 +352,129 @@ export function runAttestCommand(
     const localized = state.localizedContentByVersion.get(version);
     const localizedContentDigestHex =
       localized === undefined ? undefined : contentDigest(localized);
+    const versionEvents = log.events.filter((event) => event.packVersion === version);
+    const cycleBoundary =
+      [...versionEvents].reverse().find((event) => event.type === "changes-requested")?.sequence ??
+      0;
+    const aiEvent = [...versionEvents]
+      .reverse()
+      .find((event) => event.type === "ai-reviewed" && event.sequence > cycleBoundary);
+    const practitionerEvent = [...versionEvents]
+      .reverse()
+      .find((event) => event.type === "practitioner-reviewed" && event.sequence > cycleBoundary);
+    const policy =
+      kind === "owner-approval" && outcome === "approved"
+        ? requireReleasePolicy(
+            {
+              id: releasePolicyIdSchema.parse(policyId),
+              version: Number(policyVersion) as 1,
+              applicability: policyApplicability as "fixture-test" | "pilot",
+              ...(authorizationScope === undefined
+                ? {}
+                : { authorizationScope: authorizationScope as "pilot" }),
+            },
+            source.fixtureOnly,
+          )
+        : undefined;
+    if (kind === "owner-approval" && outcome === "approved") {
+      if (aiEvent === undefined || Date.parse(aiEvent.recordedAt) > Date.parse(recordedAt))
+        throw new UsageError("owner approval requires completed AI review first");
+      for (const requiredType of [
+        "localization-reviewed",
+        "accessibility-reviewed",
+        ...(source.sponsorship === undefined ? [] : ["sponsorship-disclosed"]),
+      ]) {
+        const requiredEvent = [...versionEvents]
+          .reverse()
+          .find((event) => event.type === requiredType && event.sequence > cycleBoundary);
+        if (
+          requiredEvent === undefined ||
+          Date.parse(requiredEvent.recordedAt) > Date.parse(recordedAt)
+        )
+          throw new UsageError(`owner approval requires completed ${requiredType} evidence first`);
+      }
+      const completedAI = loadVersionAttestations(repositoryRoot, packId, version).find(
+        (candidate) =>
+          candidate.kind === "ai-review" &&
+          candidate.outcome === "approved" &&
+          candidate.reviewEventSequence === aiEvent.sequence &&
+          candidate.actorId === aiEvent.actorId &&
+          candidate.recordedAt === aiEvent.recordedAt &&
+          candidate.contentDigest === contentDigestHex &&
+          candidate.localizedContentDigest === localizedContentDigestHex &&
+          candidate.aiReview?.reviewCycle === cycleBoundary,
+      );
+      if (completedAI === undefined)
+        throw new UsageError(
+          "owner approval requires a completed AI review attestation bound to exact content and current cycle",
+        );
+      if (
+        policy?.id === "human-assured" &&
+        (practitionerEvent === undefined ||
+          practitionerEvent.sequence <= aiEvent.sequence ||
+          Date.parse(practitionerEvent.recordedAt) > Date.parse(recordedAt))
+      )
+        throw new UsageError(
+          "human-assured owner approval requires valid practitioner review after AI review",
+        );
+      if (policy?.id === "human-assured" && practitionerEvent !== undefined) {
+        if (localizedContentDigestHex === undefined)
+          throw new UsageError("human-assured practitioner review requires Burmese localization");
+        const approvedPractitioner = loadVersionAttestations(repositoryRoot, packId, version).find(
+          (candidate) =>
+            candidate.kind === "practitioner-review" &&
+            candidate.reviewEventSequence === practitionerEvent.sequence,
+        );
+        if (approvedPractitioner === undefined)
+          throw new UsageError(
+            "human-assured owner approval requires a bound practitioner attestation",
+          );
+        const practitionerEligibility = strictParse(
+          practitionerEligibilitySchema,
+          readJsonFile(
+            eligibilityPath(repositoryRoot, practitionerEvent.actorId),
+            "practitioner eligibility",
+          ),
+        );
+        assertPolicyPractitionerEligibility({
+          pack: source,
+          attestation: approvedPractitioner,
+          eligibility: practitionerEligibility,
+          authoredActorId: versionEvents.find((event) => event.type === "authored")!.actorId,
+          evaluateAt: recordedAt,
+          localizedContentDigest: localizedContentDigestHex,
+        });
+      }
+    }
+    if (
+      kind === "ai-review" &&
+      outcome === "approved" &&
+      (localized === undefined ||
+        !optionalFlagString(values, "reviewer-system") ||
+        !optionalFlagString(values, "review-criteria") ||
+        !optionalFlagString(values, "findings-reference"))
+    )
+      throw new UsageError(
+        "completed AI review requires localization, --reviewer-system, --review-criteria, and --findings-reference",
+      );
+    if (kind === "localization-review" && localizationReview !== undefined) {
+      const authors = versionEvents
+        .filter((event) => event.type === "authored" || event.type === "localized")
+        .map((event) => event.actorId);
+      const selfReview = authors.includes(actorId);
+      if (localizationReview.reviewerRelationship === undefined)
+        localizationReview.reviewerRelationship = selfReview
+          ? "owner-fluent-self-review"
+          : "independent";
+      if (selfReview && localizationReview.reviewerRelationship !== "owner-fluent-self-review")
+        throw new UsageError(
+          "author or translator Burmese review must be labelled owner-fluent-self-review",
+        );
+      if (!selfReview && localizationReview.reviewerRelationship === "owner-fluent-self-review")
+        throw new UsageError(
+          "owner-fluent-self-review requires the same recorded author or translator actor",
+        );
+    }
     if (
       localized === undefined &&
       (kind === "localization-review" ||
@@ -340,7 +513,6 @@ export function runAttestCommand(
       ]);
     }
 
-    const versionEvents = log.events.filter((event) => event.packVersion === version);
     if (versionEvents.length === 0) {
       throw new StrictValidationError([
         {
@@ -374,6 +546,19 @@ export function runAttestCommand(
       recordedAt,
       reviewEventSequence: nextSequence,
       ...(requiresContentReview ? { contentReview } : {}),
+      ...(kind === "ai-review" && outcome === "approved"
+        ? {
+            aiReview: {
+              reviewerSystem: optionalFlagString(values, "reviewer-system"),
+              criteria: optionalFlagString(values, "review-criteria"),
+              findingsReference: optionalFlagString(values, "findings-reference"),
+              reviewCycle: cycleBoundary,
+            },
+          }
+        : {}),
+      ...(policy === undefined || outcome !== "approved"
+        ? {}
+        : { ownerApproval: { releasePolicy: policy, reviewCycle: cycleBoundary } }),
       ...(locale !== undefined ? { locale } : {}),
       ...(localizedContentDigestHex === undefined
         ? {}
@@ -392,7 +577,7 @@ export function runAttestCommand(
       const founderCheckpoint = [...versionEvents]
         .reverse()
         .find((event) => event.type === "founder-reviewed");
-      if (founderCheckpoint === undefined) {
+      if (founderCheckpoint === undefined && aiEvent === undefined) {
         throw new StrictValidationError([
           {
             path: ["kind"],
@@ -403,24 +588,37 @@ export function runAttestCommand(
       const founderAttestation = loadVersionAttestations(repositoryRoot, packId, version).find(
         (candidate) =>
           candidate.kind === "founder-review" &&
-          candidate.reviewEventSequence === founderCheckpoint.sequence,
+          candidate.reviewEventSequence === founderCheckpoint?.sequence,
       );
-      if (founderAttestation === undefined) {
+      if (founderAttestation === undefined && aiEvent === undefined) {
         throw new StrictValidationError([
           {
             path: ["kind"],
-            message: `no founder-review attestation binds provenance sequence ${founderCheckpoint.sequence}; record the founder attestation before the practitioner approval`,
+            message: `no founder-review attestation binds provenance sequence ${founderCheckpoint?.sequence ?? "missing"}; record the founder attestation before the practitioner approval`,
           },
         ]);
       }
-      validateProposedPractitionerApproval({
-        pack: source,
-        provenanceLog: log,
-        founderAttestation,
-        practitionerAttestation: attestation,
-        eligibility,
-        evaluateAt: recordedAt,
-      });
+      if (aiEvent === undefined && founderAttestation !== undefined)
+        validateProposedPractitionerApproval({
+          pack: source,
+          provenanceLog: log,
+          founderAttestation,
+          practitionerAttestation: attestation,
+          eligibility,
+          evaluateAt: recordedAt,
+        });
+      else {
+        if (localizedContentDigestHex === undefined)
+          throw new UsageError("policy-aware practitioner review requires Burmese localization");
+        assertPolicyPractitionerEligibility({
+          pack: source,
+          attestation,
+          eligibility,
+          authoredActorId: versionEvents.find((event) => event.type === "authored")!.actorId,
+          evaluateAt: recordedAt,
+          localizedContentDigest: localizedContentDigestHex,
+        });
+      }
     }
 
     const nextLog = appendProvenanceEvent(log, {
@@ -433,6 +631,7 @@ export function runAttestCommand(
       ...(localizedContentDigestHex === undefined
         ? {}
         : { localizedContentDigest: localizedContentDigestHex }),
+      ...(policy === undefined || outcome !== "approved" ? {} : { releasePolicy: policy }),
       recordedAt,
     });
 

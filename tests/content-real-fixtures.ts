@@ -45,6 +45,8 @@ export const realPackId = "retail-assistant";
 
 export const realReviewActors: Readonly<Record<AttestationKind, string>> = {
   "founder-review": "founder-handle-c2",
+  "ai-review": "ai-handle-g6",
+  "owner-approval": "owner-handle-h7",
   "practitioner-review": "reviewer-handle-a7",
   "localization-review": "burmese-handle-d3",
   "accessibility-review": "accessibility-handle-e4",
@@ -191,6 +193,28 @@ export function realAttestArgs(input: {
   if (input.kind === "founder-review" || input.kind === "practitioner-review") {
     args.push("--six-part-confirmed", "true", "--exposure-before-commitment-confirmed", "true");
   }
+  if (input.kind === "ai-review") {
+    args.push(
+      "--reviewer-system",
+      "synthetic-model-1",
+      "--review-criteria",
+      "domain-content-v1",
+      "--findings-reference",
+      "owner-record:synthetic-findings",
+    );
+  }
+  if (input.kind === "owner-approval") {
+    args.push(
+      "--release-policy",
+      "human-assured",
+      "--policy-version",
+      "1",
+      "--policy-applicability",
+      "pilot",
+      "--authorization-scope",
+      "pilot",
+    );
+  }
   if (input.kind === "localization-review") {
     args.push(
       "--locale",
@@ -228,9 +252,11 @@ export function realAttestArgs(input: {
 
 export const realReleaseOrder = [
   "founder-review",
+  "ai-review",
   "practitioner-review",
   "localization-review",
   "accessibility-review",
+  "owner-approval",
 ] as const satisfies readonly AttestationKind[];
 
 export function realReleaseArgs(
