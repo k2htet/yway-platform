@@ -1,5 +1,11 @@
 import { z } from "zod";
 import {
+  authorizationScopeIssue,
+  contentClassification,
+  contentClassificationSchema,
+  releaseAuthorizationScopeSchema,
+} from "../classification.js";
+import {
   sha256DigestSchema,
   dateTimeSchema,
   fixtureOnlySchema,
@@ -22,6 +28,14 @@ export const releaseGatesSchema = z
   })
   .strict();
 
+/**
+ * The evaluated release gates for one exact version scope.
+ *
+ * The result represents either classification. For fixture content it is
+ * unchanged from Stage 2, so an existing fixture evaluation is still reproduced
+ * exactly; the classification itself is derived from the validated source at the
+ * artifact boundary rather than restated here.
+ */
 export const releaseGateResultSchema = z
   .object({
     schemaVersion: schemaVersionLiteral,
@@ -36,7 +50,7 @@ export const releaseGateResultSchema = z
     packVersion: versionSchema,
     contentDigest: sha256DigestSchema,
     localizedContentDigest: sha256DigestSchema,
-    fixtureOnly: z.literal(true),
+    fixtureOnly: fixtureOnlySchema,
     founderApproved: z.literal(true),
     practitionerApproved: z.literal(true),
     localizationApproved: z.literal(true),
@@ -47,6 +61,15 @@ export const releaseGateResultSchema = z
   })
   .strict();
 
+/**
+ * The release manifest binds the bundle, the recorded gates, and the owner-granted
+ * authorization scope for one immutable version.
+ *
+ * `classification` is derived from the validated source and says nothing about
+ * where the content may be shown. `authorizationScope` is that separate statement;
+ * only `pilot` exists as a value, and fixture-classified content carries no scope
+ * at all. Neither field substitutes for the cumulative provenance in the bundle.
+ */
 export const releaseManifestSchema = z
   .object({
     schemaVersion: schemaVersionLiteral,
@@ -54,7 +77,8 @@ export const releaseManifestSchema = z
     packVersion: versionSchema,
     contentDigest: sha256DigestSchema,
     fixtureOnly: fixtureOnlySchema,
-    classification: z.enum(["fixture", "production"]),
+    classification: contentClassificationSchema,
+    authorizationScope: releaseAuthorizationScopeSchema.optional(),
     releasedAt: dateTimeSchema,
     bundle: z
       .object({
@@ -66,11 +90,19 @@ export const releaseManifestSchema = z
   })
   .strict()
   .superRefine((value, context) => {
-    if (value.fixtureOnly && value.classification !== "fixture") {
+    if (contentClassification(value.fixtureOnly) !== value.classification) {
       context.addIssue({
         code: "custom",
         path: ["classification"],
-        message: "fixtureOnly records must not be classified as production (fixture isolation)",
+        message: `classification "${value.classification}" does not match fixtureOnly ${value.fixtureOnly} (fixture isolation)`,
+      });
+    }
+    const scopeIssue = authorizationScopeIssue(value.fixtureOnly, value.authorizationScope);
+    if (scopeIssue !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: [...scopeIssue.path],
+        message: scopeIssue.message,
       });
     }
   });

@@ -898,7 +898,7 @@ gitTest("a trusted snapshot refuses a non-fixture actor identity inside a bundle
         packId: fixture.pack.id,
         packVersion: 1,
       }),
-    /must use a fixture- actor identity/,
+    /must be a fixture- identity for fixture-only content/,
   );
   assert.notEqual(tamperedCommit, commit);
 });

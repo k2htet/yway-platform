@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { authorizationScopeIssue, contentClassification } from "./classification.js";
 import { contentDigest } from "./digest.js";
 import {
   assertVersionScoped,
@@ -131,13 +132,20 @@ export function assertReleaseManifestBindsVersion(
       },
     ]);
   }
-  if (manifest.fixtureOnly && manifest.classification !== "fixture") {
+  if (manifest.classification !== contentClassification(manifest.fixtureOnly)) {
     throw new StrictValidationError([
       {
         path: ["releaseManifest", "classification"],
-        message: `release manifest at ${label} classifies fixture-only content as "${manifest.classification}"; fixture isolation must match`,
+        message: `release manifest at ${label} classifies fixtureOnly ${manifest.fixtureOnly} content as "${manifest.classification}"; classification is derived from the validated source and fixture isolation must match`,
       },
     ]);
+  }
+  const scopeIssue = authorizationScopeIssue(manifest.fixtureOnly, manifest.authorizationScope, [
+    "releaseManifest",
+    "authorizationScope",
+  ]);
+  if (scopeIssue !== undefined) {
+    throw new StrictValidationError([{ path: [...scopeIssue.path], message: scopeIssue.message }]);
   }
 }
 

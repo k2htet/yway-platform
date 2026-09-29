@@ -184,17 +184,32 @@ test("commands accept inline --flag=value forms and boolean forms", () => {
   expectFailureMessage(badBoolean, 'option "--json" only accepts "true" or "false"');
 });
 
-test("content:new-version refuses non-fixture sources and non-fixture actors", () => {
+test("content:new-version refuses the reserved Pack-ID namespace and non-fixture actors", () => {
+  // A real Pack may never occupy the permanently reserved `fixture-` namespace,
+  // whatever its own record flags say.
   const root = makeRoot();
   const pack = makePack({ fixtureOnly: false });
   writePackSource(root, pack);
-  const nonFixtureSource = runNewVersionCommand(
-    ["--pack", pack.id, "--actor", "fixture-author-one"],
+  const reservedId = runNewVersionCommand(
+    ["--pack", pack.id, "--actor", "author-one"],
     options(root),
   );
-  expectExit(nonFixtureSource, 1);
-  expectFailureMessage(nonFixtureSource, "only fixture-only content");
+  expectExit(reservedId, 1);
+  expectFailureMessage(reservedId, `permanent "fixture-" Pack-ID rule`);
   assert.equal(existsSync(provenancePath(root, pack.id)), false);
+
+  // A real Pack under a new identifier registers normally, and its own actor rule
+  // refuses a synthetic `fixture-` identity.
+  const realRoot = makeRoot();
+  const realPack = makePack({ id: "retail-assistant", fixtureOnly: false });
+  writePackSource(realRoot, realPack);
+  const syntheticActor = runNewVersionCommand(
+    ["--pack", realPack.id, "--actor", "fixture-author-one"],
+    options(realRoot),
+  );
+  expectExit(syntheticActor, 1);
+  expectFailureMessage(syntheticActor, "must not be a fixture- identity on real content");
+  assert.equal(existsSync(provenancePath(realRoot, realPack.id)), false);
 
   const fixtureRoot = makeRoot();
   writePackSource(fixtureRoot, makePack());

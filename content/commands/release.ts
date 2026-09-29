@@ -1,6 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildReleaseArtifacts, provenancePrefixThrough } from "../artifacts.js";
+import {
+  requestedAuthorizationScopeSchema,
+  requireClassificationIsolation,
+  type ReleaseAuthorizationScope,
+} from "../classification.js";
 import { contentDigest } from "../digest.js";
 import { verifyVersionGovernance } from "../governance.js";
 import { appendProvenanceEvent } from "../provenance.js";
@@ -33,24 +38,67 @@ import {
   releaseBundleRelativePath,
   releaseManifestPath,
   releaseManifestRelativePath,
-  requireFixtureIsolation,
   resolveRepositoryRoot,
   snapshotIndexPath,
   snapshotIndexRelativePath,
 } from "../store.js";
 import {
+  describeValue,
   failureResult,
+  optionalFlagString,
   parseCommandFlags,
   parsePositiveInteger,
   requireActorId,
   requireFlagString,
   requirePackId,
   successResult,
+  UsageError,
   type CommandOptions,
   type CommandResult,
 } from "./args.js";
 
-const usage = "Usage: pnpm content:release -- --pack <id> --version <n> --actor <fixture-id>";
+const usage =
+  "Usage: pnpm content:release -- --pack <id> --version <n> --actor <id> [--authorization-scope pilot]";
+
+/**
+ * Resolves the owner-granted release authorization scope.
+ *
+ * Classification and authorization scope are separate facts and neither may stand
+ * in for the other: real content may be released only under an explicit `pilot`
+ * scope, fixture content carries none, and `public` is refused because the
+ * `YWAY-P023` comprehension gates, the `YWAY-P024` runtime accessibility evidence,
+ * and a separate owner authorization do not exist.
+ */
+function requireAuthorizationScope(
+  raw: string | undefined,
+  fixtureOnly: boolean,
+): ReleaseAuthorizationScope | undefined {
+  if (raw === undefined) {
+    if (fixtureOnly) {
+      return undefined;
+    }
+    throw new UsageError(
+      `releasing real content requires --authorization-scope pilot; pilot eligibility is an explicit owner authorization and is never inferred from classification`,
+    );
+  }
+  const requested = requestedAuthorizationScopeSchema.safeParse(raw);
+  if (!requested.success) {
+    throw new UsageError(
+      `option "--authorization-scope" must be one of: ${requestedAuthorizationScopeSchema.options.join(", ")} (received ${describeValue(raw)})`,
+    );
+  }
+  if (requested.data === "public") {
+    throw new UsageError(
+      'option "--authorization-scope public" is refused: public release additionally requires the YWAY-P023 fluent-Burmese-review and target-user-comprehension gates, the YWAY-P024 runtime accessibility evidence, and a separate owner authorization, none of which exist. A pilot-scoped release confers no public-release authority',
+    );
+  }
+  if (fixtureOnly) {
+    throw new UsageError(
+      'option "--authorization-scope" is only accepted when releasing real content; fixture-classified content carries no release authorization scope',
+    );
+  }
+  return requested.data;
+}
 
 /**
  * Standing lifecycle states from which a release may be produced. Every earlier
@@ -157,10 +205,12 @@ export function runReleaseCommand(
       pack: { type: "string" },
       version: { type: "string" },
       actor: { type: "string" },
+      "authorization-scope": { type: "string" },
     });
     const packId = requirePackId(values);
     const version = parsePositiveInteger(requireFlagString(values, "version"), "version");
     const actorId = requireActorId(values);
+    const requestedScope = optionalFlagString(values, "authorization-scope");
 
     const repositoryRoot = resolveRepositoryRoot(options.repositoryRoot);
     const releasedAt = strictParse(
@@ -173,7 +223,8 @@ export function runReleaseCommand(
     // would immediately reject.
     const verified = verifyVersionGovernance(repositoryRoot, packId, version);
     const source = verified.source;
-    requireFixtureIsolation(source, actorId);
+    requireClassificationIsolation(source, actorId);
+    const authorizationScope = requireAuthorizationScope(requestedScope, source.fixtureOnly);
     const log = verified.provenanceLog;
     const attestations = verified.attestations;
     const sourceDigest = verified.contentDigest;
@@ -312,6 +363,7 @@ export function runReleaseCommand(
       gates: gateResult,
       releaseEvent,
       provenancePrefix: provenancePrefixThrough(releasedLog, releaseEvent),
+      ...(authorizationScope === undefined ? {} : { authorizationScope }),
     });
 
     const nextIndexBytes = snapshotIndexBytes([...existingEntries, ...artifacts.indexEntries]);
@@ -337,8 +389,12 @@ export function runReleaseCommand(
       status.currentStatus === "practitioner-reviewed"
         ? `; recorded artifact-eligible at sequence ${headOf(eligibleLog).sequence}`
         : "";
+    const scopeSuffix =
+      authorizationScope === undefined
+        ? "; classification fixture"
+        : `; classification real, release authorization scope ${authorizationScope}`;
     return successResult(
-      `PASS  released ${packId} version ${version} at sequence ${releaseEvent.sequence} (actor ${actorId}, ${releasedAt})${appendedEligibility}`,
+      `PASS  released ${packId} version ${version} at sequence ${releaseEvent.sequence} (actor ${actorId}, ${releasedAt}${scopeSuffix})${appendedEligibility}`,
     );
   } catch (error) {
     return failureResult(usage, error);

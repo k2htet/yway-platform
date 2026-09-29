@@ -1,5 +1,5 @@
 {
-  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering, and the opaque-reference character class that real-content localization-review evidence must match) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -120,7 +120,38 @@
             "type": "array",
             "items": {
               "type": "string",
-              "pattern": "^fixture:"
+              "pattern": "^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "fixtureOnly"
+        ],
+        "properties": {
+          "fixtureOnly": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "actorId": {
+            "type": "string",
+            "not": {
+              "pattern": "^fixture-"
+            }
+          },
+          "evidenceReferences": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "not": {
+                "pattern": "^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$"
+              }
             }
           }
         }

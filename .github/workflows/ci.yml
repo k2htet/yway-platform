@@ -44,3 +44,38 @@ jobs:
 
       - name: Run full verification
         run: pnpm verify:full
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Full history, not a shallow clone: a credential committed earlier must still
+      # be found, and a shallow clone would make that check silently vacuous.
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Provision pnpm with Corepack
+        run: |
+          corepack enable
+          corepack install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Runs a pinned Gitleaks release verified against its published checksum over
+      # the history and the content files, then the repository's own rules. This is
+      # a credential scanner, not a personal-data detector: it does not establish
+      # that reviewer names, transliterations, or credential documents are absent.
+      - name: Scan for secrets
+        run: bash scripts/gitleaks-scan.sh

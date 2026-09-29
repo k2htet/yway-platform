@@ -626,17 +626,28 @@ test("refuses an attestation that does not name the same actor as the eligibilit
 });
 
 test("refuses mismatched fixture classification across gate records", () => {
-  const productionEligibility = eligibilityFixture({ fixtureOnly: false });
+  // A real record must carry a real identity: a `fixture-` actor or a `fixture:`
+  // evidence reference on a `fixtureOnly: false` record is refused by the record
+  // schema before the cross-record check can run.
+  const realEligibility = eligibilityFixture({
+    fixtureOnly: false,
+    actorId: "reviewer-handle-a7",
+    evidenceReferences: ["owner-record:vetting-2026-001"],
+  });
   expectGateFailure(
-    () =>
-      validateProposedPractitionerApproval(proposedInput({ eligibility: productionEligibility })),
+    () => validateProposedPractitionerApproval(proposedInput({ eligibility: realEligibility })),
     "mismatched fixture classification: eligibility record",
   );
 
   expectGateFailure(
     () =>
       validateProposedPractitionerApproval(
-        proposedInput({ founderAttestation: founderAttestation({ fixtureOnly: false }) }),
+        proposedInput({
+          founderAttestation: founderAttestation({
+            fixtureOnly: false,
+            actorId: "founder-handle-b2",
+          }),
+        }),
       ),
     "mismatched fixture classification: founder attestation",
   );
@@ -644,9 +655,25 @@ test("refuses mismatched fixture classification across gate records", () => {
   expectGateFailure(
     () =>
       validateProposedPractitionerApproval(
-        proposedInput({ practitionerAttestation: practitionerAttestation({ fixtureOnly: false }) }),
+        proposedInput({
+          practitionerAttestation: practitionerAttestation({
+            fixtureOnly: false,
+            actorId: "reviewer-handle-a7",
+          }),
+        }),
       ),
     "mismatched fixture classification: practitioner attestation",
+  );
+
+  const syntheticActorOnRealRecord = () =>
+    eligibilityFixture({
+      fixtureOnly: false,
+      evidenceReferences: ["owner-record:vetting-2026-001"],
+    });
+  assert.throws(syntheticActorOnRealRecord, /must not be a fixture- identity on real content/);
+  assert.throws(
+    () => eligibilityFixture({ fixtureOnly: false, actorId: "reviewer-handle-a7" }),
+    /must not use a fixture: reference on real content/,
   );
 
   const productionProvenance = buildLog([{ ...founderStep, fixtureOnly: false }], {

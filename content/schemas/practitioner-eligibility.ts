@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  actorClassificationIssue,
+  evidenceReferenceClassificationIssue,
+} from "../classification.js";
+import {
   actorIdSchema,
   dateSchema,
   fixtureOnlySchema,
@@ -51,26 +55,22 @@ export const practitionerEligibilitySchema = z
         message: "validUntil must not be earlier than validFrom",
       });
     }
-    if (value.fixtureOnly) {
-      if (!value.actorId.startsWith("fixture-")) {
-        context.addIssue({
-          code: "custom",
-          path: ["actorId"],
-          message:
-            "fixtureOnly practitioner eligibility actorId must be a fixture- identity (synthetic practitioner identities only)",
-        });
-      }
-      value.evidenceReferences.forEach((reference, index) => {
-        if (!reference.startsWith("fixture:")) {
-          context.addIssue({
-            code: "custom",
-            path: ["evidenceReferences", index],
-            message:
-              "fixtureOnly qualification evidence must use fixture: references (no real identity or credential material)",
-          });
-        }
-      });
+    // One rule, both directions: a `fixture-` identity implies fixture content, and
+    // real content implies a real identity and an opaque reference to the
+    // owner-held private record rather than a synthetic one.
+    const actorIssue = actorClassificationIssue(value.fixtureOnly, value.actorId, ["actorId"]);
+    if (actorIssue !== undefined) {
+      context.addIssue({ code: "custom", path: [...actorIssue.path], message: actorIssue.message });
     }
+    value.evidenceReferences.forEach((reference, index) => {
+      const issue = evidenceReferenceClassificationIssue(value.fixtureOnly, reference, [
+        "evidenceReferences",
+        index,
+      ]);
+      if (issue !== undefined) {
+        context.addIssue({ code: "custom", path: [...issue.path], message: issue.message });
+      }
+    });
   });
 
 export type PractitionerEligibility = z.infer<typeof practitionerEligibilitySchema>;

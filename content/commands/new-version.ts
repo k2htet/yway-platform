@@ -1,3 +1,4 @@
+import { contentClassification, requireClassificationIsolation } from "../classification.js";
 import { contentDigest } from "../digest.js";
 import {
   appendProvenanceEvent,
@@ -10,7 +11,6 @@ import {
   formatRecord,
   loadPackState,
   provenanceLogPath,
-  requireFixtureIsolation,
   resolveRepositoryRoot,
 } from "../store.js";
 import {
@@ -80,7 +80,27 @@ export function runNewVersionCommand(
         },
       ]);
     }
-    requireFixtureIsolation(source, actorId);
+    requireClassificationIsolation(source, actorId);
+
+    // A real Pack establishes its own cumulative provenance from its own first event
+    // and never inherits a fixture Pack's history, so a new version cannot be derived
+    // from a version of the other classification. The reserved Pack-ID namespace
+    // already forbids the two from sharing an identifier; this states the rule at the
+    // point where an operator could try to derive one from the other.
+    if (explicitFrom !== undefined) {
+      const fromSource = state.sourceByVersion.get(explicitFrom);
+      if (
+        fromSource !== undefined &&
+        contentClassification(fromSource.fixtureOnly) !== contentClassification(source.fixtureOnly)
+      ) {
+        throw new StrictValidationError([
+          {
+            path: ["from"],
+            message: `pack "${packId}" version ${explicitFrom} is ${contentClassification(fromSource.fixtureOnly)}-classified and version ${target} is ${contentClassification(source.fixtureOnly)}-classified; a real Pack requires a new Pack ID and its own provenance genesis and can never be derived from a fixture Pack`,
+          },
+        ]);
+      }
+    }
 
     const draft: ProvenanceEventDraft = {
       packId,

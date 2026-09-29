@@ -10,8 +10,11 @@ This guide is operational documentation. It is not product or architecture autho
 - Product meaning comes from [`docs/product/PRODUCT_VISION.md`](../product/PRODUCT_VISION.md) and
   [`docs/product/PRODUCT_CONTRACTS.md`](../product/PRODUCT_CONTRACTS.md).
 - The repository-native pipeline is governed by the ACCEPTED decision
-  [`docs/decisions/003-stage-2-content-pipeline.md`](../decisions/003-stage-2-content-pipeline.md)
-  and the Content and Operations sections of
+  [`docs/decisions/003-stage-2-content-pipeline.md`](../decisions/003-stage-2-content-pipeline.md).
+  The real-content path, the private pilot, and the release authorization scope are governed by the
+  ACCEPTED decision
+  [`docs/decisions/005-real-content-trusted-build.md`](../decisions/005-real-content-trusted-build.md).
+  Both are reconciled into the Content, Practitioner, and Operations sections of
   [`docs/architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
 - Stage 2 execution evidence is recorded in the completed plan
   [`STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md`](../exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md).
@@ -21,12 +24,12 @@ Contracts this pipeline touches: `YWAY-P002` (six-part experiment structure), `Y
 `YWAY-E006` (no scoring or ranking), `YWAY-P019` and `YWAY-E005` (cumulative provenance plus
 qualified-practitioner review over the exact content), `YWAY-P020` (sponsorship disclosure),
 `YWAY-P023` (Simple English canonical content and Burmese release gates), and `YWAY-P024`
-(content-level accessibility only). Stage 2 implements only the fixture-only, content-level subset of
-each: `YWAY-P002`'s exposure-before-commitment rule is enforced through a reviewer's attested
-confirmation rather than by reading the text, `YWAY-P023`'s target-user comprehension gate is
-recorded as deferred, and `YWAY-P019`'s qualified-practitioner review is a fixture assertion rather
-than a real qualification. Those limits are stated wherever they matter below, and none of them is
-resolved by this pipeline.
+(content-level accessibility only). This pipeline implements only the content-level subset of each:
+`YWAY-P002`'s exposure-before-commitment rule is enforced through a reviewer's attested confirmation
+rather than by reading the text, `YWAY-P023`'s target-user comprehension gate is recorded as
+deferred, and `YWAY-P019`'s qualified-practitioner review is a record assertion whose real-world
+qualification evidence lives in an owner-held record outside Git rather than here. Those limits are
+stated wherever they matter below, and none of them is resolved by this pipeline.
 
 Companion documents:
 
@@ -35,19 +38,30 @@ Companion documents:
 - [`CONTENT-LIFECYCLE-RUNBOOK.md`](CONTENT-LIFECYCLE-RUNBOOK.md) — review, release, recovery, and
   retirement procedures.
 
-## What Stage 2 can and cannot do
+## What this pipeline can and cannot do
 
-Stage 2 operates a content-as-code pipeline over synthetic fixture content. It proves that the
-lifecycle is governable and tamper-detectable. It proves nothing about real practitioner
-endorsement, real qualification, real young-person comprehension, or public-release readiness.
+The pipeline operates over content-as-code and is exercised over synthetic records of both
+classifications: fixture Packs, and non-fixture Packs whose actors, evidence, and content were
+invented for the tests. It proves that the lifecycle is governable and tamper-detectable. It proves
+nothing about real practitioner endorsement, real qualification, real young-person comprehension, or
+public-release readiness.
 
-| Stage 2 does                                                                               | Stage 2 does not                                                               |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Accept only `fixtureOnly: true` Packs and `fixture-` actor identities                      | Accept production-classified content, real identities, or public release       |
-| Record who acted, when, and over which exact content digest                                | Authenticate who acted; identity and authorization are deferred                |
-| Enforce founder-then-practitioner sequencing, occupation scope, and date-valid eligibility | Vet a real practitioner in the real world; that is a later decision            |
-| Check content-level accessibility metadata and reading order                               | Claim runtime, screen-reader, device, or target-user comprehension conformance |
-| Produce byte-deterministic artifacts bound to a protected Git commit                       | Select a distribution channel or a trusted-root acquisition mechanism          |
+| This pipeline does                                                                                                                                              | This pipeline does not                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Accept `fixtureOnly: true` Packs under a `fixture-` ID with `fixture-` actors, and `fixtureOnly: false` Packs under a new ID with opaque non-`fixture-` handles | Accept real content under a `fixture-` ID, or fixture content recorded as real           |
+| Record who acted, when, and over which exact content digest                                                                                                     | Authenticate who acted; identity stays an owner-held, out-of-Git record                  |
+| Enforce founder-then-practitioner sequencing, occupation scope, and date-valid eligibility                                                                      | Vet a real practitioner in the real world; the substantive bar is an open owner decision |
+| Check content-level accessibility metadata and reading order                                                                                                    | Claim runtime, screen-reader, device, or target-user comprehension conformance           |
+| Produce byte-deterministic artifacts bound to a protected Git commit                                                                                            | Select a distribution channel or a trusted-root acquisition mechanism                    |
+| Require an explicit owner-granted `pilot` scope to release real content                                                                                         | Authorize public release, a build, device distribution, or a supervised session          |
+
+Real content is specified by
+[`YWAY-D005`](../decisions/005-real-content-trusted-build.md). The rules that distinguish it from
+fixture content live in [`content/classification.ts`](../../content/classification.ts) and are
+documented for operators in the runbook's
+[real-content section](CONTENT-LIFECYCLE-RUNBOOK.md#real-content-and-the-private-pilot). Authoring
+syntax below is identical for both classifications except for `fixtureOnly`, the pack identifier, and
+the actor and evidence references.
 
 ## Canonical schemas
 
@@ -119,7 +133,8 @@ schemaVersion: 1
 id: fixture-example-pack
 # Positive integer. Must equal the file name and must be new.
 version: 1
-# Stage 2 repository commands accept fixture-only content only.
+# true for synthetic content under a "fixture-" pack ID; false for real content, which
+# must be authored under a new ID. See the runbook's real-content section.
 fixtureOnly: true
 # Simple English is the canonical authoring language.
 canonicalLanguage: en-simple
@@ -447,7 +462,8 @@ pnpm content:attest -- --pack fixture-example-pack --version 1 --kind practition
   --six-part-confirmed true --exposure-before-commitment-confirmed true \
   --note "Synthetic fixture practitioner review."
 
-# Burmese fluency review. Evidence must be a fixture: reference for fixture-only content.
+# Burmese fluency review. Evidence must be a fixture: reference for fixture-only content,
+# and must not be one for real content: cite the owner-held private record instead.
 pnpm content:attest -- --pack fixture-example-pack --version 1 --kind localization-review \
   --actor fixture-localizer-one --outcome approved --locale my \
   --fluent-burmese-confirmed true --fluent-review-evidence fixture:synthetic-fluent-review-001 \
@@ -480,12 +496,19 @@ Flag rules the command enforces:
   is refused by the schema.
 - `--locale my` is required for, and only allowed on, `localization-review`.
 - `--fluent-burmese-confirmed` and `--fluent-review-evidence` go together and are required for an
-  approved `localization-review`. Fixture-only evidence must match `fixture:`.
+  approved `localization-review`. The evidence is one rule in both directions: fixture content must
+  match `fixture:`, and real content must not.
 - `--reading-order-confirmed`, `--media-alternatives-confirmed`, and `--runtime-validation-deferred`
   go together and are required for an approved `accessibility-review`.
 - `--disclosure-confirmed`, `--editorial-control-preserved`, and `--ordering-influence none` go
   together and are required for an approved `sponsorship-disclosure`.
-- `--note` is free text and must be non-blank. Keep it synthetic: no names, no personal data.
+- `--note` is free text and must be non-blank. Keep it synthetic: no names, no personal data. For
+  **real** content `--note` is **refused**, because the note is bound by no digest; cite the
+  owner-held private record instead.
+- Actor and evidence references are one rule in both directions: a `fixture-` actor requires fixture
+  content, and real content refuses a `fixture-` actor, a `fixture:` evidence reference, and a pack
+  identifier in the reserved `fixture-` namespace. See the runbook's
+  [real-content section](CONTENT-LIFECYCLE-RUNBOOK.md#real-content-and-the-private-pilot).
 
 A `practitioner-review` approval additionally runs the practitioner gate before anything is written.
 See [`PRACTITIONER-QUALIFICATION-POLICY.md`](PRACTITIONER-QUALIFICATION-POLICY.md).
@@ -508,17 +531,34 @@ pnpm content:verify -- --trusted-commit <full-40-or-64-character-sha>
 
 # Regenerate the portable JSON Schemas and fail on drift.
 pnpm content:schemas:check
+
+# Scan the always-covered roots plus every Git-changed file for credentials, with
+# values redacted. Required before the first real reviewer record. It fails if Git
+# cannot list changes, and it reports files it could not read.
+pnpm content:secrets:check
 ```
 
-Release, retirement, and every failure-recovery procedure are in
+Releasing real content additionally requires an explicit owner-granted scope, which fixture content
+must not carry:
+
+```sh
+pnpm content:release -- --pack retail-assistant --version 1 --actor release-handle-a7 \
+  --authorization-scope pilot
+```
+
+`--authorization-scope pilot` is required for a real release, refused for a fixture release, and
+`public` is refused by name. Release, retirement, and every failure-recovery procedure are in
 [`CONTENT-LIFECYCLE-RUNBOOK.md`](CONTENT-LIFECYCLE-RUNBOOK.md).
 
 ## What a passing check does and does not mean
 
-Every command in this guide operates on synthetic fixture content. A green result establishes
-fixture lifecycle validity only: the schemas accept the records, the digest chain is intact, the
-recorded reviews bind the exact version, and the artifacts are byte-deterministic from those records.
+The commands in this guide are exercised in the test suite against **synthetic** records of both
+classifications. A green result establishes **record and integrity validity only**: the schemas accept
+the records, the classification rules hold, the digest chain is intact, the recorded reviews bind the
+exact version, and the artifacts are byte-deterministic from those records.
 
 It does not establish real practitioner endorsement, real qualification, real Burmese fluency,
-target-user comprehension, runtime or device accessibility, or permission to publish. Those require
-their own authority and their own gates, and Stage 2 grants none of them.
+target-user comprehension, runtime or device accessibility, or permission to publish, to build, to
+distribute, or to run a session. A `pilot` authorization scope is a recorded owner act, not a
+verified fact and not public-release approval. Those require their own authority and their own
+gates, and this pipeline grants none of them.

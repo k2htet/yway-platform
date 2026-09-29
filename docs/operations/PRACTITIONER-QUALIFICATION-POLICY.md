@@ -107,7 +107,10 @@ The committed example is
 - the approval's `packId`, `packVersion`, or `contentDigest` does not match the source-derived scope,
   which is how a stale approval for edited content is refused;
 - a `fixtureOnly` record names an actor that is not a `fixture-` identity, or a `fixtureOnly`
-  eligibility record carries evidence that is not a `fixture:` reference.
+  eligibility record carries evidence that is not a `fixture:` reference;
+- a **real** record names a `fixture-` actor, carries a `fixture:` eligibility or Burmese-fluency
+  reference, carries an attestation `note`, or uses a `fixture-` Pack ID — the last of which is the
+  permanently reserved identifier namespace and is refused however the other records are labelled.
 
 Exit code `1` means one of these refused, and nothing was written.
 
@@ -135,18 +138,18 @@ Roles are the distinct jobs one person could hold in a single Pack's lifecycle. 
 commands refuse the overlap; "Policy" means a human must not record a confirmation that the overlap
 would make false.
 
-| Role                            | Records                                                                                                                                                                                      | Must not also be                                           | Enforced overlap rules                                                                                                                                                                                                                             |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Author                          | The `authored` event. `content:new-version` also records its `--actor` on the `localized` event when a localization exists; that actor is the registrar, not a verified translator identity. | The practitioner reviewer of that same version             | Author ≠ practitioner reviewer **of the same version** is enforced. Every other combination in this row is policy.                                                                                                                                 |
-| Founder reviewer                | An approved or `changes-requested` `founder-review` attestation and event                                                                                                                    | —                                                          | The founder checkpoint must precede the practitioner approval, and both must bind the exact version and digest. Whether the founder authored the content is **not** enforced; policy says do not approve your own work as founder.                 |
-| Practitioner reviewer           | An approved or `changes-requested` `practitioner-review` attestation and event, against a qualifying eligibility record                                                                      | The author of that same version                            | Non-authorship of that version and occupational eligibility are enforced. Holding the founder role in the same cycle, authoring another version of the same Pack, or authoring the localization are **not** enforced; policy says avoid all three. |
-| Localizer                       | The Burmese content in `localizations/<version>.yaml`; translator identity is not captured by the `localized` event.                                                                         | —                                                          | No command ties a translator to a version's review. Policy says the translator and the fluency reviewer should be different people, because a fluency confirmation by the author of the text is not a fluency review.                              |
-| Localization (fluency) reviewer | An approved `localization-review` attestation binding the exact `localizedContentDigest`                                                                                                     | —                                                          | An approval must confirm fluency and cite evidence, and fixture-only evidence must be a `fixture:` reference. The gate cannot tell whether the evidence is real.                                                                                   |
-| Accessibility reviewer          | An approved `accessibility-review` attestation with the mandatory runtime deferral                                                                                                           | —                                                          | Confirmations are enforced as fields. Coverage of every authored section is **not** enforced; see the runbook's known limits.                                                                                                                      |
-| Sponsorship reviewer            | An approved `sponsorship-disclosure` attestation                                                                                                                                             | —                                                          | Only applicable to a sponsored Pack. An unsponsored Pack must not carry a disclosure event.                                                                                                                                                        |
-| Release operator                | The `artifact-eligible` and `artifact-released` events                                                                                                                                       | —                                                          | The release actor must be a `fixture-` identity and every gate must pass at the release instant. The operator may be the same person as any reviewer; policy prefers a distinct operator for the release step.                                     |
-| Retiring operator               | The `retired` event, the source-side retirement record, and the artifact notice                                                                                                              | —                                                          | Retirement is terminal and refuses a duplicate. The operator may be any authorized role.                                                                                                                                                           |
-| Repository maintainer           | Schemas, commands, verification scripts, and generated output                                                                                                                                | The sole reviewer of their own change to a control surface | Separation is a review requirement under [`CONTRIBUTING.md`](../../CONTRIBUTING.md), not a command rule. A maintainer who authored a version may still not be its practitioner reviewer.                                                           |
+| Role                            | Records                                                                                                                                                                                      | Must not also be                                           | Enforced overlap rules                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Author                          | The `authored` event. `content:new-version` also records its `--actor` on the `localized` event when a localization exists; that actor is the registrar, not a verified translator identity. | The practitioner reviewer of that same version             | Author ≠ practitioner reviewer **of the same version** is enforced. Every other combination in this row is policy.                                                                                                                                                                                                                                         |
+| Founder reviewer                | An approved or `changes-requested` `founder-review` attestation and event                                                                                                                    | —                                                          | The founder checkpoint must precede the practitioner approval, and both must bind the exact version and digest. Whether the founder authored the content is **not** enforced; policy says do not approve your own work as founder.                                                                                                                         |
+| Practitioner reviewer           | An approved or `changes-requested` `practitioner-review` attestation and event, against a qualifying eligibility record                                                                      | The author of that same version                            | Non-authorship of that version and occupational eligibility are enforced. Holding the founder role in the same cycle, authoring another version of the same Pack, or authoring the localization are **not** enforced; policy says avoid all three.                                                                                                         |
+| Localizer                       | The Burmese content in `localizations/<version>.yaml`; translator identity is not captured by the `localized` event.                                                                         | —                                                          | No command ties a translator to a version's review. Policy says the translator and the fluency reviewer should be different people, because a fluency confirmation by the author of the text is not a fluency review.                                                                                                                                      |
+| Localization (fluency) reviewer | An approved `localization-review` attestation binding the exact `localizedContentDigest`                                                                                                     | —                                                          | An approval must confirm fluency and cite evidence; fixture-only evidence must be a `fixture:` reference and real evidence must not be one. The gate cannot tell whether the evidence is real.                                                                                                                                                             |
+| Accessibility reviewer          | An approved `accessibility-review` attestation with the mandatory runtime deferral                                                                                                           | —                                                          | Confirmations are enforced as fields. Coverage of every authored section is **not** enforced; see the runbook's known limits.                                                                                                                                                                                                                              |
+| Sponsorship reviewer            | An approved `sponsorship-disclosure` attestation                                                                                                                                             | —                                                          | Only applicable to a sponsored Pack. An unsponsored Pack must not carry a disclosure event.                                                                                                                                                                                                                                                                |
+| Release operator                | The `artifact-eligible` and `artifact-released` events                                                                                                                                       | —                                                          | The release actor must be a `fixture-` identity on fixture content and an opaque non-`fixture-` handle on real content, and every gate must pass at the release instant. A real release additionally requires `--authorization-scope pilot`. The operator may be the same person as any reviewer; policy prefers a distinct operator for the release step. |
+| Retiring operator               | The `retired` event, the source-side retirement record, and the artifact notice                                                                                                              | —                                                          | Retirement is terminal and refuses a duplicate. A real retirement's reason must be an opaque `owner-record:<id>` pointer. The operator may be any authorized role.                                                                                                                                                                                         |
+| Repository maintainer           | Schemas, commands, verification scripts, and generated output                                                                                                                                | The sole reviewer of their own change to a control surface | Separation is a review requirement under [`CONTRIBUTING.md`](../../CONTRIBUTING.md), not a command rule. A maintainer who authored a version may still not be its practitioner reviewer.                                                                                                                                                                   |
 
 ### Matrix rules that hold regardless of the table
 
@@ -157,16 +160,55 @@ would make false.
 2. **One person, one confirmation per cycle.** Review cycles after `changes-requested` are separate
    attestations bound to separate sequences. A prior cycle's approval cannot satisfy a later one, and
    a reviewer may not carry an earlier cycle's confirmation forward.
-3. **Fixture identities imply fixture content.** A `fixture-` actor is a synthetic identity, so any
-   record naming one is fixture-only by definition and must be marked `fixtureOnly: true`. Relabelling
-   a consistently `fixtureOnly: false` set of records is **not** detectable by these commands:
-   flag-based classification cannot authenticate intent while identity remains deferred. It is not a
-   permitted operation, and a relabelling is a governance breach regardless of whether a check
-   catches it.
-4. **Notes and reasons are audited text.** The attestation `note` and the retirement `reason` are
-   unbounded free text; the localization `fluentReviewEvidence` and the qualification
-   `evidenceReferences` are capped at 128 characters and pattern-restricted. Write all of them as
-   synthetic, opaque, and safe to publish. See the runbook's privacy section.
+3. **Fixture identities imply fixture content, and real content implies real identities.** Both
+   directions are now enforced: a `fixture-` actor requires `fixtureOnly: true`, and `fixtureOnly:
+false` requires a non-`fixture-` actor and non-`fixture:` evidence. The **identifier** is the
+   stronger control: a real Pack requires a new Pack ID, and the `fixture-` Pack-ID namespace is
+   permanently fixture-classified by a verifier-side rule. Relabelling a consistently `fixtureOnly:
+false` set of records is still **not** detectable as such — flag-based classification cannot
+   authenticate intent — but under a reserved identifier it is refused by that rule alone. It remains
+   a governance breach regardless of whether a check catches it.
+4. **Notes and reasons are audited text, and real records carry none.** The attestation `note` and
+   the retirement `reason` are unbounded free text and are bound by no digest, so a note-only edit is
+   detected by nothing. For **real** content both are refused: a real attestation carries no note and
+   a real retirement records only an `owner-record:<id>` pointer. Fixture records may still write
+   them, and they must stay synthetic, opaque, and safe to publish.
+
+5. **The two evidence fields are restricted, and the restrictions are not the same.** The
+   qualification `evidenceReferences` matches `[a-z0-9][a-z0-9:_-]*`, which forbids whitespace,
+   `@`, `.`, `/`, and non-Latin script. The localization `fluentReviewEvidence` keeps its
+   128-character cap and non-blank rule for **fixture** content, but on **real** content it must match
+   the same opaque-reference class, because it is bound by no digest either. Neither class forbids a
+   transliterated name or a numeric identifier, so both remain necessary and not sufficient: the
+   owner issues the reference, and the owner reviews the record. See the runbook's privacy section.
+
+## Reviewing real content
+
+The rules above are the same for both classifications, but a real review carries a person's
+professional judgement, so the record needs a person behind it. `YWAY-D005` places that evidence in
+an **owner-controlled private record outside Git**; the repository receives an opaque reference plus
+the approval bound to the exact version and digests.
+
+For each real Pack the owner:
+
+1. meets the reviewer in person or by video and **independently** confirms the relevant occupation
+   experience, and confirms the reviewer did not author the version they are approving;
+2. issues the reviewer an **opaque handle** and uses nothing else — no name, transliteration,
+   workplace, or contact route, in any actor ID, filename, record, commit message, or pull-request
+   text. Every review actor and instant is inside the bundle bytes and therefore publishable;
+3. records identity, qualification, and the role-matrix separations above in the private record; and
+4. confirms the content diff is not fixture scenario text re-authored under the new identifier.
+
+The practitioner is a **data subject**: what is recorded, who holds it, for how long, and how to ask
+for deletion must be stated to them, and a withdrawal mid-pilot needs a defined consequence for
+content already shipped. The private record has no tamper-evidence, is a single point of failure, and
+the repository holds a dangling pointer by design.
+
+**The repository does not authenticate anyone.** A repository writer can write a plausible
+`reviewer-handle-*` string that no check rejects. `pnpm content:secrets:check` must pass on the change
+before the first real reviewer record exists, and it detects credentials in known formats only — not
+names, not transliterations, not documents. The per-session clearance is what turns the forged-actor
+residual from described into checked, and it is a human act.
 
 ## The eligibility record is effectively frozen
 
@@ -205,9 +247,11 @@ These are recorded, not decided here. Each needs its own authority.
    verifies it, is a product and policy decision that YWAY-P019 and YWAY-D003 both leave open.
 3. **Enforcing the role matrix.** Making founder/practitioner separation, translator/reviewer
    separation, and reading-order coverage machine-checkable is a schema and gate change.
-4. **Classifying `fixture-` identities as fixture-only.** An inverse rule
-   (`fixture-` identity ⇒ `fixtureOnly: true`) would close the relabelling path described in matrix
-   rule 3.
+4. ~~**Classifying `fixture-` identities as fixture-only.**~~ **Closed by #60.** The inverse rules
+   now run in both directions, the `fixture-` Pack-ID namespace is permanently reserved and enforced
+   verifier-side, and real records carry no free-text note or prose retirement reason. What remains
+   open is narrower and is recorded in the runbook's known limits: copying fixture _content_ under a
+   new identifier is undetectable, and the relabelling itself is undetectable as a relabelling.
 5. **Sealing eligibility into history.** Historical verification re-evaluates the practitioner gate
    against the current record, so a later status change breaks a release that already happened. Either
    sealing an eligibility digest at `artifact-eligible`, or separating "eligibility no longer

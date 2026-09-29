@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { actorClassificationIssue, retirementReasonIssue } from "../classification.js";
 import {
   actorIdSchema,
   dateTimeSchema,
@@ -23,6 +24,25 @@ export const retirementRecordSchema = z
     retirementEventSequence: z.number().int().positive(),
     retirementEventDigest: sha256DigestSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    const actorIssue = actorClassificationIssue(
+      value.fixtureOnly,
+      value.actorId,
+      ["actorId"],
+      `retirement actorId "${value.actorId}"`,
+    );
+    if (actorIssue !== undefined) {
+      context.addIssue({ code: "custom", path: [...actorIssue.path], message: actorIssue.message });
+    }
+    const reasonIssue = retirementReasonIssue(value.fixtureOnly, value.reason);
+    if (reasonIssue !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: [...reasonIssue.path],
+        message: reasonIssue.message,
+      });
+    }
+  });
 
 export type RetirementRecord = z.infer<typeof retirementRecordSchema>;

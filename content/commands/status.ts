@@ -1,3 +1,4 @@
+import { contentClassification } from "../classification.js";
 import { contentDigest } from "../digest.js";
 import { verifyVersionGovernance } from "../governance.js";
 import { formatRecord, resolveRepositoryRoot } from "../store.js";
@@ -34,10 +35,12 @@ export function runStatusCommand(
       attestations,
       contentDigest: contentDigestHex,
       localizedContent,
+      releaseManifest,
       retirement,
       source,
       status,
     } = verified;
+    const classification = contentClassification(source.fixtureOnly);
 
     if (jsonOutput) {
       const payload = {
@@ -45,6 +48,12 @@ export function runStatusCommand(
         packVersion: version,
         contentDigest: contentDigestHex,
         fixtureOnly: source.fixtureOnly,
+        classification,
+        // An owner act, not a machine-verified property: the value is recorded here,
+        // and nothing in the repository checks that the owner meant it.
+        ...(releaseManifest?.authorizationScope === undefined
+          ? {}
+          : { releaseAuthorizationScope: releaseManifest.authorizationScope }),
         ...(localizedContent === undefined
           ? {}
           : {
@@ -95,6 +104,12 @@ export function runStatusCommand(
       `status: ${status.currentStatus}`,
       `contentDigest: ${contentDigestHex}`,
       `fixtureOnly: ${source.fixtureOnly ? "true" : "false"}`,
+      `classification: ${classification}`,
+      ...(releaseManifest?.authorizationScope === undefined
+        ? []
+        : [
+            `release authorization scope: ${releaseManifest.authorizationScope} (owner-granted, not machine-verified)`,
+          ]),
       `events: ${status.history.length}`,
       `attestations: ${attestations.length}`,
       ...attestations.map(

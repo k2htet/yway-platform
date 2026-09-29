@@ -1,5 +1,10 @@
 import { contentDigest } from "./digest.js";
 import {
+  evidenceReferenceClassificationIssue,
+  packIdClassificationIssue,
+  requireClassificationIsolation,
+} from "./classification.js";
+import {
   assertVersionScoped,
   deriveVersionLifecycleStatus,
   selectVersionScopedEvents,
@@ -8,7 +13,7 @@ import {
 import { verifyRecordedPractitionerApproval } from "./practitioner-gate.js";
 import { appendProvenanceEvent, verifyProvenanceLog } from "./provenance.js";
 import { reviewEventTypes } from "./governance.js";
-import { assertFixtureOnlyProvenance, requireFixtureIsolation } from "./store.js";
+import { assertFixtureOnlyProvenance } from "./store.js";
 import {
   StrictValidationError,
   collectExperimentParityIssues,
@@ -353,17 +358,14 @@ function assertLocalizationGate(
           "localization review must confirm fluent Burmese review",
         );
       }
-      if (
-        pack.fixtureOnly &&
-        !/^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(
-          attestation.localizationReview?.fluentReviewEvidence ?? "",
-        )
-      ) {
-        addIssue(
-          issues,
-          ["attestations", "localization-review", "fluentReviewEvidence"],
-          "fixture localization review must use synthetic fixture: evidence",
-        );
+      const evidenceIssue = evidenceReferenceClassificationIssue(
+        pack.fixtureOnly,
+        attestation.localizationReview?.fluentReviewEvidence ?? "",
+        ["attestations", "localization-review", "fluentReviewEvidence"],
+        "localization-review evidence",
+      );
+      if (evidenceIssue !== undefined) {
+        addIssue(issues, [...evidenceIssue.path], evidenceIssue.message);
       }
     }
   }
@@ -479,6 +481,20 @@ function assertSponsorshipGate(
     return "not-applicable";
   }
 
+  // The localization schema has no `sponsorship` field and this gate reads
+  // `pack.sponsorship` from the canonical source only, so a sponsored Pack's
+  // disclosure reaches the release boundary but not the Burmese text a
+  // participant reads. Real content must not be released into that gap
+  // (`YWAY-P020`: sponsored content must be disclosed to the reader). Fixture
+  // content may still be released here, and its committed disclosure is repeated
+  // in the Burmese limitations and asserted by the test suite.
+  if (!pack.fixtureOnly) {
+    addIssue(
+      issues,
+      ["sponsorship"],
+      `sponsored real content is not releasable: the localization schema has no sponsorship disclosure field, so the disclosure for ${pack.id} version ${pack.version} would not reach a Burmese-reading participant (YWAY-P020). The localized sponsorship representation is an open owner decision; do not work around it by leaving the disclosure out of the Burmese text`,
+    );
+  }
   if (pack.sponsorship.editorialControl !== "independent") {
     addIssue(
       issues,
@@ -658,14 +674,14 @@ function assertPractitionerGate(
 
 export function evaluateReleaseGates(input: ReleaseGateInput): ReleaseGateResult {
   const pack = strictParse(packSourceSchema, input.pack);
-  if (!pack.fixtureOnly) {
-    throw new StrictValidationError([
-      {
-        path: ["fixtureOnly"],
-        message:
-          "Stage 2 release gates accept fixture-only Packs only; production release requires a separately authorized path",
-      },
-    ]);
+  // The version, digest, review-cycle, practitioner-independence, localization,
+  // accessibility, and sponsorship gates below are one shared set for both
+  // classifications. What differs is only the classification rules in
+  // `content/classification.ts`, which `requireClassificationIsolation` applies and
+  // the record schemas enforce per record.
+  const classificationIssue = packIdClassificationIssue(pack.id, pack.fixtureOnly, ["id"]);
+  if (classificationIssue !== undefined) {
+    throw new StrictValidationError([{ path: ["id"], message: classificationIssue.message }]);
   }
   const localizedContent =
     input.localizedContent === undefined
@@ -847,7 +863,7 @@ export function appendArtifactEligibilityEvent(
     // Qualification may expire between evaluation and recording eligibility.
     evaluateReleaseGates({ ...input, evaluateAt: recordedAt });
   }
-  requireFixtureIsolation(
+  requireClassificationIsolation(
     {
       id: result.packId,
       version: result.packVersion,

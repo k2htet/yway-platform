@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { requireClassificationIsolation } from "../classification.js";
 import { contentDigest } from "../digest.js";
 import { appendProvenanceEvent } from "../provenance.js";
 import { validateProposedPractitionerApproval } from "../practitioner-gate.js";
@@ -22,7 +23,6 @@ import {
   loadVersionAttestations,
   provenanceLogPath,
   readJsonFile,
-  requireFixtureIsolation,
   requirePackSource,
   requireProvenanceLog,
   resolveRepositoryRoot,
@@ -291,7 +291,12 @@ export function runAttestCommand(
     const recordedAt = (options.now ?? (() => new Date().toISOString()))();
     const state = loadPackState(repositoryRoot, packId);
     const source = requirePackSource(state, repositoryRoot, packId, version);
-    requireFixtureIsolation(source);
+    requireClassificationIsolation(source, actorId);
+    if (!source.fixtureOnly && note !== undefined) {
+      throw new UsageError(
+        `--note is not accepted for real content; a note is free text that no digest binds and it is excluded from the release boundary, so cite the owner-held private review record in its place`,
+      );
+    }
     const log = requireProvenanceLog(state, packId);
     const contentDigestHex = contentDigest(source);
     const localized = state.localizedContentByVersion.get(version);

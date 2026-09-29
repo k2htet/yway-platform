@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
+import { isFixturePackId, type ReleaseAuthorizationScope } from "./classification.js";
 import { assertBundleBindings } from "./artifacts.js";
 import { sha256Hex } from "./digest.js";
 import { verifyProvenanceLog } from "./provenance.js";
@@ -38,6 +39,21 @@ export interface SnapshotVersionEntry {
   readonly manifest: ReleaseManifest;
   readonly notice: RetirementNotice | undefined;
   readonly retired: boolean;
+}
+
+export interface PilotSnapshotVersion {
+  readonly packId: string;
+  readonly packVersion: number;
+  readonly bundle: ReleaseBundle;
+  readonly manifest: ReleaseManifest;
+  /** The byte-verified bundle buffer for this exact version. */
+  readonly bundleBytes: Buffer;
+  /** The byte-verified release-manifest buffer for this exact version. */
+  readonly manifestBytes: Buffer;
+  readonly bundleDigest: string;
+  readonly manifestDigest: string;
+  readonly authorizationScope: ReleaseAuthorizationScope;
+  readonly trustedCommit: string;
 }
 
 /**
@@ -465,6 +481,9 @@ export function inspectSnapshotVersion(
 
   // Re-derive the embedded cumulative provenance from the bundle bytes alone, so a
   // consumer never has to trust that the recorded history is internally coherent.
+  // The classification is taken from the bundle itself, so a real Pack's provenance
+  // is held to the real rules and a fixture Pack's to the fixture ones, and a
+  // relabelled fixture still cannot pass the identifier rule.
   //
   // Scope, stated precisely: this proves the prefix is a self-consistent,
   // digest-pinned, lifecycle-legal chain for the released version. The prefix head
@@ -495,7 +514,7 @@ export function inspectSnapshotVersion(
       [bundle.packVersion]: bundle.localizedContentDigest,
     },
   });
-  assertFixtureOnlyProvenance(true, bundle.provenance);
+  assertFixtureOnlyProvenance(bundle.fixtureOnly, bundle.provenance);
 
   const noticeEntry = requireOptionalCanonicalEntry(
     snapshot.index,
@@ -553,6 +572,13 @@ export interface LoadedReleasedBundle {
  *
  * A retired version may still pass integrity verification — its historical
  * artifacts are immutable — but this loader refuses to hand it to a consumer.
+ *
+ * Since #60 this loader is **classification-agnostic**: it validates whichever
+ * classification the bundle records and preserves every refusal it made for
+ * fixture content, which is what `YWAY-D005` item 31 assigned. It is therefore not
+ * a pilot gate. Only {@link inspectPilotSnapshotVersion} requires `real`
+ * classification, a `pilot` authorization scope, and the absence of a retirement
+ * notice, and a build must use that function rather than this one.
  */
 export function loadReleasedBundle(input: {
   readonly repositoryRoot: string;
@@ -575,4 +601,139 @@ export function loadReleasedBundle(input: {
     ]);
   }
   return { trustedCommit, entry };
+}
+
+/**
+ * Resolves one real, pilot-authorized Pack version for a pilot build.
+ *
+ * This is the `#63` consumption seam. It takes a snapshot that has already been
+ * byte-verified against the trusted commit, and it returns that exact version's
+ * bundle and manifest buffers only when all three of the following hold:
+ *
+ * 1. the classification is `real` (and the Pack ID is not in the reserved
+ *    `fixture-` namespace),
+ * 2. the recorded release authorization scope is `pilot`, and
+ * 3. no retirement notice exists for that version.
+ *
+ * It returns the byte-verified buffers rather than re-reading the working tree, so
+ * there is no window between verification and packaging in which the bytes could
+ * change. Fixture content keeps every refusal it had before this function existed;
+ * real content is refused here unless all three conditions above hold.
+ *
+ * **The snapshot precondition is a caller contract, not an enforced property.** The
+ * `ArtifactSnapshot` is a plain value, so a caller that fabricates one receives
+ * fabricated buffers. A build must obtain it from {@link verifyArtifactSnapshot}
+ * with an owner-approved full commit SHA and must not construct one.
+ *
+ * **What this does not establish, and what `#63` must still do.** Comparing the
+ * pinned tree proves that the build checkout matches the owner-approved commit for
+ * the `artifacts/` subtree. It does not prove content authenticity or
+ * provenance-prefix completeness within that pin, it does not prove that the actor
+ * behind a review is a real qualified person, and it does not prove that the pinned
+ * commit is the newest approved one. `#63` must therefore additionally:
+ *
+ * - run the repository verifier (`pnpm content:verify`) in a clean checkout at the
+ *   pinned commit, which is the only step that rebuilds artifacts from the
+ *   authoring sources and checks the provenance prefix is complete;
+ * - enforce the owner-controlled `(packId, packVersion)` allowlist, whose absence
+ *   from Git is deliberate;
+ * - take a fresh owner clearance before every supervised session, including the
+ *   per-Pack check of the approving, founding, and releasing actors against the
+ *   owner-held private record; and
+ * - re-verify the packaged APK's embedded asset set against these buffers.
+ */
+export interface LoadedPilotBundle {
+  readonly trustedCommit: string;
+  readonly version: PilotSnapshotVersion;
+}
+
+/**
+ * Loads one real, pilot-authorized Pack version for a pilot build, verifying the
+ * snapshot itself.
+ *
+ * This is the entry point a build should call: it takes the same owner-approved full
+ * commit SHA as the fixture loader, performs the byte verification, and then applies
+ * every pilot condition. Nothing in the public surface can hand a build real content
+ * without passing this function, and the snapshot it returns is the verified one
+ * rather than a caller-supplied value.
+ */
+export function loadPilotBundle(input: {
+  readonly repositoryRoot: string;
+  readonly trustedCommit: string;
+  readonly packId: string;
+  readonly packVersion: number;
+}): LoadedPilotBundle {
+  const trustedCommit = requireFullCommitSha(input.trustedCommit);
+  const snapshot = verifyArtifactSnapshot({
+    repositoryRoot: input.repositoryRoot,
+    trustedCommit,
+  });
+  return {
+    trustedCommit,
+    version: inspectPilotSnapshotVersion(snapshot, input.packId, input.packVersion),
+  };
+}
+
+export function inspectPilotSnapshotVersion(
+  snapshot: ArtifactSnapshot,
+  packId: string,
+  packVersion: number,
+): PilotSnapshotVersion {
+  const entry = inspectSnapshotVersion(snapshot, packId, packVersion);
+  if (isFixturePackId(entry.bundle.packId)) {
+    throw new StrictValidationError([
+      {
+        path: ["packId"],
+        message: `${packId} version ${packVersion} uses the permanently reserved "fixture-" Pack-ID namespace and cannot be released for a pilot build`,
+      },
+    ]);
+  }
+  if (entry.bundle.fixtureOnly !== false || entry.manifest.classification !== "real") {
+    throw new StrictValidationError([
+      {
+        path: ["classification"],
+        message: `${packId} version ${packVersion} is classified as "${entry.manifest.classification}"; a pilot build embeds only real-classified content`,
+      },
+    ]);
+  }
+  if (entry.manifest.authorizationScope !== "pilot") {
+    throw new StrictValidationError([
+      {
+        path: ["authorizationScope"],
+        message: `${packId} version ${packVersion} records no "pilot" release authorization scope; pilot eligibility is a separate owner-granted statement and cannot be inferred from classification`,
+      },
+    ]);
+  }
+  if (entry.retired) {
+    throw new StrictValidationError([
+      {
+        path: ["retirementNotice"],
+        message: `${packId} version ${packVersion} has a retirement notice in the trusted snapshot; a retired version must not be embedded`,
+      },
+    ]);
+  }
+
+  const bundleBytes = snapshotFile(
+    snapshot.files,
+    canonicalArtifactPath("bundle", packId, packVersion),
+    `bundle for ${packId}@${packVersion}`,
+  );
+  const manifestBytes = snapshotFile(
+    snapshot.files,
+    canonicalArtifactPath("release-manifest", packId, packVersion),
+    `release manifest for ${packId}@${packVersion}`,
+  );
+
+  return {
+    packId,
+    packVersion,
+    bundle: entry.bundle,
+    manifest: entry.manifest,
+    bundleBytes,
+    manifestBytes,
+    bundleDigest: sha256Hex(bundleBytes),
+    manifestDigest: sha256Hex(manifestBytes),
+    authorizationScope: entry.manifest.authorizationScope,
+    trustedCommit: snapshot.trustedCommit,
+  };
 }

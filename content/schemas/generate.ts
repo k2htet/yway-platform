@@ -1,10 +1,31 @@
 import { z } from "zod";
+import {
+  contentClassificationSchema,
+  fixtureEvidencePattern,
+  fixturePackIdPrefix,
+  realRetirementReasonPattern,
+  releaseAuthorizationScopeSchema,
+} from "../classification.js";
 import { generatedSchemas, type GeneratedSchema } from "./index.js";
 
 export const generatedSchemaDirectory = "content/generated";
 
+/**
+ * The generated conditionals below restate the runtime classification rules, so
+ * their literals are taken from `content/classification.ts` rather than written
+ * out again. `pnpm content:schemas:check` compares the rendered files with the
+ * committed ones, so a constant changed in one place and not the other would
+ * otherwise leave a published JSON Schema silently describing a different rule
+ * than the runtime enforces.
+ */
+const fixtureIdPattern = `^${fixturePackIdPrefix}`;
+const fixtureEvidenceJsonPattern = fixtureEvidencePattern.source;
+const retirementReasonJsonPattern = realRetirementReasonPattern.source;
+const classifications = contentClassificationSchema.options;
+const authorizationScopes = releaseAuthorizationScopeSchema.options;
+
 const runtimeOnlyRulesComment =
-  "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.";
+  "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering, and the opaque-reference character class that real-content localization-review evidence must match) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.";
 
 type JsonObject = Record<string, unknown>;
 
@@ -59,10 +80,22 @@ function governanceAllOfClauses(name: string): JsonObject[] {
           if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
           then: {
             properties: {
-              actorId: { type: "string", pattern: "^fixture-" },
+              actorId: { type: "string", pattern: fixtureIdPattern },
               evidenceReferences: {
                 type: "array",
-                items: { type: "string", pattern: "^fixture:" },
+                items: { type: "string", pattern: fixtureEvidenceJsonPattern },
+              },
+            },
+          },
+        },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: false } } },
+          then: {
+            properties: {
+              actorId: { type: "string", not: { pattern: fixtureIdPattern } },
+              evidenceReferences: {
+                type: "array",
+                items: { type: "string", not: { pattern: fixtureEvidenceJsonPattern } },
               },
             },
           },
@@ -176,7 +209,7 @@ function governanceAllOfClauses(name: string): JsonObject[] {
                 properties: {
                   fluentReviewEvidence: {
                     type: "string",
-                    pattern: "^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                    pattern: fixtureEvidenceJsonPattern,
                   },
                 },
               },
@@ -339,9 +372,40 @@ function governanceAllOfClauses(name: string): JsonObject[] {
           then: { properties: { sponsorshipReview: false } },
         },
         {
+          if: {
+            required: ["kind", "fixtureOnly"],
+            properties: {
+              kind: { const: "localization-review" },
+              fixtureOnly: { const: false },
+            },
+          },
+          then: {
+            properties: {
+              localizationReview: {
+                type: "object",
+                properties: {
+                  fluentReviewEvidence: {
+                    type: "string",
+                    not: { pattern: fixtureEvidenceJsonPattern },
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
           if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
           then: {
-            properties: { actorId: { type: "string", pattern: "^fixture-" } },
+            properties: { actorId: { type: "string", pattern: fixtureIdPattern } },
+          },
+        },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: false } } },
+          then: {
+            properties: {
+              actorId: { type: "string", not: { pattern: fixtureIdPattern } },
+              note: false,
+            },
           },
         },
       ];
@@ -349,7 +413,61 @@ function governanceAllOfClauses(name: string): JsonObject[] {
       return [
         {
           if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
-          then: { properties: { classification: { const: "fixture" } } },
+          then: {
+            properties: {
+              classification: { const: classifications[0] },
+              authorizationScope: false,
+            },
+          },
+        },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: false } } },
+          then: {
+            required: ["authorizationScope"],
+            properties: {
+              classification: { const: classifications[1] },
+              authorizationScope: { const: authorizationScopes[0] },
+            },
+          },
+        },
+      ];
+    case "release-bundle":
+      return [
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
+          then: {
+            properties: {
+              classification: { const: classifications[0] },
+              packId: { type: "string", pattern: fixtureIdPattern },
+            },
+          },
+        },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: false } } },
+          then: {
+            properties: {
+              classification: { const: classifications[1] },
+              packId: { type: "string", not: { pattern: fixtureIdPattern } },
+            },
+          },
+        },
+      ];
+    case "retirement-record":
+      return [
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: true } } },
+          then: {
+            properties: { actorId: { type: "string", pattern: fixtureIdPattern } },
+          },
+        },
+        {
+          if: { required: ["fixtureOnly"], properties: { fixtureOnly: { const: false } } },
+          then: {
+            properties: {
+              actorId: { type: "string", not: { pattern: fixtureIdPattern } },
+              reason: { type: "string", pattern: retirementReasonJsonPattern },
+            },
+          },
         },
       ];
     default:
