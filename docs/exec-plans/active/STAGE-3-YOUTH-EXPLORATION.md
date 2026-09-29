@@ -14,24 +14,24 @@ Kickoff issue: #56.
 
 Build a private, moderated Android pilot in which an adult young person can discover a career, try a short realistic work task, receive a useful qualitative insight, reflect, and start a reversible next action without logging in. The core journey must work with no employer, job, Quest, or opportunity data.
 
-Stage 3 exits only when the journey works end to end with two genuinely reviewed, non-fixture Career Experience Packs in distinct careers, separate exploration signals, no prohibited scoring, and no login before first value. The first Pack covers retail assistant work. The owner selects the second occupation after confirming a qualified reviewer and a suitable short task. At least five adults participate in supervised sessions on managed Android devices; critical findings are resolved before closure.
+Stage 3 exits only when the journey works end to end with two genuine, non-fixture Career Experience Packs in distinct careers, each reviewed and approved under its recorded release policy, separate exploration signals, no prohibited scoring, and no login before first value. The first Pack covers retail assistant work. The owner selects the second occupation after confirming a suitable short task and the applicable policy. A qualified practitioner is required only when `human-assured` applies. At least five adults participate in supervised sessions on managed Android devices; critical findings are resolved before closure.
 
 ## Authority and contracts
 
-Follow `AGENTS.md`, Product Vision, Product Contracts, Architecture, and only directly applicable ACCEPTED decisions. This plan is execution guidance, not product or architecture authority. Significant mobile, local-storage, real-content, and trusted-delivery choices require accepted ADRs and Architecture reconciliation before dependent implementation. Stage 3 closure requires separate explicit owner authority. Product Vision and Product Contract meaning are unchanged.
+Follow `AGENTS.md`, Product Vision, Product Contracts, Architecture, and only directly applicable ACCEPTED decisions. This plan is execution guidance, not product or architecture authority. Significant mobile, local-storage, real-content, and trusted-delivery choices require accepted ADRs and Architecture reconciliation before dependent implementation. Stage 3 closure requires separate explicit owner authority. The 2026-09-29 owner-authorized Product Vision §5 and YWAY-P019/YWAY-E005 amendments, recorded in YWAY-D006, govern this plan; earlier plan language requiring a practitioner for every Pack is superseded.
 
 Primary contracts: `YWAY-P001`–`YWAY-P006`, `YWAY-P010`–`YWAY-P013`, `YWAY-P019`, `YWAY-P022`–`YWAY-P025`, `YWAY-P028`, and `YWAY-E005`–`YWAY-E006`. Preserve the `YWAY-P007`/`YWAY-E002` distinction between exploration and stronger evidence, and `YWAY-P020` sponsorship disclosure where applicable. No private youth data may flow to employers (`YWAY-P018`, `YWAY-E001`).
 
 ## Current and target state
 
-- Stage 2 is COMPLETE and supplies a deterministic, reviewed content lifecycle under `YWAY-D003`; its only released Pack is explicitly synthetic and fixture-only. Its release boundary currently refuses real-content artifacts.
-- The pilot-scoped delivery and local-state mechanisms are accepted (`YWAY-D004`), and the pilot-scoped real-content and trusted-build mechanism is accepted (`YWAY-D005`, with distribution gated on the `YWAY-D004` device inventory). Production content distribution, a production CMS or authoring workflow, identity and authorization, and synchronization remain unaccepted and keep their later triggers. No real reviewer, real Pack, build, device distribution, or supervised session is authorized by either decision.
+- Stage 2 is COMPLETE and supplies a deterministic, reviewed content lifecycle under `YWAY-D003`; its only released Pack is explicitly synthetic and fixture-only. S3-04/#60 has since added a real-content pilot artifact path, but its executable gates still require practitioner review. YWAY-D006 authorizes the policy-aware path for later implementation; it does not make that path executable in this documentation phase.
+- The pilot-scoped delivery and local-state mechanisms are accepted (`YWAY-D004`), and the pilot-scoped real-content and trusted-build mechanism is accepted (`YWAY-D005`, narrowly amended by `YWAY-D006`, with distribution gated on the `YWAY-D004` device inventory). Production content distribution, a production CMS or authoring workflow, identity and authorization, and synchronization remain unaccepted and keep their later triggers. Neither decision authorizes a build, device distribution, supervised session, or public release.
 - The target is a privately distributed, supervised Android build with complete verified Packs bundled into it. Responses and reflections remain in private app storage on the device, survive app restart, and can be erased after a session. They must not enter cloud/device backup, shared storage, exports, or diagnostic logs. No account, backend, telemetry, or synchronization is added in this stage.
 
 ## Scope and boundaries
 
 - Provide age screening for 18+ participants, without collecting birth dates; verify eligibility separately during moderated recruitment.
-- Show Pack previews with what the participant will try, expected time, language and connectivity needs, practitioner-review status, and sponsorship where relevant.
+- Show Pack previews with what the participant will try, expected time, language and connectivity needs, AI-review and owner-approval status, explicit practitioner-review presence or absence, and sponsorship where relevant. Never present AI or owner review as human practitioner assurance.
 - Extend an identified experiment with an optional localized interactive work task: scenario, action prompt, response choices, and contextual qualitative feedback. Keep the six-part experiment structure and exact-version review scope. A response is a clue for reflection, never a career or capability verdict.
 - Keep local exploration session records tied to Pack ID, version, digest, and experiment ID. Record task response, what was noticed, reflection, and whether a concrete next action was started. Keep interest, observed behavior, preferences, and constraints distinct wherever collected. Do not represent exploration as practice, verified assessment, or Portfolio evidence.
 - Offer pause and a working route to another career after a meaningful trial; offer a deeper task only when suitable content exists. Comparison is optional and never a gate. Viewing or selecting a next-step option is not counted as starting an action.
@@ -43,9 +43,10 @@ Non-goals: public release, take-home installs, 16–17 access, account or anonym
 
 1. Record owner activation in the kickoff issue and keep the roadmap, stage index, and active-plan reference aligned.
 2. Accept a mobile-delivery ADR covering the first physical app boundary, Android implementation, local durable storage, backup/export/shared-storage and diagnostic-log boundaries, offline behavior, accessibility feasibility, and managed-device distribution. The ADR evaluates candidates rather than treating Architecture's candidate table as accepted.
-3. **Satisfied 2026-09-28 by `YWAY-D005`** (`docs/decisions/005-real-content-trusted-build.md`, ACCEPTED): a real-content pilot ADR covering actual practitioner identity/qualification evidence, non-fixture release eligibility, protected trusted build input, fixture isolation, and withdrawal of managed builds after content retirement, with no credential documents or sensitive reviewer material in Git. Acceptance gated **distribution** on the `YWAY-D004` managed-device inventory, which does not yet exist.
-4. The content team secures real qualified practitioner and fluent Burmese review for each Pack. The owner selects the second occupation after reviewer access and task suitability are demonstrated. A missing reviewer blocks the Pack, pilot, and closure.
-5. The pilot operator can supervise managed Android devices, obtain separate research consent, and erase local participant data after each session. If this operating condition fails, do not distribute the build to participants.
+3. **Satisfied by `YWAY-D005`, as amended by `YWAY-D006`**: the real-content pilot decision covers practitioner identity/qualification evidence when applicable, non-fixture release eligibility, protected trusted build input, fixture isolation, and withdrawal of managed builds after content retirement, with no sensitive reviewer material in Git. Distribution still requires the `YWAY-D004` managed-device inventory.
+4. Before an `ai-owner` Pack is released or shown to a participant, implement and verify the YWAY-D006 policy-aware lifecycle, attestations, provenance, artifact/consumer checks, and owner clearance in a separate implementation PR. Obtain exact-version AI review and owner approval for each Pack; obtain a real qualified practitioner review if the selected policy is `human-assured`. The owner selects the second occupation after task suitability and policy applicability are established. Practitioner unavailability alone does not block `ai-owner` development or pilot closure.
+5. Obtain fluent Burmese review for each Pack. The fluent project owner may perform it; if the owner authored or translated the text, label it owner fluent/self-review rather than independent review. Public-release target-user comprehension validation remains separate, and the pilot's Burmese rendering restriction remains in force until #66 resolves it.
+6. The pilot operator can supervise managed Android devices, obtain separate research consent, and erase local participant data after each session. If this operating condition fails, do not distribute the build to participants.
 
 ## GitHub issue map and ordered work
 
@@ -57,10 +58,11 @@ Each issue uses `.github/ISSUE_TEMPLATE/task.md`, cites this plan and applicable
 | S3-02 — #58 | Decide real-content pilot and trusted-build ADR, including retirement response. | Activation |
 | S3-03 — #59 | Add optional localized interactive-trial content and exact-version validation/review coverage. | S3-02 |
 | S3-04 — #60 | Permit genuinely reviewed non-fixture pilot artifacts while rejecting fixtures, stale review, tampering, and retirement. | S3-02–03 |
-| S3-05 — #61 | Author and review a real retail assistant Pack with a short work task. | S3-04; real reviewers |
-| S3-06 — #64 | Obtain owner selection, then author and review a second distinct career Pack. | S3-04; owner selection; real reviewers |
-| S3-07 — #62 | Build Android age screen, discovery, previews, and accessible navigation without login. | S3-01 |
-| S3-08 — #63 | Verify and bundle complete Packs from a pinned trusted source; refuse invalid or retired content. | S3-01–02; S3-04–06 |
+| Stage 3 policy implementation — issue to assign | Add the YWAY-D006 `ai-owner` and `human-assured` paths while preserving #60's existing refusals and historical artifacts. No pilot Pack uses `ai-owner` before this passes review and verification. | YWAY-D006; S3-04 |
+| S3-05 — #61 | Author and review a real retail assistant Pack with a short work task under its selected policy. | S3-04; policy implementation before `ai-owner` release; practitioner access only if `human-assured` |
+| S3-06 — #64 | Obtain owner selection, then author and review a second distinct career Pack under its selected policy. | S3-04; owner selection; policy implementation before `ai-owner` release; practitioner access only if `human-assured` |
+| S3-07 — #62 | Build Android age screen, discovery, truthful review-status previews, and accessible navigation without login. | S3-01; policy-aware labels before pilot |
+| S3-08 — #63 | Verify and bundle complete policy-eligible Packs from a pinned trusted source; refuse invalid or retired content. | S3-01–02; S3-04–06; policy implementation before `ai-owner` build |
 | S3-09 — #65 | Deliver the short task, noticing, qualitative feedback, and reflection flow. | S3-03; S3-07–08 |
 | S3-10 — #68 | Add reversible next steps, local session recovery, and verified erase across permitted device data paths. | S3-06; S3-09 |
 | S3-11 — #66 | Validate offline recovery, Burmese rendering, themes, 200% text, contrast, touch targets, screen reader, reduced motion, and reading order. | S3-07–10 |
@@ -69,19 +71,56 @@ Each issue uses `.github/ISSUE_TEMPLATE/task.md`, cites this plan and applicable
 
 ## Validation strategy
 
-- Automated tests cover anonymous first value; the identified experiment's six parts; qualitative feedback without score or verdict; signal separation; pause, deeper-when-available, and working try-another paths; started action versus selected option; local recovery and erase; exclusion of private responses from app-managed exports and diagnostics; offline task completion; artifact digest/version/provenance checks; and rejection of fixture, unreviewed, tampered, mismatched, or retired content.
+- Automated tests cover anonymous first value; the identified experiment's six parts; qualitative feedback without score or verdict; signal separation; pause, deeper-when-available, and working try-another paths; started action versus selected option; local recovery and erase; exclusion of private responses from app-managed exports and diagnostics; offline task completion; both policy paths; artifact digest/version/provenance checks; and rejection of fixture, unreviewed, stale, policy-mismatched, tampered, or retired content. Preserve historical practitioner-reviewed artifact verification.
 - Manual Android checks cover compact and large phones, light/dark themes, 200% text scaling, contrast, touch targets, screen reader, reduced motion, Burmese wrapping/reading order, clear offline/no-sync states, backup/shared-storage/log inspection, and reset/erase verification. Record device and software versions actually used.
 - Moderated pilot evidence covers at least five 18+ participants, whether they can complete the short task and understand its insight and next step, and any critical comprehension, accessibility, privacy, or safeguarding finding. Discovery notes are non-authoritative and do not change contracts by themselves.
 - Run `pnpm agent:doctor`, `pnpm verify:fast`, `pnpm verify:invariants`, and `pnpm verify:full` at the relevant integration/closure points; report actual outcomes. Structural checks do not substitute for semantic, device, privacy, or practitioner review.
 
 ## Risks and operational limits
 
-- Stage 2's fixture release path cannot be relabeled as real content. The new path must prove actual reviewer qualification and exact-scope approval before a Pack reaches a participant. `YWAY-D005` closes Pack **identity** and **provenance** reuse: a real Pack needs a new Pack ID, and fixture Pack IDs are permanently fixture-classified by a verifier-side rule. It does **not** close copying fixture *content* under a new Pack ID with rewritten actor strings, which no repository mechanism detects and which is review-enforced only.
-- Reviewer identity is not established by the repository. Nothing authenticates an actor, a real Pack's qualification evidence may today be any string the `fixture:` rule does not constrain, and the evidence character class does not forbid a name or a numeric identifier. `YWAY-D005` requires the inverse rules, opaque owner-issued actor handles, and a per-session check of the approving, founding, and releasing actors of every embedded Pack against the owner record, and makes the secret-scan check a precondition for the first real reviewer record.
-- The substantive qualification bar for a real practitioner — what relevant occupation experience requires, and who may set it — is an open owner product decision. `YWAY-D005` specifies who performs the check and where evidence is held; it does not set the bar, and a missing reviewer still blocks the Pack, the pilot, and closure.
+- Stage 2's fixture release path cannot be relabeled as real content. The selected policy must prove exact-scope review and owner approval, plus actual reviewer qualification under `human-assured`, before a Pack reaches a participant. `YWAY-D005` closes Pack **identity** and **provenance** reuse: a real Pack needs a new Pack ID, and fixture Pack IDs are permanently fixture-classified by a verifier-side rule. It does **not** close copying fixture *content* under a new Pack ID with rewritten actor strings, which no repository mechanism detects and which is review-enforced only.
+- Actor identity is not established by the repository. Nothing authenticates an actor, and a real practitioner's qualification evidence may today be any string the `fixture:` rule does not constrain. Policy-aware implementation must retain opaque owner-issued handles, a per-session check of the policy-required approving and releasing actors of every embedded Pack against the owner record, and the secret-scan precondition for the first real practitioner record. Neither an AI actor label nor owner approval may be presented as practitioner verification.
+- The substantive qualification bar for a real practitioner — what relevant occupation experience requires, and who may set it — is an open owner product decision. `YWAY-D005` specifies who performs the check and where evidence is held; it does not set the bar. A missing reviewer blocks a `human-assured` Pack but not an `ai-owner` Pack once its implementation passes the required gates.
 - Bundled Packs can remain on an installed build after a later retirement. Limit distribution to tracked managed devices; withdraw or replace affected builds and stop sessions promptly. This does not claim an offline remote-revocation mechanism or authorize take-home distribution. `YWAY-D005` makes the response explicit and adds the limit that is easy to miss: retirement is a **distribution** response over inventoried devices, not a content recall. Retired content stays permanently readable in public Git history, in `artifacts/`, in retained APKs, and in any copy a participant already extracted. The response is also **inert** until the `YWAY-D004` managed-device inventory exists, so no build may be distributed before then.
 - Device-only records avoid a remote youth-data path only if OS backup, shared storage, exports, and diagnostics do not copy private responses. Verify those boundaries and managed-device erasure. Do not erase until the participant's session and any consented research capture are complete; explain local-only behavior plainly.
 - A single career cannot satisfy the working try-another route. If the second Pack is unavailable, do not claim the Stage 3 exit gate has passed.
+
+## Phase 1 governance authorization (2026-09-29)
+
+The owner instructed a documentation-only governance change. Product Vision §5, YWAY-P019/YWAY-E005,
+Architecture, and YWAY-D006 define the policy-aware target; D003/D005 carry explicit amendment notes.
+This phase does not alter lifecycle code, schemas, release gates, attestations, artifacts, or Pack
+provenance. The existing practitioner-required executable gate remains in force until the separate
+policy implementation is reviewed and merged. No Pack, build, session, public release, Stage 3
+closure, or future Stage activation is authorized by this documentation change.
+
+Progress:
+
+- [x] Record the owner decision in canonical product and architecture authority and the accepted-decision chain.
+- [x] Replace the Stage 3 universal reviewer dependency with a policy-dependent acceptance rule while preserving pilot distribution and public-release gates.
+- [ ] Implement and verify the policy-aware path in a separate PR before any `ai-owner` Pack reaches a participant.
+- [ ] Complete Stage 3 device, content, session, and closure evidence under the selected policy.
+
+Decision: use a versioned, owner-governed `ai-owner`/`human-assured` policy rather than a Pack-authored
+bypass flag. Discovery: S3-04/#60 already permits real pilot artifacts but still requires practitioner
+review, so this phase creates no executable AI-and-owner route. The substantive practitioner
+qualification bar and future risk triggers remain open owner decisions. The fluent owner may review
+Burmese, with self-review labelled when the owner also authored or translated it; target-user
+comprehension and runtime accessibility remain separate gates.
+
+Phase 1 completion requires the specified documentation and invariant checks, independent review of
+the changed control surfaces, and a PR that lists the superseded statements. Record actual results
+below before claiming completion.
+
+Verification on 2026-09-29: `node --import tsx scripts/check-doc-consistency.ts` and
+`node --import tsx scripts/check-product-invariants.ts` passed; the installed Prettier binary's
+`--check` over all changed Markdown and `git diff --check` passed. The first `pnpm exec prettier`
+attempt failed because pnpm could not open its cache SQLite database in the isolated worktree; the
+installed Prettier binary was used directly. No implementation or device tests ran in Phase 1.
+Independent product-integrity, architecture, security/privacy, and test reviewer adapters inspected
+the diff. Architecture found a conflict in the Burmese translator/reviewer role matrix; a narrow
+operational-document correction was made and the same reviewer confirmed resolution. All four
+reported no remaining material finding. PR creation and CI remain separate from these local checks.
 
 ## Kickoff verification
 
@@ -487,16 +526,19 @@ describes source and test inspection.
       (`YWAY-D004`) and Architecture reconciled; S3-02 accepted 2026-09-28
       (`YWAY-D005`, `docs/decisions/005-real-content-trusted-build.md`) with an explicit named
       residual-risk acceptance, and Architecture Sections 3, 6, 9, 10, and 11 reconciled.
-- [ ] S3-03–S3-06 content and real review gates complete. S3-04 (#60) mechanism complete and
-      verified. S3-05 (#61) content authored and registered 2026-09-29: `retail-assistant@1`
+- [ ] S3-03–S3-06 content and policy-required review gates complete. S3-04 (#60) practitioner-required
+      real-content mechanism is complete and verified. S3-05 (#61) content was authored and
+      registered on 2026-09-29: `retail-assistant@1`
       (`content/packs/retail-assistant/1.yaml`, Burmese `localizations/1.yaml`, provenance genesis
       sequences 1–2), `fixtureOnly: false`, `aiAssisted: true`, classification `real`, status
       `authored`, zero attestations. It is a five-minute self-contained in-app task with three
-      choices, unsponsored and with no media. **No real review exists and the Pack is not
-      releasable**: the founder, practitioner, fluent-Burmese, and accessibility reviews are all
-      outstanding, and S3-05 is blocked at the owner gate below. The genuinely reviewed real Packs,
-      real reviewers, and fluent Burmese reviews (#61, #64) remain outstanding and block the
-      milestone.
+      choices, unsponsored and with no media. **No review attestation exists and the Pack is not
+      releasable.** Founder, practitioner, fluent-Burmese, and accessibility reviews had not occurred
+      when PR #76 merged; no AI review or owner approval has been recorded either. YWAY-D006 makes
+      qualified-practitioner review mandatory only under `human-assured`, while the current commands
+      still require it until the policy-aware path is implemented. That implementation, two Packs
+      reviewed under their selected policies, and fluent Burmese review remain outstanding for the
+      milestone. The authored draft and its verification do not satisfy S3-05's release gate.
 - [x] S3-05 draft review corrections on 2026-09-29: the Burmese privacy assurance now says app
       content is not shared with shops; the task and linked experiment text were rewritten; the
       in-app noticing prompt now asks about the chosen response; and the shop visit can be
@@ -507,7 +549,8 @@ describes source and test inspection.
       the supported-environment rerun passed with 509 tests, zero failed, and zero skipped, plus
       schema, content, secret, invariant, and documentation checks. `content:status` still reports
       `authored` with zero attestations. Fluent Burmese, practitioner, founder, accessibility, and
-      participant review remain open.
+      participant reviews had not occurred at that point. YWAY-D006 changes future content-review
+      policy; Burmese, accessibility, and participant validation remain separate gates.
 - [x] Follow-up privacy-copy correction on 2026-09-29: both languages now describe the app's
       device storage and no-upload/no-send behavior without promising that nobody else can see a
       participant's screen. The shop next-fork copy was narrowed to what the app sends. The
@@ -520,7 +563,7 @@ describes source and test inspection.
       skipped, and all schema, content, secret, invariant, and documentation checks passing.
       Independent product-integrity, architecture, security/privacy, and test reviewer roles
       inspected the draft change set and reported no material findings. This is ready for human PR
-      review, not Pack release; all named human and device gates above remain open.
+      review, not Pack release; the draft passed no content-review or device-distribution gate.
 - [ ] S3-07–S3-11 youth flow and device validation complete.
 - [ ] S3-12 moderated pilot evidence complete and critical findings resolved.
 - [ ] S3-13 verification, independent review, documentation, and owner closure authority recorded.
@@ -555,7 +598,8 @@ describes source and test inspection.
 | 2026-09-27 | Start with a real retail assistant Pack and a second owner-selected career Pack; require real practitioner and fluent Burmese review. | Owner-approved scope; exact second occupation and reviewer eligibility are gated before authoring/release. |
 | 2026-09-28 | S3-02: accept real-content pilot eligibility and a trusted-build input for the private pilot. Owner-led reviewer vetting with identity and qualification evidence in an owner-controlled private record outside Git; a new Pack ID and fresh provenance history for real content with fixture Pack IDs permanently fixture-classified; pilot eligibility held separate from public-release authorization; an owner-approved full commit SHA as the build's trusted root, built from a clean checkout, verified by the repository verifier and an exhaustive `artifacts/` comparison, and embedding only an explicit `(packId, packVersion)` allowlist; a fresh fail-closed owner clearance before every supervised session; and a retirement response stating plainly that an offline installed APK cannot revoke itself and that retirement cannot retract public repository content. Recorded as `docs/decisions/005-real-content-trusted-build.md` (`YWAY-D005`, **ACCEPTED**); Architecture Sections 3, 6, 9, 10, and 11 reconciled. | Explicit owner acceptance on 2026-09-28 of six named residual risks, with **distribution** rather than implementation gated on the `YWAY-D004` managed-device inventory, which does not yet exist. #60 and #63 are unblocked against an accepted rule. Accepting the ADR authorized no real reviewer, Pack, build, device distribution, session, or public release. The substantive qualification bar for a real practitioner remains an open owner product decision. |
 | 2026-09-28 | S3-01: accept Expo/React Native with app-private `expo-sqlite` as the Android delivery and device-only local state boundary, with `adb`-installed locally signed builds on inventoried managed devices. Recorded as `docs/decisions/004-android-delivery-local-state.md` (`YWAY-D004`, **ACCEPTED**); Architecture Sections 6, 9, 10, and 11 reconciled. | Explicit owner acceptance on 2026-09-28 of the named residual risk, gating **distribution rather than implementation** on the physical-device matrix. Architecture Section 11 "Partial Pack download behavior" settled as decided-against on the same date. #62 and #63 are unblocked; supervised sessions remain gated on the real device matrix. YWAY-D004 is reserved for #57, so #58 uses YWAY-D005. |
+| 2026-09-29 | Adopt YWAY-D006's AI-and-owner release policy with optional or policy-required qualified practitioner assurance. | Explicit owner direction supersedes the 2026-09-27 universal-practitioner planning dependency and narrowly amends D003/D005. Existing executable gates remain in force until a separate policy implementation is verified. |
 
 ## Completion criteria
 
-Stage 3 may close only when both accepted ADRs and real-content gates are evidenced; two distinct reviewed Packs are valid for the private build; the no-login 18+ journey works end to end offline with qualitative, reversible guidance and a started next-action path; local youth work survives restart and can be erased; required Android accessibility and Burmese checks pass; at least five moderated adult sessions have no unresolved critical finding; repository verification and risk-relevant independent review results are recorded truthfully; and the owner explicitly authorizes closure. Stage 4 remains PLANNED.
+Stage 3 may close only when the applicable accepted decisions (YWAY-D004, YWAY-D005 as amended, and YWAY-D006) and real-content gates are evidenced; two distinct Packs satisfying their recorded release policies are valid for the private build; the no-login 18+ journey works end to end offline with qualitative, reversible guidance and a started next-action path; local youth work survives restart and can be erased; required Android accessibility and Burmese checks pass; at least five moderated adult sessions have no unresolved critical finding; repository verification and risk-relevant independent review results are recorded truthfully; and the owner explicitly authorizes closure. Stage 4 remains PLANNED.

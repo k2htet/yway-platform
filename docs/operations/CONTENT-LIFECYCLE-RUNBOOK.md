@@ -12,6 +12,9 @@ contracts it protects are `YWAY-P002`, `YWAY-P005`/`YWAY-E006`, `YWAY-P019`/`YWA
 real-content path, the private pilot, the release authorization scope, and the retirement response
 are governed by the ACCEPTED decision
 [`docs/decisions/005-real-content-trusted-build.md`](../decisions/005-real-content-trusted-build.md).
+YWAY-D006 authorizes a later policy-aware AI-and-owner path and narrowly amends D003/D005; this
+runbook documents the current practitioner-required commands until that path is implemented. Do not
+use these instructions to claim an AI-and-owner release has passed.
 
 Authoring syntax is in [`CONTENT-OPERATIONS-GUIDE.md`](CONTENT-OPERATIONS-GUIDE.md); reviewer
 eligibility and role separation are in
@@ -20,7 +23,7 @@ eligibility and role separation are in
 Lifecycle status is a projection of cumulative history, not a stored field. Nothing in this runbook
 edits, reorders, or deletes a provenance event.
 
-The happy path is
+The current executable happy path is
 `authored → founder-reviewed → practitioner-reviewed → artifact-eligible → artifact-released`. The
 complete set of legal transitions is:
 

@@ -9,6 +9,8 @@
 - Related ExecPlan: docs/exec-plans/completed/STAGE-2-CONTENT-SYSTEM-OPERATIONS-FOUNDATION.md
 - Related Product Contracts: YWAY-P002, YWAY-P005, YWAY-P019, YWAY-P020, YWAY-P023, YWAY-P024, YWAY-E005
 
+Amendment (2026-09-29): YWAY-D006 supersedes this decision's universal founder-then-qualified-practitioner release requirement for future policy-aware releases. The Stage 2 fixture workflow described here remains an accurate historical and current executable mechanism until the separate policy implementation lands. Immutable versions, exact-version review binding, practitioner eligibility and attestations, fixture isolation, deterministic artifacts, and retirement remain binding. No existing event or artifact is relabelled.
+
 ## Context
 
 Stage 2 must make Career Experience Pack governance executable before any youth-facing delivery work begins. The repository needs a way to author a synthetic representative Pack, validate its structure, preserve cumulative provenance, bind review to an immutable version, enforce founder and qualified-practitioner review, apply localization/content-accessibility/sponsorship gates, and produce deterministic artifacts for later Stage 3 consumption.
@@ -153,9 +155,10 @@ Migration must preserve all historical provenance and review scope; no migration
 
 ## Decision History
 
-| Date       | Change                                            | Reason                                                                                                                                    |
-| ---------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-21 | Initial record created as PROPOSED                | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative                               |
-| 2026-09-21 | Clarified post-release retirement signaling       | Artifact-only consumers need a deterministic notice while historical release artifacts remain immutable                                   |
-| 2026-09-22 | Bound retirement state to a trusted snapshot root | Notice absence is meaningful only when a canonical snapshot index and its files verify against the protected Git tree                     |
-| 2026-09-22 | Accepted for Stage 2                              | Four-discipline review found no material issue, verification passed, and the product owner explicitly approved the bounded recommendation |
+| Date       | Change                                            | Reason                                                                                                                                       |
+| ---------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-21 | Initial record created as PROPOSED                | Issue #32 activates Stage 2 and requires architecture review before implementation choices become normative                                  |
+| 2026-09-21 | Clarified post-release retirement signaling       | Artifact-only consumers need a deterministic notice while historical release artifacts remain immutable                                      |
+| 2026-09-22 | Bound retirement state to a trusted snapshot root | Notice absence is meaningful only when a canonical snapshot index and its files verify against the protected Git tree                        |
+| 2026-09-22 | Accepted for Stage 2                              | Four-discipline review found no material issue, verification passed, and the product owner explicitly approved the bounded recommendation    |
+| 2026-09-29 | Narrowly amended by YWAY-D006                     | Owner-authorized AI-and-owner release policy replaces the universal human gate while preserving the Stage 2 mechanisms and historical record |
