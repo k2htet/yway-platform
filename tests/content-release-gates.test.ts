@@ -898,7 +898,7 @@ test("rejects false sponsorship disclosure or editorial-independence confirmatio
   }
 });
 
-test("rejects a production-classified Pack at the Stage 2 gate", () => {
+test("refuses a Pack in the permanently reserved fixture- ID namespace at the release gate", () => {
   const setupResult = setup();
   expectGateFailure(
     () =>
@@ -906,7 +906,7 @@ test("rejects a production-classified Pack at the Stage 2 gate", () => {
         ...gateInput(setupResult),
         pack: makePack({ fixtureOnly: false }),
       }),
-    "Stage 2 release gates accept fixture-only Packs only",
+    `permanent "fixture-" Pack-ID rule`,
   );
 });
 
@@ -1143,12 +1143,24 @@ test("rejects mismatched fixture classification on localized content and S2-06 a
   const attestationSetup = setup();
   const tampered = attestationSetup.attestations.map((attestation) =>
     attestation.kind === "accessibility-review"
-      ? { ...attestation, fixtureOnly: false }
+      ? { ...attestation, fixtureOnly: false, actorId: "accessibility-handle-c3" }
       : attestation,
   );
   expectGateFailure(
     () => evaluateReleaseGates({ ...gateInput(attestationSetup), attestations: tampered }),
     "attestation fixtureOnly false",
+  );
+
+  // The inverse rule: a synthetic identity cannot be attributed to a real reviewer,
+  // so a `fixtureOnly: false` attestation may not carry a `fixture-` actor.
+  const syntheticActor = attestationSetup.attestations.map((attestation) =>
+    attestation.kind === "accessibility-review"
+      ? { ...attestation, fixtureOnly: false }
+      : attestation,
+  );
+  expectGateFailure(
+    () => evaluateReleaseGates({ ...gateInput(attestationSetup), attestations: syntheticActor }),
+    "must not be a fixture- identity on real content",
   );
 });
 

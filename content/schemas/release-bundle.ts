@@ -1,6 +1,12 @@
 import { z } from "zod";
 import {
+  contentClassificationSchema,
+  contentClassification,
+  packIdClassificationIssue,
+} from "../classification.js";
+import {
   dateTimeSchema,
+  fixtureOnlySchema,
   packIdSchema,
   schemaVersionLiteral,
   sha256DigestSchema,
@@ -21,8 +27,9 @@ import { provenanceEventLogSchema } from "./provenance-event.js";
  * boundary. Qualification documents, attestation notes, and private retirement
  * reasons are deliberately absent.
  *
- * Stage 2 accepts fixture-only Packs only, so the classification is fixed and
- * there is no production override on this schema.
+ * Classification is derived from the validated source and is a statement about
+ * synthetic-versus-genuine content only. Release authorization scope is a separate
+ * owner-granted field on the release manifest and is deliberately not present here.
  */
 export const releaseBundleSchema = z
   .object({
@@ -31,8 +38,8 @@ export const releaseBundleSchema = z
     packVersion: versionSchema,
     contentDigest: sha256DigestSchema,
     localizedContentDigest: sha256DigestSchema,
-    fixtureOnly: z.literal(true),
-    classification: z.literal("fixture"),
+    fixtureOnly: fixtureOnlySchema,
+    classification: contentClassificationSchema,
     releasedAt: dateTimeSchema,
     pack: packSourceSchema,
     localizedContent: localizedContentSchema,
@@ -59,6 +66,21 @@ export const releaseBundleSchema = z
         code: "custom",
         path: ["pack", "fixtureOnly"],
         message: `bundle pack fixtureOnly ${value.pack.fixtureOnly} does not match bundle fixtureOnly ${value.fixtureOnly}`,
+      });
+    }
+    if (contentClassification(value.fixtureOnly) !== value.classification) {
+      context.addIssue({
+        code: "custom",
+        path: ["classification"],
+        message: `bundle classification "${value.classification}" does not match bundle fixtureOnly ${value.fixtureOnly}; classification is derived from the validated source (fixture isolation must be consistent across the release boundary)`,
+      });
+    }
+    const packIdIssue = packIdClassificationIssue(value.packId, value.fixtureOnly, ["packId"]);
+    if (packIdIssue !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: [...packIdIssue.path],
+        message: packIdIssue.message,
       });
     }
     if (value.localizedContent.packId !== value.packId) {

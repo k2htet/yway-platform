@@ -33,11 +33,13 @@ const scripts = manifest.scripts ?? {};
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const fastModeScripts = ["lint", "typecheck"] as const;
 const fullModeInitialScripts = ["lint", "typecheck", "format:check"] as const;
-// Pin the whole governed content control surface: generated-schema drift and
-// content/artifact drift must both fail `verify:full`, which CI runs.
+// Pin the whole governed content control surface: generated-schema drift,
+// content/artifact drift, and credential exposure must all fail `verify:full`,
+// which CI runs.
 const expectedFullModePostScripts = [
   "content:schemas:check",
   "content:verify",
+  "content:secrets:check",
   "verify:invariants",
   "verify:docs",
 ] as const;

@@ -1077,7 +1077,7 @@ function pinnedFixtureRepository(): { root: string; commit: string } {
 }
 
 test("the trusted-snapshot evidence for S2-08 cannot be silently skipped", () => {
-  // The four git-backed tests below are the only evidence that artifact consumers
+  // The git-backed tests below are the only evidence that artifact consumers
   // refuse a retired version and detect notice deletion. A silent `test.skip` would
   // let full verification pass without running them, so availability is asserted here
   // as an ordinary, non-skipped test.

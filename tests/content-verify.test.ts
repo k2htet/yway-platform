@@ -192,10 +192,7 @@ test("content:verify detects a tampered release manifest", () => {
   const path = manifestPath(root, fixture.pack.id, 1);
   writeFileSync(
     path,
-    readFileSync(path, "utf8").replace(
-      '"classification": "fixture"',
-      '"classification": "production"',
-    ),
+    readFileSync(path, "utf8").replace('"classification": "fixture"', '"classification": "real"'),
     "utf8",
   );
   const result = runVerifyCommand([], options(root));

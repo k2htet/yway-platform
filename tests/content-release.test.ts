@@ -782,7 +782,7 @@ test("content:release refuses a retired version", () => {
   expectFailureMessage(result, "a retired version is no longer artifact-eligible");
 });
 
-test("content:release offers no production override for fixture content", () => {
+test("content:release offers no classification or scope override for fixture content", () => {
   const root = makeRoot();
   const pack = driveToReleaseReady(root);
 
@@ -794,7 +794,8 @@ test("content:release offers no production override for fixture content", () => 
   expectFailureMessage(nonFixtureActor, "must be a fixture- identity");
   assert.equal(existsSync(bundlePath(root, pack.id, 1)), false);
 
-  // A production-classifying flag does not exist; unknown options are refused.
+  // Classification is derived from the validated source, so no classification
+  // override flag exists; unknown options are refused.
   const override = runReleaseCommand(
     [
       "--pack",
@@ -804,12 +805,22 @@ test("content:release offers no production override for fixture content", () => 
       "--actor",
       "fixture-operator-one",
       "--classification",
-      "production",
+      "real",
     ],
     options(root),
   );
   expectExit(override, 2);
   expectFailureMessage(override, 'unknown option "--classification"');
+
+  // Fixture content carries no release authorization scope, so the option is
+  // refused rather than recorded.
+  const scopeOnFixture = runReleaseCommand(
+    [...releaseArgs(pack.id, 1), "--authorization-scope", "pilot"],
+    options(root),
+  );
+  expectExit(scopeOnFixture, 2);
+  expectFailureMessage(scopeOnFixture, "only accepted when releasing real content");
+  assert.equal(existsSync(manifestPath(root, pack.id, 1)), false);
 
   expectExit(runReleaseCommand(releaseArgs(pack.id, 1), options(root)), 0);
   const manifest = strictParse(
@@ -818,9 +829,10 @@ test("content:release offers no production override for fixture content", () => 
   );
   assert.equal(manifest.classification, "fixture");
   assert.equal(manifest.fixtureOnly, true);
+  assert.equal(manifest.authorizationScope, undefined);
 
-  // A non-fixture Pack cannot even be registered, so the release boundary has no
-  // production-classified path to reach.
+  // A real Pack can never occupy the reserved `fixture-` namespace, so the release
+  // boundary has no way to reach it from this identifier.
   const productionRoot = makeRoot();
   writePackSource(productionRoot, makePack({ fixtureOnly: false }));
   const registered = runNewVersionCommand(
@@ -828,7 +840,7 @@ test("content:release offers no production override for fixture content", () => 
     options(productionRoot),
   );
   expectExit(registered, 1);
-  expectFailureMessage(registered, "not fixture-only");
+  expectFailureMessage(registered, `permanent "fixture-" Pack-ID rule`);
 });
 
 test("content:release refuses a release timestamp that precedes the eligibility event", () => {

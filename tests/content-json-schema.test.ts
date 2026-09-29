@@ -8,6 +8,10 @@ import type { ErrorObject, ValidateFunction } from "ajv";
 import {
   generatedSchemas,
   packSourceSchema,
+  practitionerEligibilitySchema,
+  releaseBundleSchema,
+  releaseManifestSchema,
+  reviewAttestationSchema,
   retirementNoticeSchema,
   retirementRecordSchema,
   strictParse,
@@ -412,14 +416,21 @@ test("generated attestation schema enforces localization, accessibility, and spo
   assert.equal(validate(sponsorshipChanges), true, firstValidationError(validate));
 });
 
-test("generated manifest schema rejects production classification for fixture records", () => {
+test("generated manifest schema rejects the retired production value and a real claim on fixture content", () => {
   const validate = compileGenerated("release-manifest");
 
   assert.equal(validate(validGeneratedManifest()), true, firstValidationError(validate));
+  // The `production` value is retired, so it is not in the value domain at all.
   assert.equal(
     validate(validGeneratedManifest({ classification: "production" })),
     false,
-    "fixtureOnly manifest cannot be production-classified",
+    "the retired production value is not a classification",
+  );
+  // And fixture-only content may not be recorded as real.
+  assert.equal(
+    validate(validGeneratedManifest({ classification: "real" })),
+    false,
+    "fixtureOnly manifest cannot be real-classified",
   );
 });
 
@@ -661,7 +672,10 @@ test("generated schemas reject a task that is missing, blank, too short, or unkn
   }
 });
 
-function validGeneratedBundle(task: Record<string, unknown> | undefined): Record<string, unknown> {
+function validGeneratedBundle(
+  task: Record<string, unknown> | undefined,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
   const digest = "a".repeat(64);
   const pack = withGeneratedInteractiveTask(runtimeValidPackFixture(), task);
   const localized = withGeneratedInteractiveTask(runtimeValidLocalizedFixture(), task);
@@ -695,6 +709,7 @@ function validGeneratedBundle(task: Record<string, unknown> | undefined): Record
         },
       ],
     },
+    ...overrides,
   };
 }
 
@@ -936,6 +951,22 @@ function validGeneratedRetirementRecord(): Record<string, unknown> {
   };
 }
 
+function validGeneratedEligibility(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    actorId: "fixture-practitioner-one",
+    fixtureOnly: true,
+    occupations: ["local-guide"],
+    status: "active",
+    verification: { method: "manual", status: "verified", verifiedOn: "2026-09-01" },
+    validFrom: "2026-09-01",
+    validUntil: "2027-09-01",
+    evidenceReferences: ["fixture:qualification-note"],
+  };
+}
+
+const validGeneratedRetirement = validGeneratedRetirementRecord;
+
 function validGeneratedRetirementNotice(): Record<string, unknown> {
   return {
     schemaVersion: 1,
@@ -993,5 +1024,210 @@ test("generated retirement-notice schema matches runtime binding requirements", 
     () => strictParse(retirementNoticeSchema, missingManifest),
     StrictValidationError,
     "runtime must require the release manifest digest too",
+  );
+});
+
+/**
+ * The generated JSON Schemas carry the classification conditionals as data, so each
+ * one is asserted here against a record the runtime schemas also refuse. The
+ * generated rendering is the portable contract; runtime validation stays
+ * authoritative, and a conditional that silently stopped meaning anything would
+ * otherwise leave a JSON-Schema consumer accepting a record the pipeline refuses.
+ */
+test("generated schemas enforce the real-content inverse classification rules", () => {
+  const eligibility = compileGenerated("practitioner-eligibility");
+  const realEligibility = validGeneratedEligibility();
+  realEligibility["fixtureOnly"] = false;
+  realEligibility["actorId"] = "reviewer-handle-a7";
+  realEligibility["evidenceReferences"] = ["owner-record:vetting-2026-001"];
+  assert.equal(eligibility(realEligibility), true, firstValidationError(eligibility));
+  const syntheticActor = structuredClone(realEligibility);
+  syntheticActor["actorId"] = "fixture-practitioner-one";
+  assert.equal(
+    eligibility(syntheticActor),
+    false,
+    "a real eligibility record may not carry a fixture- identity",
+  );
+  assert.throws(
+    () => strictParse(practitionerEligibilitySchema, syntheticActor),
+    StrictValidationError,
+  );
+  const syntheticEvidence = structuredClone(realEligibility);
+  syntheticEvidence["evidenceReferences"] = ["fixture:qualification-note"];
+  assert.equal(
+    eligibility(syntheticEvidence),
+    false,
+    "a real eligibility record may not cite fixture: evidence",
+  );
+  assert.throws(
+    () => strictParse(practitionerEligibilitySchema, syntheticEvidence),
+    StrictValidationError,
+  );
+
+  const attestation = compileGenerated("review-attestation");
+  const realAttestation = validGeneratedAttestation({ actorId: "reviewer-handle-a7" });
+  realAttestation["fixtureOnly"] = false;
+  assert.equal(attestation(realAttestation), true, firstValidationError(attestation));
+  const syntheticAttestationActor = structuredClone(realAttestation);
+  syntheticAttestationActor["actorId"] = "fixture-founder-one";
+  assert.equal(
+    attestation(syntheticAttestationActor),
+    false,
+    "a real attestation may not carry a fixture- identity",
+  );
+  assert.throws(
+    () => strictParse(reviewAttestationSchema, syntheticAttestationActor),
+    StrictValidationError,
+  );
+  const noted = structuredClone(realAttestation);
+  noted["note"] = "Free text that no digest binds.";
+  assert.equal(attestation(noted), false, "a real attestation may not carry a note");
+  assert.throws(() => strictParse(reviewAttestationSchema, noted), StrictValidationError);
+  const syntheticFluency = structuredClone(realAttestation);
+  syntheticFluency["kind"] = "localization-review";
+  syntheticFluency["actorId"] = "burmese-handle-d3";
+  delete syntheticFluency["contentReview"];
+  syntheticFluency["reviewEventSequence"] = 3;
+  syntheticFluency["locale"] = "my";
+  syntheticFluency["localizedContentDigest"] = generatedDigest;
+  syntheticFluency["localizationReview"] = {
+    fluentBurmeseConfirmed: true,
+    fluentReviewEvidence: "fixture:fluent-review-001",
+  };
+  assert.equal(
+    attestation(syntheticFluency),
+    false,
+    "a real localization review may not cite fixture: evidence",
+  );
+  assert.throws(
+    () => strictParse(reviewAttestationSchema, syntheticFluency),
+    StrictValidationError,
+  );
+  // The opaque-reference class on real fluency evidence is a runtime-only rule, and
+  // the generated schema is deliberately looser. Pinning the divergence here means it
+  // cannot widen unnoticed.
+  const freeTextFluency = structuredClone(realAttestation);
+  freeTextFluency["kind"] = "localization-review";
+  freeTextFluency["actorId"] = "burmese-handle-d3";
+  delete freeTextFluency["contentReview"];
+  freeTextFluency["reviewEventSequence"] = 3;
+  freeTextFluency["locale"] = "my";
+  freeTextFluency["localizedContentDigest"] = generatedDigest;
+  freeTextFluency["localizationReview"] = {
+    fluentBurmeseConfirmed: true,
+    fluentReviewEvidence: "Confirmed by the reviewer at the office on Tuesday",
+  };
+  assert.throws(
+    () => strictParse(reviewAttestationSchema, freeTextFluency),
+    StrictValidationError,
+    "real fluency evidence must be an opaque reference, not free text",
+  );
+  assert.match(
+    renderAllGeneratedSchemas().get(schemaFileName("review-attestation")) ?? "",
+    /opaque-reference character class that real-content localization-review evidence must match/,
+    "the generated schema must disclose the runtime-only rule it cannot express",
+  );
+
+  const retirement = compileGenerated("retirement-record");
+  const realRetirement = validGeneratedRetirement();
+  realRetirement["fixtureOnly"] = false;
+  realRetirement["actorId"] = "release-handle-f5";
+  realRetirement["reason"] = "owner-record:retirement-2026-001";
+  assert.equal(retirement(realRetirement), true, firstValidationError(retirement));
+  const syntheticRetirementActor = structuredClone(realRetirement);
+  syntheticRetirementActor["actorId"] = "fixture-operator-one";
+  assert.equal(
+    retirement(syntheticRetirementActor),
+    false,
+    "a real retirement record may not carry a fixture- identity",
+  );
+  assert.throws(
+    () => strictParse(retirementRecordSchema, syntheticRetirementActor),
+    StrictValidationError,
+  );
+  const proseRetirement = structuredClone(realRetirement);
+  proseRetirement["reason"] = "The reviewer asked us to remove it.";
+  assert.equal(
+    retirement(proseRetirement),
+    false,
+    "a real retirement reason must be an owner-record pointer",
+  );
+  assert.throws(() => strictParse(retirementRecordSchema, proseRetirement), StrictValidationError);
+});
+
+test("generated bundle and manifest schemas bind classification to the identifier and the scope", () => {
+  const bundle = compileGenerated("release-bundle");
+  const manifest = compileGenerated("release-manifest");
+  const realManifest = validGeneratedManifest({
+    fixtureOnly: false,
+    classification: "real",
+    authorizationScope: "pilot",
+  });
+  assert.equal(manifest(realManifest), true, firstValidationError(manifest));
+  const scopeMissing = { ...realManifest };
+  delete scopeMissing["authorizationScope"];
+  assert.equal(manifest(scopeMissing), false, "a real manifest must record a pilot scope");
+  assert.throws(
+    () => strictParse(releaseManifestSchema, scopeMissing as unknown),
+    /authorizationScope "pilot"/,
+  );
+  const fixtureWithScope = validGeneratedManifest({ authorizationScope: "pilot" });
+  assert.equal(manifest(fixtureWithScope), false, "a fixture manifest must not carry a scope");
+  assert.throws(
+    () => strictParse(releaseManifestSchema, fixtureWithScope as unknown),
+    /must not carry a release authorization scope/,
+  );
+  const fixtureAsReal = validGeneratedManifest({ classification: "real" });
+  assert.equal(manifest(fixtureAsReal), false, "fixture content may not be real-classified");
+  assert.throws(
+    () => strictParse(releaseManifestSchema, fixtureAsReal as unknown),
+    /does not match fixtureOnly true/,
+  );
+
+  // A real bundle: a new identifier, real classification, and no `fixture-` identity
+  // anywhere in the embedded pack, localization, or provenance.
+  const realBundleDocument = JSON.parse(
+    JSON.stringify(validGeneratedBundle(undefined)).replaceAll(
+      "fixture-local-guide",
+      "retail-assistant",
+    ),
+  ) as Record<string, unknown>;
+  realBundleDocument["fixtureOnly"] = false;
+  realBundleDocument["classification"] = "real";
+  for (const embedded of [
+    realBundleDocument["pack"],
+    realBundleDocument["localizedContent"],
+    ...(realBundleDocument["provenance"] as { events: Record<string, unknown>[] }).events,
+  ]) {
+    (embedded as Record<string, unknown>)["fixtureOnly"] = false;
+  }
+  for (const event of (realBundleDocument["provenance"] as { events: Record<string, unknown>[] })
+    .events) {
+    event["actorId"] = "release-handle-f5";
+  }
+  const realBundle = realBundleDocument;
+  assert.equal(bundle(realBundle), true, firstValidationError(bundle));
+  const reservedId = structuredClone(realBundle);
+  reservedId["packId"] = "fixture-retail-assistant";
+  (reservedId["pack"] as Record<string, unknown>)["id"] = "fixture-retail-assistant";
+  assert.equal(
+    bundle(reservedId),
+    false,
+    "a real bundle may not sit in the reserved Pack-ID namespace",
+  );
+  assert.throws(() => strictParse(releaseBundleSchema, reservedId), StrictValidationError);
+
+  // The other direction: fixture content must sit inside the reserved namespace.
+  const fixtureBundle = validGeneratedBundle(undefined);
+  (fixtureBundle["pack"] as Record<string, unknown>)["id"] = "unmarked-guide";
+  fixtureBundle["packId"] = "unmarked-guide";
+  assert.equal(
+    bundle(fixtureBundle),
+    false,
+    "fixture content may not sit outside the reserved Pack-ID namespace",
+  );
+  assert.throws(
+    () => strictParse(releaseBundleSchema, fixtureBundle as unknown),
+    /must be authored under a reserved "fixture-" Pack ID/,
   );
 });

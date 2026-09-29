@@ -826,11 +826,11 @@ test("rejects fixture-only eligibility with non-fixture evidence references", ()
         practitionerEligibilitySchema,
         validEligibility({ evidenceReferences: ["manual-verification-2026-001"] }),
       ),
-    "fixture: references",
+    "must use a fixture: reference for fixture-only content",
   );
 });
 
-test("allows production-classified eligibility to use non-fixture identifiers", () => {
+test("allows real-content eligibility to use non-fixture identifiers", () => {
   const parsed = strictParse(
     practitionerEligibilitySchema,
     validEligibility({
@@ -1199,11 +1199,39 @@ test("accepts a valid release manifest", () => {
   assert.equal(parsed.classification, "fixture");
 });
 
-test("rejects production classification for fixture-only records", () => {
+test("keeps classification and release authorization scope separate on a release manifest", () => {
+  // The retired `production` value is gone: classification is fixture-versus-real.
   expectStrictFailure(
     () => strictParse(releaseManifestSchema, validManifest({ classification: "production" })),
-    "fixtureOnly records must not be classified as production",
+    "classification",
   );
+  // Fixture content may not be recorded as real, and carries no scope.
+  expectStrictFailure(
+    () => strictParse(releaseManifestSchema, validManifest({ classification: "real" })),
+    'classification "real" does not match fixtureOnly true',
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(
+        releaseManifestSchema,
+        validManifest({ classification: "real", fixtureOnly: false, authorizationScope: "public" }),
+      ),
+    "authorizationScope",
+  );
+  expectStrictFailure(
+    () =>
+      strictParse(
+        releaseManifestSchema,
+        validManifest({ classification: "real", fixtureOnly: false }),
+      ),
+    'real-classified content must record authorizationScope "pilot"',
+  );
+  const real = strictParse(
+    releaseManifestSchema,
+    validManifest({ classification: "real", fixtureOnly: false, authorizationScope: "pilot" }),
+  );
+  assert.equal(real.classification, "real");
+  assert.equal(real.authorizationScope, "pilot");
 });
 
 test("rejects release manifests with unmet gates", () => {

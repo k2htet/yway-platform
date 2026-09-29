@@ -518,7 +518,8 @@ test("content:retire of a released version refuses a manifest whose classificati
   const manifestPath = releaseManifestPath(root, pack.id, 1);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
   manifest["fixtureOnly"] = false;
-  manifest["classification"] = "production";
+  manifest["classification"] = "real";
+  manifest["authorizationScope"] = "pilot";
   const manifestBytes = `${JSON.stringify(manifest, null, 2)}\n`;
   writeFileSync(manifestPath, manifestBytes, "utf8");
 
@@ -567,7 +568,9 @@ test("content:status rejects resealed provenance with fixture metadata that disa
     expectExit(result, 1);
     expectFailureMessage(
       result,
-      "fixtureOnly" in changed ? "source declares fixtureOnly true" : "fixture- actor identity",
+      "fixtureOnly" in changed
+        ? "source declares fixtureOnly true"
+        : "must be a fixture- identity for fixture-only content",
     );
   }
 });
@@ -579,7 +582,11 @@ test("content:status rejects a retirement record with fixture classification tha
 
   const recordPath = retirementRecordPath(root, pack.id, 1);
   const record = JSON.parse(readFileSync(recordPath, "utf8")) as Record<string, unknown>;
+  // A real record needs a real identity and an opaque owner-record reason, so the
+  // only field this case changes is the classification itself.
   record["fixtureOnly"] = false;
+  record["actorId"] = "operator-handle-d4";
+  record["reason"] = "owner-record:retirement-2026-001";
   writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
 
   const result = runStatusCommand(["--pack", pack.id, "--version", "1"], options(root));

@@ -9,6 +9,11 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  actorClassificationIssue,
+  contentClassification,
+  packIdClassificationIssue,
+} from "./classification.js";
 import { canonicalJson } from "./canonical.js";
 import { contentDigest, sha256Hex } from "./digest.js";
 import { verifyProvenanceLog } from "./provenance.js";
@@ -268,28 +273,12 @@ export function commitWrites(
   }
 }
 
-export function requireFixtureIsolation(
-  source: { readonly id: string; readonly version: number; readonly fixtureOnly: boolean },
-  actorId?: string,
-): void {
-  if (!source.fixtureOnly) {
-    throw new StrictValidationError([
-      {
-        path: ["fixtureOnly"],
-        message: `pack "${source.id}" version ${source.version} is not fixture-only; Stage 2 repository commands accept only fixture-only content (fixture isolation)`,
-      },
-    ]);
-  }
-  if (actorId !== undefined && !actorId.startsWith("fixture-")) {
-    throw new StrictValidationError([
-      {
-        path: ["actorId"],
-        message: `actor "${actorId}" must be a fixture- identity for fixture-only pack "${source.id}" (synthetic actor identities only)`,
-      },
-    ]);
-  }
-}
-
+/**
+ * Requires every event in a log to carry the same classification as the content it
+ * belongs to, and every actor to be a classification-appropriate identity. Both
+ * directions of the actor rule live here, so the artifact-only consumer, the
+ * release gate, and the repository loader cannot drift apart.
+ */
 export function assertFixtureOnlyProvenance(fixtureOnly: boolean, log: ProvenanceEventLog): void {
   for (const event of log.events) {
     if (event.fixtureOnly !== fixtureOnly) {
@@ -300,11 +289,12 @@ export function assertFixtureOnlyProvenance(fixtureOnly: boolean, log: Provenanc
         },
       ]);
     }
-    if (fixtureOnly && !event.actorId.startsWith("fixture-")) {
+    const actorIssue = actorClassificationIssue(fixtureOnly, event.actorId, ["events"]);
+    if (actorIssue !== undefined) {
       throw new StrictValidationError([
         {
-          path: ["events"],
-          message: `provenance event at sequence ${event.sequence} for a fixture-only pack must use a fixture- actor identity`,
+          path: ["events", "actorId"],
+          message: `provenance event at sequence ${event.sequence}: ${actorIssue.message}`,
         },
       ]);
     }
@@ -420,6 +410,14 @@ export function loadPackState(repositoryRoot: string, packId: string): PackState
         },
       ]);
     }
+    // The reserved `fixture-` Pack-ID namespace is enforced here, on the identifier
+    // and not on any record flag, so relabelling every `fixtureOnly` field in a
+    // consistent fixture record set does not move a Pack out of it. It also covers
+    // fixture Packs registered after this code was written.
+    const classificationIssue = packIdClassificationIssue(source.id, source.fixtureOnly, ["id"]);
+    if (classificationIssue !== undefined) {
+      throw new StrictValidationError([{ path: ["id"], message: classificationIssue.message }]);
+    }
     sources.push(source);
   }
   assertUniquePackVersions(sources);
@@ -523,11 +521,16 @@ export function loadPackState(repositoryRoot: string, packId: string): PackState
           },
         ]);
       }
-      if (source.fixtureOnly && !event.actorId.startsWith("fixture-")) {
+      const actorIssue = actorClassificationIssue(source.fixtureOnly, event.actorId, [
+        "events",
+        index,
+        "actorId",
+      ]);
+      if (actorIssue !== undefined) {
         throw new StrictValidationError([
           {
             path: ["events", index, "actorId"],
-            message: `provenance event at sequence ${event.sequence} for fixture-only pack "${packId}" must use a fixture- actor identity`,
+            message: `provenance event at sequence ${event.sequence} for ${contentClassification(source.fixtureOnly)} pack "${packId}": ${actorIssue.message}`,
           },
         ]);
       }

@@ -1,5 +1,5 @@
 {
-  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
+  "$comment": "Derived from the runtime Zod schemas in content/schemas/. Expressible governance conditionals are included under allOf. Rules JSON Schema cannot express (cross-array ID uniqueness, cross-field equality, cross-document identifier and order parity between a canonical document and its localization, date-window ordering, and the opaque-reference character class that real-content localization-review evidence must match) are enforced only by runtime Zod validation; use the runtime validators for full governance checks.",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -27,7 +27,13 @@
       "type": "string",
       "enum": [
         "fixture",
-        "production"
+        "real"
+      ]
+    },
+    "authorizationScope": {
+      "type": "string",
+      "enum": [
+        "pilot"
       ]
     },
     "releasedAt": {
@@ -132,6 +138,32 @@
         "properties": {
           "classification": {
             "const": "fixture"
+          },
+          "authorizationScope": false
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "fixtureOnly"
+        ],
+        "properties": {
+          "fixtureOnly": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "authorizationScope"
+        ],
+        "properties": {
+          "classification": {
+            "const": "real"
+          },
+          "authorizationScope": {
+            "const": "pilot"
           }
         }
       }

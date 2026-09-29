@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { realRetirementReasonPattern, requireClassificationIsolation } from "../classification.js";
 import { contentDigest, sha256Hex } from "../digest.js";
 import { assertReleaseManifestBindsVersion } from "../governance.js";
 import { readCanonicalSnapshotIndex } from "./release.js";
@@ -29,7 +30,6 @@ import {
   provenanceLogPath,
   readJsonFile,
   releaseManifestPath,
-  requireFixtureIsolation,
   requirePackSource,
   requireProvenanceLog,
   resolveRepositoryRoot,
@@ -45,12 +45,13 @@ import {
   requireFlagString,
   requirePackId,
   successResult,
+  UsageError,
   type CommandOptions,
   type CommandResult,
 } from "./args.js";
 
 const usage =
-  "Usage: pnpm content:retire -- --pack <id> --version <n> --actor <id> --reason <reason>";
+  'Usage: pnpm content:retire -- --pack <id> --version <n> --actor <id> --reason <reason> [--reason "owner-record:<id>" for real content]';
 
 interface PlannedNotice {
   readonly path: string;
@@ -78,7 +79,15 @@ export function runRetireCommand(
     const recordedAt = (options.now ?? (() => new Date().toISOString()))();
     const state = loadPackState(repositoryRoot, packId);
     const source = requirePackSource(state, repositoryRoot, packId, version);
-    requireFixtureIsolation(source, actorId);
+    requireClassificationIsolation(source, actorId);
+    // A real retirement records only an opaque `owner-record:<id>` pointer: the
+    // reason itself is a real person's circumstance and stays in the owner-held
+    // record outside Git, where the repository holds a dangling reference by design.
+    if (!source.fixtureOnly && !realRetirementReasonPattern.test(reason)) {
+      throw new UsageError(
+        'retiring real content requires --reason "owner-record:<id>", an opaque reference to the owner-held record; the reason itself must not be recorded in the repository',
+      );
+    }
     const log = requireProvenanceLog(state, packId);
     const contentDigestHex = contentDigest(source);
     const status = deriveVersionLifecycleStatus(log, version);

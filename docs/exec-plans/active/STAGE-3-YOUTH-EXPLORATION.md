@@ -284,6 +284,193 @@ These are structural repository checks on a content-model and validation change.
 establish that any real feedback is contextual, that any real practitioner or fluent Burmese reviewer
 has reviewed a task, or that the later youth flow can present a task accessibly.
 
+## S3-04 implementation and verification (2026-09-28)
+
+S3-04 (#60) extends the Stage 2 content lifecycle so a non-fixture Pack can produce a deterministic
+private-pilot artifact after exact-version review and every content gate passes, while fixture
+artifacts stay byte-identical and unusable for the pilot. APK construction and device distribution
+remain #63.
+
+**The mechanism exists; nothing operational is authorized.** Every real-classification test in this
+repository uses synthetic non-fixture records invented in a test file: opaque handles written by
+the test, `owner-record:` references that resolve to nothing, and content written to be disposable.
+No real practitioner, founder, or Burmese reviewer is involved, no real Pack exists, and no
+reviewer, build, distribution, supervised session, or public release is authorized by this work. The
+substantive qualification bar for a real practitioner remains an open owner product decision and must
+be settled before a real reviewer is accepted.
+
+What now exists:
+
+- **`content/classification.ts` is the single home for the classification rules**, so the schemas,
+  the four lifecycle commands, the artifact boundary, the repository verifier, and the artifact-only
+  consumer all enforce one rule instead of restating it. Content classification (`fixture` or
+  `real`) and release authorization scope (`pilot`) are separate facts: neither value domain was
+  extended to carry the other, and neither substitutes for the cumulative provenance the bundle
+  already carries.
+- **The `fixture-` Pack-ID namespace is permanently reserved**, enforced on the identifier in
+  `loadPackState`, the release gate, the release-artifact builder, and the artifact contract. It
+  covers fixture Packs registered later, not only those that exist today, and it is a rule in
+  `content/` so a change to it goes through repository review.
+- **The inverse rules run in both directions.** A `fixtureOnly: false` record may not use a `fixture-`
+  actor, a `fixture:` qualification reference, a `fixture:` Burmese-fluency reference, or a free-text
+  attestation `note`; a real retirement records only an `owner-record:<id>` pointer. The matching
+  fixture-side rules are unchanged.
+- **The lifecycle is open to real Packs** through the same version, digest, review-cycle,
+  practitioner-independence, localization, accessibility, and sponsorship gates. A real Pack
+  requires a new identifier and its own provenance genesis, and deriving a version across
+  classifications is refused.
+- **The `YWAY-D003` artifact-contract amendment is in place.** The bundle and manifest derive
+  `classification` from the validated source; the unused `production` value is retired rather than
+  reused as an authorization scope; the manifest carries a separate optional `authorizationScope`
+  whose only value is `pilot`. `--authorization-scope pilot` is required for a real release, refused
+  for a fixture release, and `public` is refused by name for the gates and owner authorization that do
+  not exist. The field is absent from the historical fixture manifests, so the committed Stage 2
+  artifacts are byte-identical and `content:verify` still reports the same digests.
+- **`inspectPilotSnapshotVersion` is the #63 consumption seam.** It takes an already byte-verified
+  snapshot and an exact `(packId, packVersion)` and returns that version's verified bundle and
+  manifest buffers only when classification is `real`, scope is `pilot`, and no retirement notice
+  exists. The existing fixture consumer is unchanged. The function's own documentation, the runbook,
+  and this plan all state what it does **not** prove and what #63 must still do: run the repository
+  verifier in a clean pinned checkout, enforce the owner-controlled allowlist, take a fresh per-session
+  clearance, and re-verify the packaged APK.
+- **Secret scanning exists in two layers.** `pnpm content:secrets:check` scans the always-covered
+  roots plus every Git-changed file with values redacted, runs in `verify:full`, and is required
+  before the first real reviewer record; CI adds a pinned Gitleaks release (`v8.30.1`, verified
+  against its published checksum) over the full history and the content files, in a separate
+  `Secret scan` job that checks out full history so the history scan is not vacuous. Both documents
+  and the command output state that this is a credential check and **not** a personal-data detector:
+  passing it does not establish that reviewer names, transliterations, workplaces, or credential
+  documents are absent, and that exclusion remains owner-review-enforced.
+- **The operator documents carry the human controls**: owner-issued opaque actor handles, the private
+  reviewer and qualification record outside Git with its custody and data-subject constraints, the
+  five owner-review steps before a real-content release, the per-session clearance including the
+  per-Pack actor check, and the retirement response with its limits stated plainly — an installed
+  offline APK cannot revoke itself, retirement is a distribution response rather than a content
+  recall, retired content stays readable in public Git history, and the response is inert until the
+  `YWAY-D004` managed-device inventory exists.
+
+Honest limits, recorded rather than designed away:
+
+- A consistently relabelled fixture record set with **every** fixture marker removed is internally
+  consistent: the tests build exactly that set, prove it releases and verifies under a new
+  identifier, and prove it is refused under a reserved identifier **by the Pack-ID rule alone**.
+  The relabelling itself is not detected, and that is the accepted residual.
+- Copying fixture *content* under a new identifier with rewritten actor strings is not detectable by
+  any repository mechanism. Owner review of the content diff and repository review are the only
+  controls.
+- Nothing authenticates an actor. A repository writer can write a plausible `reviewer-handle-*`
+  string; the per-session clearance is what turns that residual from described into checked, and it
+  is a human act.
+- `pilot` is the only grantable scope, so the recorded scope of a real manifest cannot be varied.
+  A scope mismatch is therefore caught by the artifact contract before the rebuild rather than by
+  comparing two different scopes.
+- The generated JSON Schema validates each document's own shape. The inverse classification rules
+  are expressed there as conditionals, derived from the same constants the runtime uses, but
+  runtime validation remains authoritative, and the character classes still do not forbid a
+  transliterated name or a numeric identifier.
+- A real release requires Burmese content, so any artifact the pilot seam can return today contains
+  Burmese user-facing text while the open `YWAY-D004` line-breaking violation stands. The only
+  barriers are the not-yet-existing managed-device inventory and #63/#66; nothing in #60 relaxes or
+  acknowledges that beyond recording it here.
+- The secret scan's changed-file half contributes nothing on a clean CI checkout, and a gitignored
+  path such as `.env` is outside both scan layers. The Gitleaks job is not yet a required status
+  check, which is an owner action this repository cannot verify.
+
+Repository verification actually run on 2026-09-28 (Node 24.20.0, pnpm 11.24.0), after the four
+independent reviews below: `pnpm agent:doctor` reported READY (its working-tree warning is this
+change); `pnpm content:schemas:check` passed; `pnpm content:verify` passed reporting the single
+committed `fixture-retail-assistant@2` release with `classification: "fixture"`, no authorization
+scope, `retired: true`, and the same bundle and manifest digests as before this change; `pnpm
+content:secrets:check` passed with 153 files scanned and 3 binary evidence images reported as not
+read; `pnpm verify:invariants` passed; `pnpm verify:fast` passed; `pnpm verify:full` passed (lint,
+typecheck, format check, verification-runner self-test, **506 tests passed / 0 failed / 0 skipped**,
+generated schemas, content verify, secret scan, invariants, docs). Because 0 tests were skipped, the
+Git-gated negative tests actually executed. The Stage 2 fixture lifecycle, deterministic-artifact,
+and trusted-snapshot suites were re-run explicitly alongside the three new files: **146 tests
+passed**, with **no change to any committed file under `artifacts/`**
+(`git diff --name-only artifacts/` is empty). The pinned Gitleaks scan was run locally: 107 commits
+and every working-tree file scanned, no leak, and it did catch a literal key in an intermediate
+version of the new test file, which is why every test secret is assembled from fragments at run time.
+
+## S3-04 independent review outcome (2026-09-28)
+
+Four independent discipline reviews ran against this change before it was recorded complete:
+product integrity, architecture, security/privacy, and test. All material findings are resolved
+below. The review changed the implementation in three substantive ways, and each is now covered by a
+test:
+
+- **A sponsored real Pack is refused at the release gate.** The localization schema has no
+  `sponsorship` field, so a sponsored real Pack's disclosure would reach the bundle but not the
+  Burmese text a participant reads, which `YWAY-P020` treats as a violation. Rather than leaving
+  the Stage 2 known limit as prose on a newly opened path, the gate now refuses sponsored real
+  content by name and records the localized representation as an open owner decision in the
+  decision's follow-up list.
+- **The secret check now fails closed and has no opt-out.** It previously returned a green pass
+  when Git could not list changes, and `--repository-root` could point it at an empty directory.
+  It now fails when the changed-file half cannot be produced, refuses a directory it does not
+  recognise as this repository, fails when a non-binary candidate cannot be read instead of counting
+  it as clean,
+  clears the same `GIT_*` redirection variables the trusted-snapshot verifier clears, and redacts
+  rejected `--actor` and positional values instead of echoing them into a terminal or CI log.
+- **Real Burmese-fluency evidence must be an opaque reference.** It was the one field left as
+  unbounded free text on the real path while bound by no digest — the same defect that made the
+  attestation `note` unusable for real content. It now matches the same opaque-reference class as
+  qualification evidence, and the qualification policy no longer describes the two fields as
+  identically restricted.
+
+Two further review findings were resolved without a behaviour change, because the code was wrong
+about itself rather than unsafe: a docstring claimed the pre-existing consumer "still serves fixture
+content only" when it is now classification-agnostic, and the same claim appeared in this plan. Both
+are corrected, and `loadPilotBundle` was added so a build has one entry point that verifies the
+snapshot itself and then applies every pilot condition. The generated JSON Schemas now interpolate
+the classification constants from `content/classification.ts` instead of restating them, so
+`content:schemas:check` is load-bearing for these rules; the two `fixture:` evidence definitions
+that had drifted (one strict, one loose) are now one; and `content/eligibility/` refuses any entry
+that is not an `<actorId>.json` record, so a copy of the owner-held private record cannot be left
+there unnoticed.
+
+Test review also found the strongest claim under-evidenced, and the gap is closed. The relabelled
+record set is now driven all the way to a **fully re-sealed** committed artifact set — content
+digests, provenance chain, manifest, and index all recomputed after the rename, and the authoring
+sources renamed with it — and is refused by the artifact-only consumer, the pilot seam, **and** the
+repository verifier, with the identifier rule as the only thing that can refuse it. The consumer's
+real classification branch is exercised with a synthetic actor substituted into a re-sealed real
+bundle. Non-authorship and the stale-version and stale-digest arms are re-run on the real branch;
+`content:release` and `content:retire` each get a synthetic-actor negative of their own; the
+canonical-path refusal and the absence of any "approved for release" wording in a pilot-scoped
+record or report are asserted for real content; the note and reason rules are exercised on
+hand-written record files as well as through the flags, with a fixture-side positive control that
+proves the note was read rather than ignored; every new generated-schema conditional has a negative
+with a paired runtime assertion, and the one rule the generated schema provably cannot express — the
+opaque-reference class on real fluency evidence — is named in the generated `$comment` and pinned by
+an assertion; and the secret check's changed-file half is tested against real Git, with a negative
+control that shows the finding arrived through that half.
+
+Architecture review confirmed no import cycle, no layering violation, a fixture path that is
+byte-identical, `inspectSnapshotVersion` still unexported, and no deferred architecture question
+decided. Security/privacy review confirmed the privacy rules hold and the retirement limits are
+stated without hedging, and named the residual the record already accepts: nothing authenticates an
+actor, a transliterated name still passes the opaque-reference class, and a repository writer can
+forge an actor handle that only the per-session clearance catches.
+
+On 2026-09-29, follow-up review found two local secret-scan paths that could produce a clean result
+without scanning a changed non-ASCII filename or an oversized readable file. Git change discovery now
+uses NUL-delimited paths and handles rename destinations; the command fails when any non-binary
+candidate was not read. Regression tests reproduced both defects before the fix and cover a rename.
+After the fix, `pnpm agent:doctor` reported READY, the focused scanner suite passed 15 tests with no
+skips, `pnpm verify:fast` passed, `pnpm content:secrets:check` passed with 153 files scanned and 3
+binary images reported, and `pnpm verify:full` passed with **509 tests / 0 failed / 0 skipped**.
+Independent product-integrity, architecture, security/privacy, and test reviewers inspected the
+current change set on 2026-09-29 and reported no material finding. The pinned Gitleaks scan was not
+rerun after this scanner-only fix; the CI `Secret scan` job must run on the PR.
+
+**What these checks do not establish.** They are structural and repository-level checks over
+synthetic records. They do not establish that any content was reviewed by a real qualified
+practitioner, that any Burmese text was assessed by a fluent reader, that the owner vetted anyone,
+that a build can be trusted end to end, or that a young person can use any of it. None of the seven
+`YWAY-D005` tabletop cases is demonstrated by a run; the case-by-case status in that record still
+describes source and test inspection.
+
 ## Progress checklist
 
 - [x] Owner explicitly activated Stage 3 and approved the bounded plan on 2026-09-27.
@@ -293,7 +480,9 @@ has reviewed a task, or that the later youth flow can present a task accessibly.
       (`YWAY-D004`) and Architecture reconciled; S3-02 accepted 2026-09-28
       (`YWAY-D005`, `docs/decisions/005-real-content-trusted-build.md`) with an explicit named
       residual-risk acceptance, and Architecture Sections 3, 6, 9, 10, and 11 reconciled.
-- [ ] S3-03–S3-06 content and real review gates complete.
+- [ ] S3-03–S3-06 content and real review gates complete. S3-04 (#60) mechanism complete and
+      verified; the genuinely reviewed real Packs, real reviewers, and fluent Burmese reviews
+      (#61, #64) remain outstanding and block the milestone.
 - [ ] S3-07–S3-11 youth flow and device validation complete.
 - [ ] S3-12 moderated pilot evidence complete and critical findings resolved.
 - [ ] S3-13 verification, independent review, documentation, and owner closure authority recorded.
@@ -315,6 +504,9 @@ has reviewed a task, or that the later youth flow can present a task accessibly.
 | 2026-09-28 | Stage 2's only released version, `fixture-retail-assistant@2`, is retired, and the artifact tree is shared across all Packs and reflects what has *ever* been released. | The allowlist is load-bearing for a stronger reason than "a fixture is sitting in the tree": any released non-retired Pack would otherwise be embeddable. Allowlist granularity is `(packId, packVersion)`, unordered, and must never become a preference or ranking signal. See `docs/decisions/005-real-content-trusted-build.md`. |
 | 2026-09-28 | Retirement preserves the historical bundle and manifest, and the repository is public. | Retirement cannot retract published content. The `YWAY-D005` response is a distribution control over inventoried devices; the corpus stays permanently readable. Stated plainly so no later report implies a recall that does not exist. |
 | 2026-09-28 | `evaluateReleaseGates` verified the localized digest before any content-parity rule, so a pair with a mismatched interactive task was reported only as a digest mismatch, and the required direct-call check could not be exercised. | The gate now checks parity right after parsing, naming the specific defect. A digest mismatch is still the second line of defence, not the first, and neither check weakens the other. |
+| 2026-09-28 | A consistently relabelled fixture record set with every fixture marker removed is **internally consistent**: it releases and verifies normally under a new Pack identifier. | The reserved `fixture-` Pack-ID rule makes it unreleasable under a reserved identifier, which is unreachability, not detection. Confirmed by building exactly that record set in a test and refusing it at the identifier rule alone. Owner review of the content diff remains the only control against fixture content re-authored under a new identifier. |
+| 2026-09-28 | `pilot` is the only grantable release authorization scope, so a real manifest's recorded scope cannot vary. | A scope mismatch is caught by the artifact contract rather than by comparing two scopes, and `public` cannot be serialized or read at all. This is deliberate: the comprehension, accessibility, and owner-authorization prerequisites do not exist. |
+| 2026-09-28 | The pinned Gitleaks check found a literal credential in an intermediate version of the new secret-scan test file, even though the repository's own rules did not. | Test secrets are assembled from fragments at run time, so the test proves the check works without planting a real finding. Two independent scan layers are kept: high-confidence local rules in `verify:full` and the broader pinned Gitleaks release in CI. |
 
 ## Decision log
 

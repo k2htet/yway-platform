@@ -39,7 +39,12 @@ export function parseCommandFlags(
   while (index < tokens.length) {
     const token = tokens[index]!;
     if (!token.startsWith("--")) {
-      throw new UsageError(`unexpected positional argument "${token}"`);
+      // The value is not echoed: on the real-content path these arguments are places
+      // an operator could type a name or a contact route by mistake, and a refusal
+      // must not put it into terminal scrollback or a CI log.
+      throw new UsageError(
+        `unexpected positional argument (${token.length} characters, starting "${token.slice(0, 1)}")`,
+      );
     }
 
     const equals = token.indexOf("=");
@@ -127,6 +132,14 @@ export function requireActorId(values: FlagValues): string {
   return requireIdentifier(values, "actor", actorIdSchema);
 }
 
+/**
+ * Validates an identifier argument.
+ *
+ * A rejected value is described, never echoed: an operator who typed a name into
+ * `--actor` would otherwise have that name printed back into a terminal or a CI log,
+ * and the argument is a place where a real person's identifier can be entered by
+ * mistake.
+ */
 function requireIdentifier(
   values: FlagValues,
   name: string,
@@ -135,10 +148,29 @@ function requireIdentifier(
   const raw = requireFlagString(values, name);
   if (!schema.safeParse(raw).success) {
     throw new UsageError(
-      `option "--${name}" must be a lowercase kebab-case identifier (received "${raw}")`,
+      `option "--${name}" must be a lowercase kebab-case identifier (received ${describeValue(raw)})`,
     );
   }
   return raw;
+}
+
+/** Describes a rejected value by shape only, so a name never reaches a log. */
+export function describeValue(raw: string): string {
+  const categories: string[] = [];
+  if (/\s/u.test(raw)) {
+    categories.push("whitespace");
+  }
+  if (/@/u.test(raw)) {
+    categories.push("an at sign");
+  }
+  if (/\//u.test(raw)) {
+    categories.push("a path separator");
+  }
+  if (/[^\x20-\x7e]/u.test(raw)) {
+    categories.push("a non-ASCII character");
+  }
+  const detail = categories.length === 0 ? "an unexpected character" : categories.join(", ");
+  return `a ${raw.length}-character value with ${detail}`;
 }
 
 export function failureResult(usage: string, error: unknown): CommandResult {

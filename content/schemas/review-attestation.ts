@@ -1,5 +1,11 @@
 import { z } from "zod";
 import {
+  actorClassificationIssue,
+  attestationNoteIssue,
+  evidenceReferenceClassificationIssue,
+  opaqueReferencePattern,
+} from "../classification.js";
+import {
   actorIdSchema,
   dateTimeSchema,
   sha256DigestSchema,
@@ -28,10 +34,22 @@ export const contentReviewConfirmationSchema = z
   })
   .strict();
 
+/**
+ * The fluency confirmation a localization reviewer records.
+ *
+ * `fluentReviewEvidence` is excluded from the artifact boundary and bound by no
+ * digest, so for real content it must be an opaque reference to the owner-held
+ * record rather than free text: a real reviewer's name, workplace, or contact route
+ * must not be committable here. The class forbids whitespace, `@`, `.`, `/`, and
+ * non-Latin script; it does not forbid a transliterated name, so owner issuance
+ * remains the control. Fixture content keeps synthetic prose.
+ */
+const fluentReviewEvidenceSchema = z.string().max(128).regex(/\S/, "must not be blank");
+
 export const localizationReviewConfirmationSchema = z
   .object({
     fluentBurmeseConfirmed: z.boolean(),
-    fluentReviewEvidence: z.string().max(128).regex(/\S/, "must not be blank"),
+    fluentReviewEvidence: fluentReviewEvidenceSchema,
   })
   .strict();
 
@@ -165,18 +183,20 @@ export const reviewAttestationSchema = z
         message: "approved localization-review attestations must confirm fluent Burmese review",
       });
     }
-    if (
-      value.fixtureOnly &&
-      isLocalizationReview &&
-      value.localizationReview !== undefined &&
-      !/^fixture:[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(value.localizationReview.fluentReviewEvidence)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["localizationReview", "fluentReviewEvidence"],
-        message:
-          "fixtureOnly localization-review evidence must use a fixture: reference (synthetic evidence only)",
-      });
+    if (isLocalizationReview && value.localizationReview !== undefined) {
+      const evidenceIssue = evidenceReferenceClassificationIssue(
+        value.fixtureOnly,
+        value.localizationReview.fluentReviewEvidence,
+        ["localizationReview", "fluentReviewEvidence"],
+        "localization-review evidence",
+      );
+      if (evidenceIssue !== undefined) {
+        context.addIssue({
+          code: "custom",
+          path: [...evidenceIssue.path],
+          message: evidenceIssue.message,
+        });
+      }
     }
 
     if (approved && isAccessibilityReview && value.accessibilityReview === undefined) {
@@ -239,13 +259,25 @@ export const reviewAttestationSchema = z
       });
     }
 
-    if (value.fixtureOnly && !value.actorId.startsWith("fixture-")) {
+    const actorIssue = actorClassificationIssue(value.fixtureOnly, value.actorId, ["actorId"]);
+    if (actorIssue !== undefined) {
+      context.addIssue({ code: "custom", path: [...actorIssue.path], message: actorIssue.message });
+    }
+    if (
+      !value.fixtureOnly &&
+      value.localizationReview !== undefined &&
+      !opaqueReferencePattern.test(value.localizationReview.fluentReviewEvidence)
+    ) {
       context.addIssue({
         code: "custom",
-        path: ["actorId"],
+        path: ["localizationReview", "fluentReviewEvidence"],
         message:
-          "fixtureOnly attestation actorId must be a fixture- identity (synthetic actor identities only)",
+          "real-content localization-review evidence must be an opaque non-sensitive reference to the owner-held review record; it is excluded from the artifact boundary and bound by no digest, so it must not carry a name, a workplace, a contact route, or a document path",
       });
+    }
+    const noteIssue = attestationNoteIssue(value.fixtureOnly, value.note);
+    if (noteIssue !== undefined) {
+      context.addIssue({ code: "custom", path: [...noteIssue.path], message: noteIssue.message });
     }
   });
 

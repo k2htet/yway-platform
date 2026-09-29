@@ -1,6 +1,11 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { buildReleaseArtifacts, provenancePrefixThrough } from "./artifacts.js";
+import {
+  contentClassification,
+  type ContentClassification,
+  type ReleaseAuthorizationScope,
+} from "./classification.js";
 import { sha256Hex } from "./digest.js";
 import { verifyVersionGovernance } from "./governance.js";
 import { evaluateReleaseGates } from "./release-gates.js";
@@ -40,6 +45,8 @@ export interface ReleasedArtifactSummary {
   readonly packVersion: number;
   readonly contentDigest: string;
   readonly releasedAt: string;
+  readonly classification: ContentClassification;
+  readonly authorizationScope?: ReleaseAuthorizationScope;
   readonly bundleRelativePath: string;
   readonly bundleDigest: string;
   readonly manifestRelativePath: string;
@@ -71,7 +78,22 @@ function verifyEligibilityRecords(repositoryRoot: string): number {
   if (!existsSync(directory)) {
     return 0;
   }
-  const actorIds = readdirSync(directory)
+  const entries = readdirSync(directory).sort();
+  // This directory holds the repository-side pointer to the owner-held private review
+  // record, so a copy of that record dropped here — a Markdown export, a scan, a
+  // backup file — is the highest-value stray material in the repository and must be
+  // refused rather than ignored. Only `<actorId>.json` belongs here.
+  for (const entry of entries) {
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\.json$/.test(entry)) {
+      throw new StrictValidationError([
+        {
+          path: [entry],
+          message: `unexpected entry ${eligibilityDirectory}/${entry}; only "<actorId>.json" eligibility records belong in this directory, and a copy of the owner-held private review record must never be committed`,
+        },
+      ]);
+    }
+  }
+  const actorIds = entries
     .filter((entry) => entry.endsWith(".json"))
     .map((entry) => entry.slice(0, -".json".length))
     .sort();
@@ -198,12 +220,24 @@ export function verifyRepository(input: {
         expectedHeadEventDigest: releaseEvent.eventDigest,
       });
 
+      // The authorization scope is a separate owner-granted field, not a function
+      // of the classification, so the rebuild takes the recorded value. Rebuilding
+      // with a different value produces different manifest bytes, which the
+      // comparison below refuses; a recorded `public` scope cannot be parsed at all.
+      //
+      // This design depends on the scope domain having exactly one value. While it
+      // does, "take the recorded value" cannot echo a wrong-but-legal scope, because
+      // the only legal value is the one the classification requires. If a second
+      // scope is ever added, this becomes an echo and must be replaced by a
+      // derivation from an authoring record.
+      const recordedScope = verified.releaseManifest?.authorizationScope;
       const artifacts = buildReleaseArtifacts({
         pack: verified.source,
         localizedContent: localized,
         gates,
         releaseEvent,
         provenancePrefix,
+        ...(recordedScope === undefined ? {} : { authorizationScope: recordedScope }),
       });
 
       assertArtifactBytesMatch(
@@ -261,6 +295,11 @@ export function verifyRepository(input: {
         packVersion: version,
         contentDigest: verified.contentDigest,
         releasedAt: releaseEvent.recordedAt,
+        classification: contentClassification(verified.source.fixtureOnly),
+        // Omitted rather than reported as null: fixture content carries no scope.
+        ...(artifacts.manifest.authorizationScope === undefined
+          ? {}
+          : { authorizationScope: artifacts.manifest.authorizationScope }),
         bundleRelativePath: artifacts.bundleRelativePath,
         bundleDigest: artifacts.bundleDigest,
         manifestRelativePath: artifacts.manifestRelativePath,

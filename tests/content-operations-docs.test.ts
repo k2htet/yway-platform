@@ -12,6 +12,7 @@ import {
   runNewVersionCommand,
   runReleaseCommand,
   runRetireCommand,
+  runSecretScanCommand,
   runStatusCommand,
   runVerifyCommand,
   strictParse,
@@ -39,6 +40,10 @@ const contentCommands: Readonly<Record<string, (argv: readonly string[]) => Comm
   "content:release": (argv) => runReleaseCommand(argv, { repositoryRoot: makeRoot() }),
   "content:retire": (argv) => runRetireCommand(argv, { repositoryRoot: makeRoot() }),
   "content:verify": (argv) => runVerifyCommand(argv, { repositoryRoot: makeRoot() }),
+  // The secret check reads Git to list changes, so it is given an empty change list
+  // rather than a throwaway repository.
+  "content:secrets:check": (argv) =>
+    runSecretScanCommand(argv, { repositoryRoot: makeRoot(), readGitChanges: () => [] }),
 };
 
 function fencedBlocks(markdown: string, language: string): string[] {

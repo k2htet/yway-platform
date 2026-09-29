@@ -1,3 +1,10 @@
+import {
+  authorizationScopeIssue,
+  contentClassification,
+  packIdClassificationIssue,
+  type ContentClassification,
+  type ReleaseAuthorizationScope,
+} from "./classification.js";
 import { contentDigest, sha256Hex } from "./digest.js";
 import { releaseGateManifestFields } from "./release-gates.js";
 import { buildSnapshotIndexEntry, canonicalArtifactPath } from "./snapshot-index.js";
@@ -28,6 +35,13 @@ export interface ReleaseArtifactInput {
   readonly releaseEvent: ProvenanceEvent;
   /** The Pack provenance log, truncated to end at `releaseEvent`. */
   readonly provenancePrefix: ProvenanceEventLog;
+  /**
+   * The owner-granted release authorization scope, recorded for real content only.
+   *
+   * It is a separate statement from classification and is refused for fixture
+   * content, which keeps the historical fixture manifests byte-identical.
+   */
+  readonly authorizationScope?: ReleaseAuthorizationScope;
 }
 
 export interface ReleaseArtifactSet {
@@ -115,6 +129,20 @@ export function buildReleaseArtifacts(input: ReleaseArtifactInput): ReleaseArtif
   const localizedDigest = contentDigest(input.localizedContent);
   const packId = pack.id;
   const version = pack.version;
+  const classification = contentClassification(pack.fixtureOnly);
+
+  const packIdIssue = packIdClassificationIssue(packId, pack.fixtureOnly, ["pack"]);
+  if (packIdIssue !== undefined) {
+    throw new StrictValidationError([{ path: ["pack"], message: packIdIssue.message }]);
+  }
+  const scopeIssue = authorizationScopeIssue(pack.fixtureOnly, input.authorizationScope, [
+    "authorizationScope",
+  ]);
+  if (scopeIssue !== undefined) {
+    throw new StrictValidationError([
+      { path: ["authorizationScope"], message: scopeIssue.message },
+    ]);
+  }
 
   const bundle = strictParse(releaseBundleSchema, {
     schemaVersion: 1,
@@ -122,8 +150,8 @@ export function buildReleaseArtifacts(input: ReleaseArtifactInput): ReleaseArtif
     packVersion: version,
     contentDigest: sourceDigest,
     localizedContentDigest: localizedDigest,
-    fixtureOnly: true,
-    classification: "fixture",
+    fixtureOnly: pack.fixtureOnly,
+    classification,
     releasedAt: releaseEvent.recordedAt,
     pack,
     localizedContent: input.localizedContent,
@@ -138,8 +166,11 @@ export function buildReleaseArtifacts(input: ReleaseArtifactInput): ReleaseArtif
     packId,
     packVersion: version,
     contentDigest: sourceDigest,
-    fixtureOnly: true,
-    classification: "fixture",
+    fixtureOnly: pack.fixtureOnly,
+    classification,
+    ...(input.authorizationScope === undefined
+      ? {}
+      : { authorizationScope: input.authorizationScope }),
     releasedAt: releaseEvent.recordedAt,
     bundle: { path: bundleRelativePath, digest: bundleDigest },
     gates: releaseGateManifestFields(input.gates),
@@ -181,7 +212,8 @@ export interface BundleBinding {
   readonly packVersion: number;
   readonly contentDigest: string;
   readonly localizedContentDigest: string;
-  readonly classification: "fixture" | "production";
+  readonly classification: ContentClassification;
+  readonly authorizationScope: ReleaseAuthorizationScope | undefined;
   readonly bundleDigest: string;
   readonly bundleRelativePath: string;
   readonly manifestDigest: string;
@@ -227,11 +259,27 @@ export function assertBundleBindings(input: {
       message: `release manifest releasedAt ${manifest.releasedAt} does not match bundle releasedAt ${bundle.releasedAt}`,
     });
   }
-  if (manifest.classification !== "fixture") {
+  if (manifest.classification !== contentClassification(bundle.fixtureOnly)) {
     issues.push({
       path: ["classification"],
-      message: `Stage 2 release artifacts must be classified as "fixture" (received "${manifest.classification}")`,
+      message: `release manifest classification "${manifest.classification}" does not match bundle fixtureOnly ${bundle.fixtureOnly} (classification is derived from the validated source)`,
     });
+  }
+  if (bundle.classification !== contentClassification(bundle.fixtureOnly)) {
+    issues.push({
+      path: ["classification"],
+      message: `release bundle classification "${bundle.classification}" does not match bundle fixtureOnly ${bundle.fixtureOnly}`,
+    });
+  }
+  const packIdIssue = packIdClassificationIssue(bundle.packId, bundle.fixtureOnly, ["packId"]);
+  if (packIdIssue !== undefined) {
+    issues.push({ path: [...packIdIssue.path], message: packIdIssue.message });
+  }
+  const scopeIssue = authorizationScopeIssue(bundle.fixtureOnly, manifest.authorizationScope, [
+    "authorizationScope",
+  ]);
+  if (scopeIssue !== undefined) {
+    issues.push({ path: [...scopeIssue.path], message: scopeIssue.message });
   }
   if (manifest.bundle.path !== input.bundleRelativePath) {
     issues.push({
@@ -313,6 +361,7 @@ export function assertBundleBindings(input: {
     contentDigest: bundle.contentDigest,
     localizedContentDigest: bundle.localizedContentDigest,
     classification: manifest.classification,
+    authorizationScope: manifest.authorizationScope,
     bundleDigest: input.bundleDigest,
     bundleRelativePath: input.bundleRelativePath,
     manifestDigest: input.manifestDigest,

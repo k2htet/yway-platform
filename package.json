@@ -21,6 +21,7 @@
     "content:retire": "node --import tsx scripts/content-retire.ts",
     "content:release": "node --import tsx scripts/content-release.ts",
     "content:verify": "node --import tsx scripts/content-verify.ts",
+    "content:secrets:check": "node --import tsx scripts/content-secret-scan.ts",
     "verify:fast": "node --import tsx scripts/run-verification.ts fast",
     "verify:full": "node --import tsx scripts/run-verification.ts full",
     "verify:invariants": "node --import tsx scripts/check-product-invariants.ts",
