@@ -1,0 +1,33 @@
+{
+  "events": [
+    {
+      "actorId": "content-agent-a1",
+      "contentDigest": "81f18a92bd56d67e4df9320f61166c0bbee3ef606e0b3f9951e0606b797b1fef",
+      "eventDigest": "c99cecfcc2a042eff7ef694488ffedefd881994ffdc7bf43241e32bd99fcb027",
+      "fixtureOnly": false,
+      "packId": "retail-assistant",
+      "packVersion": 1,
+      "previousEventDigest": null,
+      "recordedAt": "2026-09-29T04:37:24.250Z",
+      "schemaVersion": 1,
+      "sequence": 1,
+      "type": "authored"
+    },
+    {
+      "actorId": "content-agent-a1",
+      "contentDigest": "81f18a92bd56d67e4df9320f61166c0bbee3ef606e0b3f9951e0606b797b1fef",
+      "eventDigest": "bae5d9f248a1f18d045c3c7f405832b219657f2d1007c9da497f1bf90673cb33",
+      "fixtureOnly": false,
+      "localizedContentDigest": "c1669aa635f10ef37d84e7479afa2dad6d4b67fc95c98096fbd9ea5b4fab55b4",
+      "packId": "retail-assistant",
+      "packVersion": 1,
+      "previousEventDigest": "c99cecfcc2a042eff7ef694488ffedefd881994ffdc7bf43241e32bd99fcb027",
+      "recordedAt": "2026-09-29T04:37:24.250Z",
+      "schemaVersion": 1,
+      "sequence": 2,
+      "type": "localized"
+    }
+  ],
+  "packId": "retail-assistant",
+  "schemaVersion": 1
+}

@@ -488,8 +488,39 @@ describes source and test inspection.
       (`YWAY-D005`, `docs/decisions/005-real-content-trusted-build.md`) with an explicit named
       residual-risk acceptance, and Architecture Sections 3, 6, 9, 10, and 11 reconciled.
 - [ ] S3-03–S3-06 content and real review gates complete. S3-04 (#60) mechanism complete and
-      verified; the genuinely reviewed real Packs, real reviewers, and fluent Burmese reviews
-      (#61, #64) remain outstanding and block the milestone.
+      verified. S3-05 (#61) content authored and registered 2026-09-29: `retail-assistant@1`
+      (`content/packs/retail-assistant/1.yaml`, Burmese `localizations/1.yaml`, provenance genesis
+      sequences 1–2), `fixtureOnly: false`, `aiAssisted: true`, classification `real`, status
+      `authored`, zero attestations. It is a five-minute self-contained in-app task with three
+      choices, unsponsored and with no media. **No real review exists and the Pack is not
+      releasable**: the founder, practitioner, fluent-Burmese, and accessibility reviews are all
+      outstanding, and S3-05 is blocked at the owner gate below. The genuinely reviewed real Packs,
+      real reviewers, and fluent Burmese reviews (#61, #64) remain outstanding and block the
+      milestone.
+- [x] S3-05 draft review corrections on 2026-09-29: the Burmese privacy assurance now says app
+      content is not shared with shops; the task and linked experiment text were rewritten; the
+      in-app noticing prompt now asks about the chosen response; and the shop visit can be
+      completed by asking a worker about a past or imagined request. The uncommitted, unattested
+      version-1 draft provenance was resealed to these corrected files. `pnpm content:verify`,
+      `pnpm verify:fast`, `pnpm verify:invariants`, and Prettier check of the three Pack files
+      passed. The first in-sandbox `pnpm verify:full` run stopped on three Git-backed test files;
+      the supported-environment rerun passed with 509 tests, zero failed, and zero skipped, plus
+      schema, content, secret, invariant, and documentation checks. `content:status` still reports
+      `authored` with zero attestations. Fluent Burmese, practitioner, founder, accessibility, and
+      participant review remain open.
+- [x] Follow-up privacy-copy correction on 2026-09-29: both languages now describe the app's
+      device storage and no-upload/no-send behavior without promising that nobody else can see a
+      participant's screen. The shop next-fork copy was narrowed to what the app sends. The
+      unattested, uncommitted draft provenance was resealed; `pnpm content:verify`, Pack-file
+      Prettier check, and `git diff --check` passed. `content:status` still reports `authored` with
+      zero attestations. Supervised-session and device residual risks remain governed by
+      `YWAY-D004`; this content edit grants no review or release clearance.
+- [x] Pre-PR verification and review on 2026-09-29: `pnpm agent:doctor` reported READY;
+      `pnpm verify:full` passed in the supported environment with 509 tests, zero failed, zero
+      skipped, and all schema, content, secret, invariant, and documentation checks passing.
+      Independent product-integrity, architecture, security/privacy, and test reviewer roles
+      inspected the draft change set and reported no material findings. This is ready for human PR
+      review, not Pack release; all named human and device gates above remain open.
 - [ ] S3-07–S3-11 youth flow and device validation complete.
 - [ ] S3-12 moderated pilot evidence complete and critical findings resolved.
 - [ ] S3-13 verification, independent review, documentation, and owner closure authority recorded.

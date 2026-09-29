@@ -1,0 +1,119 @@
+schemaVersion: 1
+id: retail-assistant
+version: 1
+fixtureOnly: false
+canonicalLanguage: en-simple
+aiAssisted: true
+title: "Try one small moment of shop work"
+summary: >-
+  A short exploration pack about helping customers in a shop. You answer one situation that shop
+  workers meet, so you can notice what the work asks of you before you choose it. It is not career
+  advice, and it does not describe any real shop, employer, or job opening.
+occupations:
+  - retail-assistant
+preview:
+  headline: "Answer one customer, then see what this work asks of you"
+  description: >-
+    About five minutes in the app with a situation a shop worker can meet during a normal day,
+    then one small step in real life if you want it.
+limitations:
+  - >-
+    This is exploration. Choosing a response, reading what it changes, and writing anything in
+    this pack are ways of finding out about the work. They are not practice, not work experience,
+    and not a verified assessment of you.
+  - >-
+    Nothing here sorts or orders careers, compares them with each other, or recommends one, and
+    nothing here says what you are good at or whether this work suits you.
+  - >-
+    Nothing here names any actual shop, company, funder, or job vacancy that you could act on.
+  - >-
+    No company paid for this pack, and no company chose which experiments are in it or in what
+    order they appear.
+  - >-
+    The app saves what you write in this pack on this phone. It does not upload it or send it to a
+    shop or company.
+  - >-
+    The Burmese version is a translation of this Simple English text. It has not been tested with
+    Burmese-speaking young people, so how well it is understood is not yet known.
+  - >-
+    The accessibility check covers the words on the screen only. How this behaves on a real phone,
+    with a screen reader, with large text, and with Burmese line breaks still needs separate
+    testing.
+experiments:
+  - id: exp-answer-a-missing-item
+    title: "A customer asks for something that is not on the shelf"
+    question: >-
+      What does it ask of me when a customer wants something the shop does not have in front of
+      them?
+    action: >-
+      Read the situation below and choose the response you would give. Then read what this
+      response says about the work. You can try more than one response, and there is no right
+      answer here.
+    timebox: "About five minutes, once, inside the app."
+    whatToNotice: >-
+      Which response did you choose first? What would you need to find out before you could answer
+      the customer with confidence? Notice anything that surprised you in the situation and why.
+    reflection: >-
+      Write two or three sentences about how your response felt, and one thing you would want to
+      see in a real shop before you decided anything about this work.
+    nextFork: >-
+      If you want to check it against the real thing, look at how similar items are arranged on a
+      shelf in a shop you pass, or ask one shop worker how they find an item missing from a shelf.
+      Nothing here asks you to apply for a job, join a course, or agree to work any shifts in
+      advance, and you can stop at any point.
+    interactiveTask:
+      scenario: >-
+        A customer comes to the counter holding up their phone. They ask for one specific item
+        that is not on the shelf in front of them. One other customer is waiting behind them.
+      actionPrompt: "Choose what you say or do first."
+      choices:
+        - id: check-where-it-is-stored
+          text: "Say you will look for it, and check the shelf and the stock room yourself."
+          feedback: >-
+            Looking yourself means you find out how this shop keeps its things, and it means the
+            customer waits while you do it. The wait is an unavoidable part of this work, and so
+            is knowing your own shelves well enough to answer quickly. Notice how it felt to be
+            the person who decided whether to go and look.
+        - id: say-it-is-not-there-and-offer-something-else
+          text: "Tell the customer it is not on the shelf, and ask if they would like something similar."
+          feedback: >-
+            Offering something else moves the conversation on quickly, and it puts you in the
+            position of noticing what else the shop has. Some customers want that and some do
+            not. Notice how it felt to say the item was not there.
+        - id: ask-someone-else-before-answering
+          text: "Ask a colleague or the person in charge where the item is before you answer."
+          feedback: >-
+            Asking moves the problem to someone who may know more, and the customer waits a
+            little longer while you find out. It also means part of this work is knowing who to
+            ask and when, and asking in front of a customer can feel like passing work along.
+            Notice how it felt to ask instead of deciding.
+  - id: exp-ask-a-shop-worker
+    title: "Ask a shop worker how they find a missing item"
+    question: "How does a shop worker actually find something that is not out on the shelf?"
+    action: >-
+      At a shop that agrees, ask one worker how they handle a request for an item that is not on
+      the shelf. Ask what they check first, who they ask for help, and what they say if the item
+      cannot be found. They can describe a past or imagined request; no customer needs to make one
+      during your visit.
+    timebox: "Ten minutes, once, at a shop that agrees."
+    whatToNotice: >-
+      Which steps they say they can do themselves, and when they would check with another person.
+      Notice how they say they would speak to a customer if the item cannot be found.
+    reflection: >-
+      Write two or three sentences about one thing this worker told you that you had not thought
+      about, and one thing you would still want to ask them.
+    nextFork: >-
+      Watch one more shop at a busier hour, and if it still interests you, ask what that shop looks
+      like on its busiest day. You do not have to give the shop your name, your number, or where
+      you live, and the app does not send what you write here to any shop. You do not have to apply for a
+      job, join a course, or agree to work any shifts, and deciding to stop here is a fine place
+      to stop.
+accessibility:
+  scope: content
+  readingOrder:
+    - summary
+    - preview
+    - limitations
+    - exp-answer-a-missing-item
+    - exp-ask-a-shop-worker
+authoredAt: 2026-09-29T00:00:00Z
