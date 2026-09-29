@@ -464,6 +464,13 @@ Independent product-integrity, architecture, security/privacy, and test reviewer
 current change set on 2026-09-29 and reported no material finding. The pinned Gitleaks scan was not
 rerun after this scanner-only fix; the CI `Secret scan` job must run on the PR.
 
+A later review on 2026-09-29 found that `content:release` echoed a rejected
+`--authorization-scope` value into its usage error. The release command now uses the existing
+shape-only value description, and a regression test proves a mistyped contact value is absent from
+the error and no artifact is written. The focused real-content suite passed 25 tests with no skips;
+`pnpm verify:fast` and a supported-environment `pnpm verify:full` passed, the latter with 509 tests,
+0 failed, and 0 skipped. This correction changes no release authorization rule.
+
 **What these checks do not establish.** They are structural and repository-level checks over
 synthetic records. They do not establish that any content was reviewed by a real qualified
 practitioner, that any Burmese text was assessed by a fluent reader, that the owner vetted anyone,

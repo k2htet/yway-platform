@@ -428,12 +428,15 @@ test("releasing real content requires an explicit pilot scope and never a public
   const unknownScope = makeRoot();
   registerRealPack(unknownScope, pack);
   recordRealReviews(unknownScope, pack);
+  const mistypedContact = ["reviewer", "@", "example.invalid"].join("");
   const unknown = runReleaseCommand(
-    realReleaseArgs(pack.id, 1, "everyone"),
+    realReleaseArgs(pack.id, 1, mistypedContact),
     commandOptions(unknownScope),
   );
   expectExit(unknown, 2);
   expectFailureMessage(unknown, "must be one of: pilot, public");
+  assert.equal((unknown.stderr ?? "").includes(mistypedContact), false);
+  assert.equal(existsSync(join(unknownScope, "artifacts")), false);
 });
 
 test("real records refuse a synthetic actor, synthetic evidence, and an unbound note", () => {

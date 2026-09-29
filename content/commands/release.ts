@@ -43,6 +43,7 @@ import {
   snapshotIndexRelativePath,
 } from "../store.js";
 import {
+  describeValue,
   failureResult,
   optionalFlagString,
   parseCommandFlags,
@@ -83,7 +84,7 @@ function requireAuthorizationScope(
   const requested = requestedAuthorizationScopeSchema.safeParse(raw);
   if (!requested.success) {
     throw new UsageError(
-      `option "--authorization-scope" must be one of: ${requestedAuthorizationScopeSchema.options.join(", ")} (received "${raw}")`,
+      `option "--authorization-scope" must be one of: ${requestedAuthorizationScopeSchema.options.join(", ")} (received ${describeValue(raw)})`,
     );
   }
   if (requested.data === "public") {
